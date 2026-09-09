@@ -1,0 +1,15 @@
+{
+  "name": "kis-crm",
+  "private": true,
+  "version": "1.0.0",
+  "description": "АРМ менеджера по работе с клиентами в CRM-системе",
+  "workspaces": ["packages/*", "server", "web"],
+  "scripts": {
+    "build:shared": "npm run build -w @crm/shared",
+    "dev:api": "npm run start:dev -w @crm/server",
+    "dev:web": "npm run dev -w @crm/web",
+    "test:api": "npm run test:e2e -w @crm/server",
+    "test:web": "npm run test -w @crm/web"
+  },
+  "engines": { "node": ">=20" }
+}

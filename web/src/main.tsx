@@ -1,0 +1,44 @@
+import { CssBaseline, ThemeProvider } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+// Для date-fns 3.x нужен отдельный адаптер: AdapterDateFns рассчитан
+// на вторую версию библиотеки и обращается к её внутренним модулям
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ru } from 'date-fns/locale';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+import { App } from './App';
+import { AuthProvider } from './features/auth/AuthContext';
+import { theme } from './theme/theme';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Справочники и списки редко меняются в рамках одного сеанса работы
+      staleTime: 30_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </LocalizationProvider>
+    </ThemeProvider>
+  </StrictMode>,
+);

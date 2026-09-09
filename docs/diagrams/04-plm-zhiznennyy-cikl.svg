@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="604" viewBox="0 0 1180 604">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#546e7a"/>
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <g transform="translate(0, 44)">
+    <polyline points="202.0,220.0 238.0,220.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="402.0,220.0 438.0,220.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="602.0,220.0 638.0,220.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="802.0,179.2 848.0,156.3" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="799.7,262.0 849.1,288.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="320.0,262.0 320.0,300.0 790.0,300.0 848.0,312.0" fill="none" stroke="#546e7a" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="536.0" y="291.5" width="38.0" height="17" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+    <text x="555.0" y="303.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#37474f">отказ</text>
+    <polyline points="520.0,262.0 520.0,336.0 800.0,336.0 848.0,332.9" fill="none" stroke="#546e7a" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <polyline points="1002.0,118.0 1028.0,118.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="1095.0,78.0 1095.0,22.0 120.0,22.0 120.0,178.0" fill="none" stroke="#546e7a" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="554.9" y="13.5" width="105.2" height="17" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+    <text x="607.5" y="25.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#37474f">новая потребность</text>
+    <polyline points="1002.0,328.0 998.0,328.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="40" y="180" width="160" height="80" rx="12" ry="12" fill="#dbe7f3" stroke="#1c4e80" stroke-width="1.5"/>
+    <text x="120" y="216" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#263238">Первичный</text>
+    <text x="120" y="232" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">контакт</text>
+    <rect x="240" y="180" width="160" height="80" rx="12" ry="12" fill="#dbe7f3" stroke="#1c4e80" stroke-width="1.5"/>
+    <text x="320" y="224" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">Квалификация</text>
+    <rect x="440" y="180" width="160" height="80" rx="12" ry="12" fill="#e3dcec" stroke="#7c5295" stroke-width="1.5"/>
+    <text x="520" y="216" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#263238">Коммерческое</text>
+    <text x="520" y="232" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">предложение</text>
+    <rect x="640" y="180" width="160" height="80" rx="12" ry="12" fill="#e3dcec" stroke="#7c5295" stroke-width="1.5"/>
+    <text x="720" y="224" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">Переговоры</text>
+    <rect x="850" y="80" width="150" height="76" rx="12" ry="12" fill="#dbeddc" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="925" y="114" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#263238">Сделка</text>
+    <text x="925" y="130" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">выиграна</text>
+    <rect x="850" y="290" width="150" height="76" rx="12" ry="12" fill="#fadbdb" stroke="#c62828" stroke-width="1.5"/>
+    <text x="925" y="324" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#263238">Сделка</text>
+    <text x="925" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">проиграна</text>
+    <rect x="1030" y="80" width="130" height="76" rx="12" ry="12" fill="#dbeddc" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="1095" y="114" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#263238">Повторные</text>
+    <text x="1095" y="130" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">продажи</text>
+    <rect x="1000" y="290" width="160" height="76" rx="12" ry="12" fill="#eceff1" stroke="#607d8b" stroke-width="1.5"/>
+    <text x="1080" y="324" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#263238">Архивирование</text>
+    <text x="1080" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">клиента и сделки</text>
+    <rect x="240" y="430" width="660" height="70" rx="4" ry="4" fill="#ffffff" stroke="#455a64" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="570" y="461" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">Каждый переход между стадиями фиксируется в таблице DealStageHistory</text>
+    <text x="570" y="477" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">с указанием исходной и целевой стадии, автора и времени изменения</text>
+  </g>
+  <text x="590" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" fill="#263238">Рисунок 4 — PLM-диаграмма (жизненный цикл клиента и сделки)</text>
+</svg>

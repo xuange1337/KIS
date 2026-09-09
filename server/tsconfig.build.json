@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  // Тесты не должны попадать в сборку: из-за них общим корнем становится
+  // каталог server/, и main.js оказывается в dist/src вместо dist
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+}

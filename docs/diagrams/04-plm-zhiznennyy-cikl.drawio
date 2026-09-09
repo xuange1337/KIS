@@ -1,0 +1,82 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Рисунок 4 — PLM-диаграмма (жизненный цикл клиента и сделки)">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" page="1" pageWidth="1180" pageHeight="560" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="p1" value="Первичный&lt;br&gt;контакт" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#dbe7f3;strokeColor=#1c4e80;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="Квалификация" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#dbe7f3;strokeColor=#1c4e80;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="180" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="Коммерческое&lt;br&gt;предложение" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="180" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="Переговоры" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="640" y="180" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="won" value="Сделка&lt;br&gt;выиграна" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#dbeddc;strokeColor=#2e7d32;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="850" y="80" width="150" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="lost" value="Сделка&lt;br&gt;проиграна" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#fadbdb;strokeColor=#c62828;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="850" y="290" width="150" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="repeat" value="Повторные&lt;br&gt;продажи" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#dbeddc;strokeColor=#2e7d32;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="80" width="130" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="arch" value="Архивирование&lt;br&gt;клиента и сделки" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="290" width="160" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="Каждый переход между стадиями фиксируется в таблице DealStageHistory&lt;br&gt;с указанием исходной и целевой стадии, автора и времени изменения" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;align=left;spacingLeft=10;verticalAlign=middle;fillColor=#ffffff;strokeColor=#455a64;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="240" y="430" width="660" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="p1" target="p2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="p2" target="p3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="p3" target="p4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="p4" target="won">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="p4" target="lost">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="отказ" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;dashed=1;fontSize=10;" edge="1" parent="1" source="p2" target="lost">
+          <mxGeometry relative="1" as="geometry">
+          <Array as="points">
+            <mxPoint x="320" y="300"/>
+            <mxPoint x="790" y="300"/>
+          </Array>
+        </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;dashed=1;fontSize=10;" edge="1" parent="1" source="p3" target="lost">
+          <mxGeometry relative="1" as="geometry">
+          <Array as="points">
+            <mxPoint x="520" y="336"/>
+            <mxPoint x="800" y="336"/>
+          </Array>
+        </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="won" target="repeat">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="новая потребность" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;dashed=1;fontSize=10;" edge="1" parent="1" source="repeat" target="p1">
+          <mxGeometry relative="1" as="geometry">
+          <Array as="points">
+            <mxPoint x="1095" y="22"/>
+            <mxPoint x="120" y="22"/>
+          </Array>
+        </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="lost" target="arch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

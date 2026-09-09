@@ -1,0 +1,61 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Рисунок 2 — ER-диаграмма (основные сущности CRM)">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" page="1" pageWidth="1180" pageHeight="780" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="audit" value="AuditLog&lt;br&gt;&lt;br&gt;PK id&lt;br&gt;FK user_id&lt;br&gt;entity&lt;br&gt;entity_id&lt;br&gt;action&lt;br&gt;payload&lt;br&gt;created_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#eceff1;strokeColor=#607d8b;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="205" height="165" as="geometry"/>
+        </mxCell>
+        <mxCell id="users" value="Users&lt;br&gt;&lt;br&gt;PK user_id&lt;br&gt;login&lt;br&gt;password_hash&lt;br&gt;full_name&lt;br&gt;role&lt;br&gt;is_active" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#dbe7f3;strokeColor=#1c4e80;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="265" width="205" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="clients" value="Clients&lt;br&gt;&lt;br&gt;PK client_id&lt;br&gt;name&lt;br&gt;inn&lt;br&gt;industry&lt;br&gt;status&lt;br&gt;source&lt;br&gt;address&lt;br&gt;FK owner_user_id&lt;br&gt;created_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#dbeddc;strokeColor=#2e7d32;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="330" y="40" width="205" height="205" as="geometry"/>
+        </mxCell>
+        <mxCell id="contacts" value="Contacts&lt;br&gt;&lt;br&gt;PK contact_id&lt;br&gt;FK client_id&lt;br&gt;full_name&lt;br&gt;position&lt;br&gt;phone&lt;br&gt;email&lt;br&gt;preferred_channel&lt;br&gt;notes" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#dbeddc;strokeColor=#2e7d32;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="330" y="330" width="205" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="deals" value="Deals&lt;br&gt;&lt;br&gt;PK deal_id&lt;br&gt;FK client_id&lt;br&gt;title&lt;br&gt;stage&lt;br&gt;amount&lt;br&gt;currency&lt;br&gt;probability&lt;br&gt;planned_close&lt;br&gt;FK owner_user_id&lt;br&gt;closed_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="40" width="205" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="acts" value="Activities&lt;br&gt;&lt;br&gt;PK activity_id&lt;br&gt;FK client_id&lt;br&gt;FK deal_id&lt;br&gt;type&lt;br&gt;subject&lt;br&gt;planned_at&lt;br&gt;done_at&lt;br&gt;status&lt;br&gt;result&lt;br&gt;FK owner_user_id" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#fbe4cd;strokeColor=#ed6c02;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="330" width="205" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="history" value="DealStageHistory&lt;br&gt;&lt;br&gt;PK id&lt;br&gt;FK deal_id&lt;br&gt;from_stage&lt;br&gt;to_stage&lt;br&gt;FK changed_by&lt;br&gt;changed_at" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="915" y="40" width="215" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="offers" value="CommercialOffers&lt;br&gt;&lt;br&gt;PK offer_id&lt;br&gt;FK deal_id&lt;br&gt;number&lt;br&gt;date&lt;br&gt;total_amount&lt;br&gt;status&lt;br&gt;file_ref" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;fillColor=#fbe4cd;strokeColor=#ed6c02;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="915" y="330" width="215" height="165" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="Поле owner_user_id в таблицах Clients, Deals и Activities ссылается на Users (ответственный менеджер)&lt;br&gt;и служит основой разграничения доступа: менеджер работает только со своими записями" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;align=left;spacingLeft=10;verticalAlign=middle;fillColor=#ffffff;strokeColor=#455a64;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="615" width="790" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="e0" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="users" target="audit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="1 : N&lt;br&gt;ответственный" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="users" target="clients">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="clients" target="contacts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="clients" target="deals">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="clients" target="acts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="deals" target="acts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="deals" target="history">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="deals" target="offers">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

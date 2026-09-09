@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="684" viewBox="0 0 1180 684">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#546e7a"/>
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <g transform="translate(0, 44)">
+    <polyline points="342.0,320.0 418.0,320.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="762.0,320.0 838.0,320.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="590.0,182.0 590.0,248.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polyline points="590.0,458.0 590.0,392.0" fill="none" stroke="#546e7a" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="420" y="250" width="340" height="140" rx="4" ry="4" fill="#e3dcec" stroke="#7c5295" stroke-width="1.5"/>
+    <text x="590" y="308" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#263238">A0</text>
+    <text x="590" y="324" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">Вести учёт взаимодействий</text>
+    <text x="590" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">с клиентами и контроль сделок</text>
+    <rect x="40" y="245" width="300" height="150" rx="4" ry="4" fill="#dbe7f3" stroke="#1c4e80" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="190" y="292" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">ВХОД</text>
+    <text x="190" y="308" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238"></text>
+    <text x="190" y="324" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· данные о клиентах и контактах</text>
+    <text x="190" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· события: звонки, встречи, письма</text>
+    <text x="190" y="356" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· параметры сделок и КП</text>
+    <rect x="840" y="245" width="300" height="150" rx="4" ry="4" fill="#dbeddc" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="990" y="292" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">ВЫХОД</text>
+    <text x="990" y="308" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238"></text>
+    <text x="990" y="324" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· история взаимодействий</text>
+    <text x="990" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· отчёты по продажам и активностям</text>
+    <text x="990" y="356" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· документы: КП, выгрузки</text>
+    <rect x="420" y="40" width="340" height="140" rx="4" ry="4" fill="#fbe4cd" stroke="#ed6c02" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="590" y="82" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">УПРАВЛЕНИЕ</text>
+    <text x="590" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238"></text>
+    <text x="590" y="114" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· регламент работы отдела продаж</text>
+    <text x="590" y="130" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· права доступа по ролям</text>
+    <text x="590" y="146" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· справочники стадий и статусов</text>
+    <rect x="420" y="460" width="340" height="140" rx="4" ry="4" fill="#eceff1" stroke="#607d8b" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="590" y="502" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">МЕХАНИЗМЫ</text>
+    <text x="590" y="518" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238"></text>
+    <text x="590" y="534" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· менеджер, руководитель, администратор</text>
+    <text x="590" y="550" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· web-интерфейс АРМ · сервер приложений</text>
+    <text x="590" y="566" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12"  fill="#263238">· СУБД PostgreSQL</text>
+  </g>
+  <text x="590" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" fill="#263238">Рисунок 6 — IDEF0-диаграмма (функция A0)</text>
+</svg>

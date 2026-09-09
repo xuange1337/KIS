@@ -1,0 +1,120 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Рисунок 1 — Диаграмма модулей и потоков данных">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" page="1" pageWidth="1220" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="user" value="Менеджер&lt;br&gt;по работе с клиентами" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="330" width="190" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="head" value="Руководитель&lt;br&gt;отдела продаж" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="190" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin" value="Администратор" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="190" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="spa" value="Web-клиент (SPA)&lt;br&gt;экранные формы АРМ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbe7f3;strokeColor=#1c4e80;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="300" y="320" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="auth" value="Авторизация&lt;br&gt;и разграничение прав" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbe7f3;strokeColor=#1c4e80;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="300" y="150" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="clients" value="Модуль управления&lt;br&gt;клиентами (1.2.1)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="590" y="40" width="210" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="contacts" value="Модуль контактов&lt;br&gt;(1.2.2)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="590" y="138" width="210" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="deals" value="Модуль сделок&lt;br&gt;(1.2.3)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="590" y="236" width="210" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="acts" value="Модуль активностей&lt;br&gt;(1.2.4)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="590" y="334" width="210" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="offers" value="Модуль КП и отчётов&lt;br&gt;(1.2.5)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e3dcec;strokeColor=#7c5295;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="590" y="432" width="210" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="db" value="База данных&lt;br&gt;PostgreSQL" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;whiteSpace=wrap;html=1;fillColor=#dbeddc;strokeColor=#2e7d32;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="900" y="200" width="200" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="audit" value="Журнал действий&lt;br&gt;пользователей" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dbeddc;strokeColor=#2e7d32;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="900" y="340" width="200" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="reports" value="Подсистема отчётности&lt;br&gt;и выгрузок PDF / Excel / CSV" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fbe4cd;strokeColor=#ed6c02;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="880" y="480" width="240" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="dict" value="Справочники: стадии, статусы, источники,&lt;br&gt;типы активностей — используются всеми модулями" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;align=left;spacingLeft=10;verticalAlign=middle;fillColor=#ffffff;strokeColor=#455a64;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="470" y="580" width="450" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="e0" value="ввод данных" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="user" target="spa">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="запрос сводок" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="head" target="spa">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="admin" target="spa">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="вход в систему" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="spa" target="auth">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="права доступа" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;dashed=1;fontSize=10;" edge="1" parent="1" source="auth" target="spa">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="spa" target="clients">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="spa" target="contacts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="spa" target="deals">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="spa" target="acts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="spa" target="offers">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="clients" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="contacts" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="deals" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="acts" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="offers" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e15" value="агрегация" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="db" target="reports">
+          <mxGeometry relative="1" as="geometry">
+          <Array as="points">
+            <mxPoint x="855" y="245"/>
+            <mxPoint x="855" y="520"/>
+          </Array>
+        </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" value="отчёты и выгрузки" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;dashed=1;fontSize=10;" edge="1" parent="1" source="reports" target="spa">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e17" value="записи журнала" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;fontSize=10;" edge="1" parent="1" source="auth" target="audit">
+          <mxGeometry relative="1" as="geometry">
+          <Array as="points">
+            <mxPoint x="555" y="16"/>
+            <mxPoint x="1165" y="16"/>
+            <mxPoint x="1165" y="373"/>
+          </Array>
+        </mxGeometry>
+        </mxCell>
+        <mxCell id="e18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#546e7a;dashed=1;fontSize=10;" edge="1" parent="1" source="dict" target="offers">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
