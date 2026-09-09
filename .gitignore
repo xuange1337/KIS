@@ -6,3 +6,6 @@ build/
 uploads/
 coverage/
 .DS_Store
+
+# Кэш инкрементальной сборки TypeScript
+*.tsbuildinfo
