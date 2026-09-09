@@ -1,9 +1,9 @@
 import {
+  Box,
   Alert,
   Button,
   Grid,
   MenuItem,
-  Paper,
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -63,6 +63,11 @@ export function ClientsPage() {
 
   const { data, isFetching, isError } = useClients(query);
 
+  // Пустая выборка означает разное: база пуста или фильтры слишком узкие
+  const hasFilters = Boolean(
+    debouncedSearch || status || source || industry || ownerUserId,
+  );
+
   const columns: GridColDef[] = [
     { field: 'name', headerName: 'Наименование', flex: 2, minWidth: 240 },
     {
@@ -73,7 +78,13 @@ export function ClientsPage() {
       renderCell: (params) => <ClientStatusChip status={params.value} />,
     },
     { field: 'industry', headerName: 'Отрасль', flex: 1, minWidth: 160 },
-    { field: 'inn', headerName: 'ИНН', width: 130, sortable: false },
+    {
+      field: 'inn',
+      headerName: 'ИНН',
+      width: 130,
+      sortable: false,
+      cellClassName: 'tabular',
+    },
     {
       field: 'owner',
       headerName: 'Ответственный',
@@ -116,7 +127,7 @@ export function ClientsPage() {
         </Alert>
       )}
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Box sx={{ mb: 2.5 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <TextField
@@ -205,8 +216,17 @@ export function ClientsPage() {
             </Grid>
           )}
         </Grid>
-      </Paper>
+      </Box>
 
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2.5,
+          bgcolor: 'background.paper',
+          overflow: 'hidden',
+        }}
+      >
       <DataTable<ClientDto>
         rows={data?.items ?? []}
         columns={columns}
@@ -218,7 +238,16 @@ export function ClientsPage() {
         sortModel={sortModel}
         onSortModelChange={setSortModel}
         onRowClick={(params) => navigate(`/clients/${params.id}`)}
+        emptyTitle={
+          hasFilters ? 'Ничего не найдено' : 'Клиентов пока нет'
+        }
+        emptyHint={
+          hasFilters
+            ? 'Измените условия поиска или сбросьте фильтры'
+            : 'Добавьте первого клиента, чтобы начать вести базу'
+        }
       />
+      </Box>
 
       <ClientFormDialog
         open={formOpen}

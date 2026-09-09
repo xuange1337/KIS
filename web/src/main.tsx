@@ -8,9 +8,9 @@ import { ru } from 'date-fns/locale';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
+// Переменные начертания: один файл вместо набора весов, поддержка кириллицы
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
 import { App } from './App';
 import { AuthProvider } from './features/auth/AuthContext';
 import { theme } from './theme/theme';

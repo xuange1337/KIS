@@ -1,4 +1,4 @@
-import { Paper } from '@mui/material';
+import { Box } from '@mui/material';
 import {
   DataGrid,
   GridColDef,
@@ -6,6 +6,8 @@ import {
   GridRowParams,
   GridSortModel,
 } from '@mui/x-data-grid';
+import { EmptyState } from './EmptyState';
+import { NEUTRAL, TOKENS } from '../theme/tokens';
 
 interface DataTableProps<T> {
   rows: T[];
@@ -20,12 +22,17 @@ interface DataTableProps<T> {
   onSortModelChange?: (model: GridSortModel) => void;
   onRowClick?: (params: GridRowParams) => void;
   height?: number;
+  /** Сообщение, когда выборка пуста. */
+  emptyTitle?: string;
+  emptyHint?: string;
 }
 
 /**
  * Таблица списков с серверной постраничной выборкой и сортировкой.
- * Используется всеми разделами (клиенты, сделки, активности, КП),
- * поэтому настройки пагинации и локализации заданы в одном месте.
+ *
+ * Оформление намеренно «бесшовное»: внешняя рамка убрана, строки разделены
+ * светлой линией, заголовки набраны капителью. Плотность данных выше, чем
+ * у типовой таблицы, поэтому на экран помещается больше записей.
  */
 export function DataTable<T extends object>({
   rows,
@@ -38,10 +45,12 @@ export function DataTable<T extends object>({
   sortModel,
   onSortModelChange,
   onRowClick,
-  height = 560,
+  height = 600,
+  emptyTitle = 'Записей не найдено',
+  emptyHint,
 }: DataTableProps<T>) {
   return (
-    <Paper variant="outlined" sx={{ height, width: '100%' }}>
+    <Box sx={{ height, width: '100%' }}>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -56,14 +65,54 @@ export function DataTable<T extends object>({
         onSortModelChange={onSortModelChange}
         onRowClick={onRowClick}
         pageSizeOptions={[10, 25, 50, 100]}
+        rowHeight={46}
+        columnHeaderHeight={38}
         disableRowSelectionOnClick
         disableColumnMenu
+        // Пустая таблица без подписи читается как сбой загрузки
+        slots={{
+          noRowsOverlay: () => (
+            <EmptyState title={emptyTitle} hint={emptyHint} dense />
+          ),
+        }}
         sx={{
           border: 'none',
-          '& .MuiDataGrid-columnHeaders': { bgcolor: 'grey.50' },
-          '& .MuiDataGrid-row': onRowClick ? { cursor: 'pointer' } : undefined,
+          fontSize: 13,
+          '--DataGrid-rowBorderColor': NEUTRAL[100],
+
+          '& .MuiDataGrid-columnHeaders': {
+            borderBottom: `1px solid ${NEUTRAL[200]}`,
+          },
+          '& .MuiDataGrid-columnHeader': {
+            '&:focus, &:focus-within': { outline: 'none' },
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            color: NEUTRAL[500],
+          },
+
+          '& .MuiDataGrid-cell': {
+            borderBottom: `1px solid ${NEUTRAL[100]}`,
+            '&:focus, &:focus-within': { outline: 'none' },
+          },
+          '& .MuiDataGrid-row': {
+            cursor: onRowClick ? 'pointer' : 'default',
+            '&:hover': { backgroundColor: TOKENS.surfaceHover },
+          },
+
+          '& .MuiDataGrid-overlayWrapper': { height: 'auto', minHeight: 160 },
+          '& .MuiDataGrid-overlayWrapperInner': { height: 'auto !important' },
+
+          '& .MuiDataGrid-footerContainer': {
+            borderTop: `1px solid ${NEUTRAL[200]}`,
+            minHeight: 44,
+          },
+          '& .MuiTablePagination-root': { fontSize: 12.5 },
         }}
       />
-    </Paper>
+    </Box>
   );
 }

@@ -47,14 +47,16 @@ import { formatDateTime } from '../components/formatters';
 import { ActivityFormDialog } from '../features/activities/ActivityFormDialog';
 import { CompleteActivityDialog } from '../features/activities/CompleteActivityDialog';
 import { useCalendarActivities, useUsers } from '../api/hooks';
+import { DATA, NEUTRAL } from '../theme/tokens';
 import { useAuth } from '../features/auth/AuthContext';
 
 type ViewMode = 'month' | 'week' | 'day';
 
+/** Цвета типов активностей — из общей палитры данных. */
 const TYPE_COLORS: Record<ActivityType, string> = {
-  [ActivityType.CALL]: '#1c4e80',
-  [ActivityType.MEETING]: '#7c5295',
-  [ActivityType.EMAIL]: '#2e7d32',
+  [ActivityType.CALL]: DATA.slate,
+  [ActivityType.MEETING]: DATA.violet,
+  [ActivityType.EMAIL]: DATA.teal,
 };
 
 /** Экранная форма «Календарь/планировщик» (ТЗ п. 2.5). */
@@ -267,8 +269,7 @@ export function CalendarPage() {
                     minWidth: 0,
                     p: 1,
                     bgcolor: outsideMonth ? 'grey.50' : 'background.paper',
-                    borderColor: today ? 'primary.main' : undefined,
-                    borderWidth: today ? 2 : 1,
+                    borderColor: today ? NEUTRAL[900] : undefined,
                     opacity: outsideMonth ? 0.6 : 1,
                     cursor: 'pointer',
                   }}

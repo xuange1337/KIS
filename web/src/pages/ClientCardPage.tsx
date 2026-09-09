@@ -5,13 +5,9 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Divider,
   Grid,
   IconButton,
   Link as MuiLink,
-  List,
-  ListItem,
-  ListItemText,
   Stack,
   Tab,
   Table,
@@ -25,25 +21,23 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import {
   ACTIVITY_TYPE_LABELS,
   ActivityDto,
-  ActivityStatus,
   CLIENT_SOURCE_LABELS,
   ContactDto,
   PREFERRED_CHANNEL_LABELS,
 } from '@crm/shared';
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
+import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
-  ActivityStatusChip,
   ClientStatusChip,
   DealStageChip,
 } from '../components/StatusChip';
-import { formatDate, formatDateTime, formatMoney } from '../components/formatters';
+import { formatDate, formatMoney } from '../components/formatters';
 import { ClientFormDialog } from '../features/clients/ClientFormDialog';
 import { ContactFormDialog } from '../features/contacts/ContactFormDialog';
 import { DealFormDialog } from '../features/deals/DealFormDialog';
@@ -323,67 +317,20 @@ export function ClientCardPage() {
                   Запланировать активность
                 </Button>
               </Stack>
-              {activities && activities.items.length > 0 ? (
-                <List dense disablePadding>
-                  {activities.items.map((activity, index) => (
-                    <Box key={activity.activityId}>
-                      {index > 0 && <Divider component="li" />}
-                      <ListItem
-                        disableGutters
-                        secondaryAction={
-                          activity.status === ActivityStatus.PLANNED && (
-                            <IconButton
-                              size="small"
-                              title="Отметить выполнение"
-                              onClick={() => setCompleting(activity)}
-                            >
-                              <TaskAltIcon fontSize="small" />
-                            </IconButton>
-                          )
-                        }
-                      >
-                        <ListItemText
-                          primary={
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                            >
-                              <Typography variant="body2" fontWeight={500}>
-                                {activity.subject}
-                              </Typography>
-                              <ActivityStatusChip status={activity.status} />
-                            </Stack>
-                          }
-                          secondary={
-                            <>
-                              {ACTIVITY_TYPE_LABELS[activity.type]} ·{' '}
-                              {formatDateTime(activity.plannedAt)}
-                              {activity.deal && (
-                                <>
-                                  {' · '}
-                                  <Link to={`/deals/${activity.deal.dealId}`}>
-                                    {activity.deal.title}
-                                  </Link>
-                                </>
-                              )}
-                              {activity.result && (
-                                <>
-                                  <br />
-                                  Результат: {activity.result}
-                                </>
-                              )}
-                            </>
-                          }
-                          secondaryTypographyProps={{ fontSize: 12 }}
-                        />
-                      </ListItem>
-                    </Box>
-                  ))}
-                </List>
-              ) : (
-                <EmptyText text="Взаимодействий пока не было" />
-              )}
+              <ActivityList
+                activities={activities?.items ?? []}
+                emptyText="Взаимодействий пока не было"
+                emptyHint="Запланируйте звонок, встречу или письмо по этому клиенту"
+                onComplete={setCompleting}
+                // Клиент уже открыт, поэтому во второй строке полезнее сделка
+                secondaryOf={(activity) =>
+                  activity.deal
+                    ? `${ACTIVITY_TYPE_LABELS[activity.type]} · ${activity.deal.title}`
+                    : ACTIVITY_TYPE_LABELS[activity.type]
+                }
+                showResult
+                hideOpenAction
+              />
             </>
           )}
         </CardContent>

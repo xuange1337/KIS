@@ -26,7 +26,6 @@ import {
   BASE_CURRENCY,
   Currency,
   DEAL_STAGE_LABELS,
-  DealStage,
   ExportFormat,
   FunnelRow,
   ManagerActivityRow,
@@ -51,6 +50,8 @@ import {
   YAxis,
 } from 'recharts';
 import { PageHeader } from '../components/PageHeader';
+import { DEAL_STAGE_COLORS } from '../components/StatusChip';
+import { DATA, NEUTRAL } from '../theme/tokens';
 import {
   formatDate,
   formatMoney,
@@ -72,15 +73,6 @@ const REPORT_TABS: { name: ReportName; label: string }[] = [
 
 /** Отчёты, в которых участвуют денежные суммы. */
 const MONEY_REPORTS: ReportName[] = ['funnel', 'sales-dynamics', 'top'];
-
-const STAGE_COLORS: Record<DealStage, string> = {
-  [DealStage.NEW]: '#90a4ae',
-  [DealStage.QUALIFICATION]: '#4fc3f7',
-  [DealStage.PROPOSAL]: '#1c4e80',
-  [DealStage.NEGOTIATION]: '#ed6c02',
-  [DealStage.WON]: '#2e7d32',
-  [DealStage.LOST]: '#c62828',
-};
 
 /** Экранная форма «Отчёты»: период, фильтры, графики и выгрузка (ТЗ п. 2.4, 2.5). */
 export function ReportsPage() {
@@ -330,10 +322,10 @@ function FunnelReport({
             </Typography>
             <ResponsiveContainer width="100%" height={340}>
               <BarChart data={chartData} margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" fontSize={11} interval={0} angle={-15} textAnchor="end" height={70} />
+                <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
+                <XAxis dataKey="label" fontSize={11} stroke={NEUTRAL[400]} interval={0} angle={-15} textAnchor="end" height={70} />
                 <YAxis
-                  fontSize={11}
+                  fontSize={11} stroke={NEUTRAL[400]}
                   tickFormatter={(value: number) =>
                     `${Math.round(value / 1000)} тыс.`
                   }
@@ -342,9 +334,14 @@ function FunnelReport({
                   formatter={(value: number) => formatMoney(value, currency)}
                   labelFormatter={(label: string) => label}
                 />
-                <Bar dataKey="amount" name="Сумма" radius={[4, 4, 0, 0]}>
+                <Bar
+                  dataKey="amount"
+                  name="Сумма"
+                  radius={[4, 4, 0, 0]}
+                  isAnimationActive={false}
+                >
                   {chartData.map((row) => (
-                    <Cell key={row.stage} fill={STAGE_COLORS[row.stage]} />
+                    <Cell key={row.stage} fill={DEAL_STAGE_COLORS[row.stage]} />
                   ))}
                 </Bar>
               </BarChart>
@@ -399,10 +396,10 @@ function SalesDynamicsReport({
             ) : (
               <ResponsiveContainer width="100%" height={340}>
                 <LineChart data={chartData} margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="label" fontSize={11} />
+                  <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
+                  <XAxis dataKey="label" fontSize={11} stroke={NEUTRAL[400]} />
                   <YAxis
-                    fontSize={11}
+                    fontSize={11} stroke={NEUTRAL[400]}
                     tickFormatter={(value: number) =>
                       `${Math.round(value / 1000)} тыс.`
                     }
@@ -413,9 +410,10 @@ function SalesDynamicsReport({
                     type="monotone"
                     dataKey="amount"
                     name="Сумма продаж"
-                    stroke="#1c4e80"
+                    stroke={DATA.indigo}
                     strokeWidth={2}
-                    dot={{ r: 4 }}
+                    dot={{ r: 3 }}
+                    isAnimationActive={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -459,28 +457,31 @@ function ManagerActivitiesReport({ rows }: { rows: ManagerActivityRow[] }) {
             ) : (
               <ResponsiveContainer width="100%" height={340}>
                 <BarChart data={rows} margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="fullName" fontSize={11} />
-                  <YAxis fontSize={11} allowDecimals={false} />
+                  <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
+                  <XAxis dataKey="fullName" fontSize={11} stroke={NEUTRAL[400]} />
+                  <YAxis fontSize={11} stroke={NEUTRAL[400]} allowDecimals={false} />
                   <ChartTooltip />
                   <Legend />
                   <Bar
                     dataKey="calls"
                     name={ACTIVITY_TYPE_LABELS[ActivityType.CALL]}
                     stackId="a"
-                    fill="#1c4e80"
+                    isAnimationActive={false}
+                    {...{ fill: DATA.slate }}
                   />
                   <Bar
                     dataKey="meetings"
                     name={ACTIVITY_TYPE_LABELS[ActivityType.MEETING]}
                     stackId="a"
-                    fill="#7c5295"
+                    isAnimationActive={false}
+                    {...{ fill: DATA.indigo }}
                   />
                   <Bar
                     dataKey="emails"
                     name={ACTIVITY_TYPE_LABELS[ActivityType.EMAIL]}
                     stackId="a"
-                    fill="#2e7d32"
+                    isAnimationActive={false}
+                    {...{ fill: DATA.green }}
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>

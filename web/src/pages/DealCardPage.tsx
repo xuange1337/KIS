@@ -21,11 +21,9 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import {
   ACTIVITY_TYPE_LABELS,
   ActivityDto,
-  ActivityStatus,
   DEAL_STAGE_LABELS,
   DealStage,
   OfferDto,
@@ -33,9 +31,9 @@ import {
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
+import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
-  ActivityStatusChip,
   DealStageChip,
   OfferStatusChip,
 } from '../components/StatusChip';
@@ -293,46 +291,16 @@ export function DealCardPage() {
                   Запланировать
                 </Button>
               </Stack>
-              {activities && activities.items.length > 0 ? (
-                <Table size="small">
-                  <TableBody>
-                    {activities.items.map((activity) => (
-                      <TableRow key={activity.activityId}>
-                        <TableCell sx={{ width: 120 }}>
-                          {ACTIVITY_TYPE_LABELS[activity.type]}
-                        </TableCell>
-                        <TableCell>
-                          {activity.subject}
-                          {activity.result && (
-                            <Typography variant="caption" display="block" color="text.secondary">
-                              Результат: {activity.result}
-                            </Typography>
-                          )}
-                        </TableCell>
-                        <TableCell sx={{ width: 160 }}>
-                          {formatDateTime(activity.plannedAt)}
-                        </TableCell>
-                        <TableCell sx={{ width: 150 }}>
-                          <ActivityStatusChip status={activity.status} />
-                        </TableCell>
-                        <TableCell align="right" sx={{ width: 56 }}>
-                          {activity.status === ActivityStatus.PLANNED && (
-                            <IconButton
-                              size="small"
-                              title="Отметить выполнение"
-                              onClick={() => setCompleting(activity)}
-                            >
-                              <TaskAltIcon fontSize="small" />
-                            </IconButton>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <EmptyText text="Активности по сделке не запланированы" />
-              )}
+              <ActivityList
+                activities={activities?.items ?? []}
+                emptyText="Активности по сделке не запланированы"
+                emptyHint="Запланируйте звонок или встречу, чтобы двигать сделку"
+                onComplete={setCompleting}
+                // Клиент виден в сведениях сделки, поэтому здесь — тип и тема
+                secondaryOf={(activity) => ACTIVITY_TYPE_LABELS[activity.type]}
+                showResult
+                hideOpenAction
+              />
             </CardContent>
           </Card>
         </Grid>

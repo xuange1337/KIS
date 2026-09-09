@@ -1,6 +1,7 @@
 import { Box, Breadcrumbs, Link, Stack, Typography } from '@mui/material';
 import { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { NEUTRAL } from '../theme/tokens';
 
 interface Crumb {
   label: string;
@@ -15,7 +16,12 @@ interface PageHeaderProps {
   actions?: ReactNode;
 }
 
-/** Единая шапка экрана: заголовок, хлебные крошки и действия. */
+/**
+ * Шапка экрана.
+ *
+ * Заголовок отделён от содержимого не рамкой, а воздухом и одной линией:
+ * так экран читается как страница, а не как набор вложенных панелей.
+ */
 export function PageHeader({
   title,
   subtitle,
@@ -23,43 +29,54 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <Box sx={{ mb: 2.5 }}>
+    <Box sx={{ mb: 3, pb: 2.5, borderBottom: `1px solid ${NEUTRAL[200]}` }}>
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <Breadcrumbs sx={{ mb: 1, fontSize: 14 }}>
+        <Breadcrumbs
+          separator="/"
+          sx={{
+            mb: 1,
+            fontSize: 12,
+            color: NEUTRAL[400],
+            '& .MuiBreadcrumbs-separator': { mx: 0.75 },
+          }}
+        >
           {breadcrumbs.map((crumb) =>
             crumb.to ? (
               <Link
                 key={crumb.label}
                 component={RouterLink}
                 to={crumb.to}
-                underline="hover"
-                color="inherit"
+                underline="none"
+                sx={{ fontSize: 12, color: NEUTRAL[500], '&:hover': { color: NEUTRAL[900] } }}
               >
                 {crumb.label}
               </Link>
             ) : (
-              <Typography key={crumb.label} color="text.primary" fontSize={14}>
+              <Typography key={crumb.label} sx={{ fontSize: 12, color: NEUTRAL[400] }}>
                 {crumb.label}
               </Typography>
             ),
           )}
         </Breadcrumbs>
       )}
+
       <Stack
         direction="row"
-        alignItems="flex-start"
+        alignItems="flex-end"
         justifyContent="space-between"
-        spacing={2}
+        spacing={3}
       >
-        <Box>
-          <Typography variant="h5">{title}</Typography>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h4" sx={{ mb: subtitle ? 0.5 : 0 }}>
+            {title}
+          </Typography>
           {subtitle && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant="body2" color="text.secondary">
               {subtitle}
             </Typography>
           )}
         </Box>
-        <Stack direction="row" spacing={1} flexShrink={0}>
+        <Stack direction="row" spacing={1} flexShrink={0} alignItems="center">
           {actions}
         </Stack>
       </Stack>

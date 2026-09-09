@@ -1,294 +1,250 @@
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  Stack,
-  Typography,
-} from '@mui/material';
-import CallIcon from '@mui/icons-material/Call';
-import EmailIcon from '@mui/icons-material/Email';
-import EventIcon from '@mui/icons-material/Event';
-import {
-  ACTIVITY_TYPE_LABELS,
-  ActivityDto,
-  ActivityType,
-  Currency,
-  DEAL_STAGE_LABELS,
-  DEAL_FUNNEL_STAGES,
-  DealStage,
-  FunnelRow,
-} from '@crm/shared';
-import { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Alert, Box, Button, Grid, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import { ActivityDto } from '@crm/shared';
+import { ReactNode, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
-import {
-  formatMoney,
-  formatNumber,
-  formatShortDateTime,
-} from '../components/formatters';
+import { MetricRow, MetricTile } from '../components/MetricTile';
+import { SalesFunnel } from '../components/SalesFunnel';
+import { ActivityList } from '../components/ActivityList';
+import { ListSkeleton, MetricsSkeleton } from '../components/Skeletons';
+import { formatMoney, formatNumber } from '../components/formatters';
+import { CompleteActivityDialog } from '../features/activities/CompleteActivityDialog';
+import { DealFormDialog } from '../features/deals/DealFormDialog';
 import { useDashboard } from '../api/hooks';
 import { useAuth } from '../features/auth/AuthContext';
+import { TOKENS } from '../theme/tokens';
 
-const ACTIVITY_ICONS: Record<ActivityType, ReactNode> = {
-  [ActivityType.CALL]: <CallIcon fontSize="small" color="action" />,
-  [ActivityType.MEETING]: <EventIcon fontSize="small" color="action" />,
-  [ActivityType.EMAIL]: <EmailIcon fontSize="small" color="action" />,
-};
+/** Сколько просроченных активностей показывать на главной. */
+const OVERDUE_PREVIEW = 4;
 
-/** Главная страница: показатели, уведомления, ближайшие активности (ТЗ п. 2.5). */
+/**
+ * Главная страница (ТЗ п. 2.5).
+ *
+ * Порядок блоков повторяет порядок вопросов, на которые менеджер отвечает
+ * в начале дня: что горит, что запланировано, в каком состоянии воронка.
+ * Поэтому просроченные активности стоят выше остальных списков.
+ */
 export function DashboardPage() {
   const { user, canSeeAll } = useAuth();
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useDashboard();
+
+  const [completing, setCompleting] = useState<ActivityDto | null>(null);
+  const [dealFormOpen, setDealFormOpen] = useState(false);
+
+  const firstName = user?.fullName.split(' ')[1] ?? user?.fullName ?? '';
+
+  const header = (
+    <PageHeader
+      title={`Здравствуйте, ${firstName}`}
+      subtitle={
+        canSeeAll
+          ? 'Сводные показатели по отделу продаж'
+          : 'Сводные показатели по вашим клиентам и сделкам'
+      }
+      actions={
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setDealFormOpen(true)}
+        >
+          Новая сделка
+        </Button>
+      }
+    />
+  );
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
-      </Box>
+      <>
+        {header}
+        <MetricsSkeleton />
+        <Grid container spacing={3} sx={{ mt: 0 }}>
+          <Grid item xs={12} lg={5}>
+            <Panel title="Воронка продаж">
+              <ListSkeleton rows={4} />
+            </Panel>
+          </Grid>
+          <Grid item xs={12} lg={7}>
+            <Panel title="Ближайшие активности">
+              <ListSkeleton rows={6} />
+            </Panel>
+          </Grid>
+        </Grid>
+      </>
     );
   }
 
   if (isError || !data) {
-    return <Alert severity="error">Не удалось загрузить показатели</Alert>;
+    return (
+      <>
+        {header}
+        <Alert severity="error">
+          Не удалось загрузить показатели. Проверьте соединение с сервером
+        </Alert>
+      </>
+    );
   }
 
   return (
     <>
-      <PageHeader
-        title={`Здравствуйте, ${user?.fullName.split(' ')[1] ?? user?.fullName}`}
-        subtitle={
-          canSeeAll
-            ? 'Сводные показатели по отделу продаж'
-            : 'Сводные показатели по вашим клиентам и сделкам'
-        }
-      />
+      {header}
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <KpiTile
+      <MetricRow>
+        <MetricTile
           label="Сделок в работе"
           value={formatNumber(data.dealsInWork)}
-          hint={formatMoney(data.dealsInWorkAmount, data.currency)}
+          context={formatMoney(data.dealsInWorkAmount, data.currency)}
+          icon={<SwapHorizOutlinedIcon />}
+          to="/deals"
         />
-        <KpiTile
+        <MetricTile
           label="Выиграно за месяц"
           value={formatNumber(data.wonThisMonthCount)}
-          hint={formatMoney(data.wonThisMonthAmount, data.currency)}
-          color="success.main"
+          context={
+            data.wonThisMonthCount > 0
+              ? formatMoney(data.wonThisMonthAmount, data.currency)
+              : 'В этом месяце сделок не закрыто'
+          }
+          icon={<CheckCircleOutlineIcon />}
+          tone={data.wonThisMonthCount > 0 ? 'success' : 'neutral'}
+          to="/reports"
         />
-        <KpiTile
-          label="Активностей на сегодня"
+        <MetricTile
+          label="Активностей сегодня"
           value={formatNumber(data.plannedTodayCount)}
-          hint="запланировано"
+          context={
+            data.plannedTodayCount > 0
+              ? 'запланировано'
+              : 'На сегодня ничего не запланировано'
+          }
+          icon={<EventAvailableOutlinedIcon />}
+          to="/calendar"
         />
-        <KpiTile
-          label="Просроченные активности"
+        <MetricTile
+          label="Просрочено"
           value={formatNumber(data.overdueCount)}
-          hint={data.overdueCount > 0 ? 'требуют внимания' : 'просрочек нет'}
-          color={data.overdueCount > 0 ? 'error.main' : 'text.primary'}
+          context={
+            data.overdueCount > 0 ? 'требуют внимания' : 'просроченных задач нет'
+          }
+          icon={<WarningAmberOutlinedIcon />}
+          tone={data.overdueCount > 0 ? 'danger' : 'neutral'}
+          to="/calendar"
+          last
         />
-      </Grid>
+      </MetricRow>
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={5}>
-          <Card variant="outlined" sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Воронка продаж
-              </Typography>
-              <FunnelBars rows={data.funnel} currency={data.currency} />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={7}>
-          <Card variant="outlined" sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Ближайшие активности
-              </Typography>
+      <Grid container spacing={3} sx={{ mt: 0 }}>
+        {/* Просроченное идёт первым: это единственное, что требует
+            немедленного решения, остальное — планирование */}
+        {data.overdueActivities.length > 0 && (
+          <Grid item xs={12}>
+            <Panel
+              title={`Требуют внимания · ${data.overdueCount}`}
+              tone="danger"
+              action={{
+                label: 'Все просроченные',
+                onClick: () => navigate('/reports'),
+              }}
+            >
+              {/* Показываем только начало списка: иначе просрочка вытесняет
+                  с первого экрана планы на сегодня и состояние воронки */}
               <ActivityList
-                activities={data.upcomingActivities}
-                emptyText="Запланированных активностей нет"
+                activities={data.overdueActivities.slice(0, OVERDUE_PREVIEW)}
+                emptyText=""
+                onComplete={setCompleting}
               />
+            </Panel>
+          </Grid>
+        )}
 
-              {data.overdueActivities.length > 0 && (
-                <>
-                  <Divider sx={{ my: 2 }} />
-                  <Typography variant="h6" color="error.main" gutterBottom>
-                    Просроченные
-                  </Typography>
-                  <ActivityList
-                    activities={data.overdueActivities}
-                    emptyText=""
-                    overdue
-                  />
-                </>
-              )}
-            </CardContent>
-          </Card>
+        <Grid item xs={12} lg={7}>
+          <Panel title="Ближайшие активности">
+            <ActivityList
+              activities={data.upcomingActivities}
+              emptyText="Ближайших активностей нет"
+              emptyHint="Запланируйте звонок или встречу в разделе «Календарь»"
+              onComplete={setCompleting}
+            />
+          </Panel>
+        </Grid>
+
+        <Grid item xs={12} lg={5}>
+          <Panel
+            title="Воронка продаж"
+            action={{ label: 'Все сделки', onClick: () => navigate('/deals') }}
+          >
+            <SalesFunnel rows={data.funnel} currency={data.currency} />
+          </Panel>
         </Grid>
       </Grid>
+
+      <CompleteActivityDialog
+        open={Boolean(completing)}
+        activity={completing}
+        onClose={() => setCompleting(null)}
+      />
+      <DealFormDialog
+        open={dealFormOpen}
+        onClose={() => setDealFormOpen(false)}
+        onSaved={(deal) => navigate(`/deals/${deal.dealId}`)}
+      />
     </>
   );
 }
 
-function KpiTile({
-  label,
-  value,
-  hint,
-  color = 'text.primary',
+/** Блок дашборда: заголовок капителью и рамка вокруг содержимого. */
+function Panel({
+  title,
+  tone,
+  action,
+  children,
 }: {
-  label: string;
-  value: string;
-  hint: string;
-  color?: string;
+  title: string;
+  tone?: 'danger';
+  action?: { label: string; onClick: () => void };
+  children: ReactNode;
 }) {
   return (
-    <Grid item xs={12} sm={6} lg={3}>
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {label}
-          </Typography>
-          <Typography variant="h4" sx={{ color, fontWeight: 600 }}>
-            {value}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {hint}
-          </Typography>
-        </CardContent>
-      </Card>
-    </Grid>
-  );
-}
-
-/**
- * Мини-воронка на дашборде: только рабочие стадии.
- * Ширина полосы пропорциональна максимальной сумме, поэтому
- * соотношение стадий читается без осей и подписей.
- */
-function FunnelBars({
-  rows,
-  currency,
-}: {
-  rows: FunnelRow[];
-  currency: Currency;
-}) {
-  const working = rows.filter((row) => DEAL_FUNNEL_STAGES.includes(row.stage));
-  const maxAmount = Math.max(...working.map((row) => row.amount), 1);
-  const won = rows.find((row) => row.stage === DealStage.WON);
-
-  return (
-    <Stack spacing={1.5}>
-      {working.map((row) => (
-        <Box key={row.stage}>
-          <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-            <Typography variant="body2">
-              {DEAL_STAGE_LABELS[row.stage]}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {row.count} · {formatMoney(row.amount, currency)}
-            </Typography>
-          </Stack>
-          <Box
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              bgcolor: 'grey.100',
-              overflow: 'hidden',
-            }}
-          >
-            <Box
-              sx={{
-                height: '100%',
-                width: `${Math.max((row.amount / maxAmount) * 100, 2)}%`,
-                bgcolor: 'primary.main',
-              }}
-            />
-          </Box>
-        </Box>
-      ))}
-
-      {won && (
-        <>
-          <Divider sx={{ pt: 1 }} />
-          <Stack direction="row" justifyContent="space-between">
-            <Typography variant="body2" color="success.main">
-              {DEAL_STAGE_LABELS[DealStage.WON]}
-            </Typography>
-            <Typography variant="body2" color="success.main" fontWeight={500}>
-              {won.count} · {formatMoney(won.amount, currency)}
-            </Typography>
-          </Stack>
-        </>
-      )}
-    </Stack>
-  );
-}
-
-function ActivityList({
-  activities,
-  emptyText,
-  overdue,
-}: {
-  activities: ActivityDto[];
-  emptyText: string;
-  overdue?: boolean;
-}) {
-  if (activities.length === 0) {
-    return emptyText ? (
-      <Typography variant="body2" color="text.secondary">
-        {emptyText}
-      </Typography>
-    ) : null;
-  }
-
-  return (
-    <List dense disablePadding>
-      {activities.map((activity) => (
-        <ListItem
-          key={activity.activityId}
-          disableGutters
-          secondaryAction={
-            <Chip
-              size="small"
-              label={formatShortDateTime(activity.plannedAt)}
-              color={overdue ? 'error' : 'default'}
-              variant="outlined"
-            />
-          }
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 1.25,
+          minHeight: 22,
+        }}
+      >
+        <Typography
+          variant="overline"
+          component="h2"
+          sx={{ color: tone === 'danger' ? TOKENS.danger : undefined }}
         >
-          <Box sx={{ mr: 1.5, display: 'flex' }}>
-            {ACTIVITY_ICONS[activity.type]}
-          </Box>
-          <ListItemText
-            primary={activity.subject}
-            secondary={
-              activity.client ? (
-                <Link
-                  to={`/clients/${activity.client.clientId}`}
-                  style={{ color: 'inherit' }}
-                >
-                  {activity.client.name}
-                </Link>
-              ) : (
-                ACTIVITY_TYPE_LABELS[activity.type]
-              )
-            }
-            primaryTypographyProps={{ fontSize: 14 }}
-            secondaryTypographyProps={{ fontSize: 12 }}
-            sx={{ pr: 12 }}
-          />
-        </ListItem>
-      ))}
-    </List>
+          {title}
+        </Typography>
+        {action && (
+          <Button size="small" onClick={action.onClick} sx={{ py: 0.25, minHeight: 0 }}>
+            {action.label}
+          </Button>
+        )}
+      </Box>
+      <Box
+        sx={{
+          border: `1px solid ${tone === 'danger' ? 'rgba(179, 53, 44, 0.28)' : TOKENS.border}`,
+          borderRadius: 2,
+          bgcolor: TOKENS.surface,
+          px: 2.5,
+          py: 2,
+        }}
+      >
+        {children}
+      </Box>
+    </Box>
   );
 }

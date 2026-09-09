@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import {
   BASE_CURRENCY,
   DEAL_STAGE_LABELS,
@@ -8,6 +8,8 @@ import {
 import { DragEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatMoney } from '../../components/formatters';
+import { DEAL_STAGE_COLORS } from '../../components/StatusChip';
+import { NEUTRAL } from '../../theme/tokens';
 
 /** Колонки доски: рабочие стадии плюс выигранные и проигранные. */
 const COLUMNS: DealStage[] = [
@@ -47,7 +49,7 @@ export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) 
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
+    <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1 }}>
       {COLUMNS.map((stage) => {
         const columnDeals = deals.filter((deal) => deal.stage === stage);
         // Итог по колонке считается только по базовой валюте: суммы
@@ -73,74 +75,82 @@ export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) 
             onDragLeave={() => setHoverStage(null)}
             onDrop={handleDrop(stage)}
             sx={{
-              minWidth: 268,
-              flex: '1 0 268px',
-              bgcolor: hoverStage === stage ? 'primary.50' : 'grey.50',
-              border: '1px solid',
-              borderColor: hoverStage === stage ? 'primary.main' : 'divider',
-              borderRadius: 2,
-              p: 1,
-              transition: 'background-color 120ms, border-color 120ms',
+              minWidth: 252,
+              flex: '1 0 252px',
+              // Колонка обозначена цветной чертой сверху, а не заливкой:
+              // фон отвлекал бы от карточек, ради которых доска и нужна
+              borderTop: `2px solid ${DEAL_STAGE_COLORS[stage]}`,
+              bgcolor: hoverStage === stage ? NEUTRAL[100] : 'transparent',
+              borderRadius: 0.5,
+              px: 1,
+              pt: 1.5,
+              pb: 1,
+              transition: 'background-color 120ms',
             }}
           >
             <Stack
               direction="row"
               justifyContent="space-between"
-              alignItems="center"
-              sx={{ px: 0.5, py: 1 }}
+              alignItems="baseline"
+              sx={{ px: 0.5, mb: 0.25 }}
             >
-              <Typography variant="subtitle2">
+              <Typography sx={{ fontSize: 12.5, fontWeight: 600 }}>
                 {DEAL_STAGE_LABELS[stage]}
               </Typography>
-              <Chip size="small" label={columnDeals.length} />
+              <Typography className="tabular" variant="caption">
+                {columnDeals.length}
+              </Typography>
             </Stack>
             <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ px: 0.5, display: 'block', mb: 1 }}
+              className="tabular"
+              sx={{ px: 0.5, display: 'block', mb: 1.5, fontSize: 12, color: NEUTRAL[500] }}
             >
               {formatMoney(total)}
-              {hasOtherCurrency && ' + другие валюты'}
+              {hasOtherCurrency && ' +'}
             </Typography>
 
             <Stack spacing={1}>
               {columnDeals.map((deal) => (
-                <Card
+                <Box
                   key={deal.dealId}
-                  variant="outlined"
                   draggable={!disabled}
                   onDragStart={() => setDraggedId(deal.dealId)}
                   onDragEnd={() => setDraggedId(null)}
                   onClick={() => navigate(`/deals/${deal.dealId}`)}
                   sx={{
                     cursor: disabled ? 'pointer' : 'grab',
-                    opacity: draggedId === deal.dealId ? 0.4 : 1,
+                    opacity: draggedId === deal.dealId ? 0.35 : 1,
                     bgcolor: 'background.paper',
+                    border: `1px solid ${NEUTRAL[200]}`,
+                    borderRadius: 1.25,
+                    p: 1.5,
+                    transition: 'border-color 120ms',
+                    '&:hover': { borderColor: NEUTRAL[400] },
                   }}
                 >
-                  <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                    <Typography variant="body2" fontWeight={500} noWrap>
-                      {deal.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap
-                      sx={{ display: 'block' }}>
-                      {deal.client?.name}
-                    </Typography>
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      sx={{ mt: 1 }}
+                  <Typography sx={{ fontSize: 13, fontWeight: 500, mb: 0.25 }} noWrap>
+                    {deal.title}
+                  </Typography>
+                  <Typography variant="caption" noWrap sx={{ display: 'block' }}>
+                    {deal.client?.name}
+                  </Typography>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="baseline"
+                    sx={{ mt: 1.25 }}
+                  >
+                    <Typography
+                      className="tabular"
+                      sx={{ fontSize: 13, fontWeight: 600 }}
                     >
-                      <Typography variant="body2" fontWeight={500}>
-                        {formatMoney(deal.amount, deal.currency)}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {deal.probability}%
-                      </Typography>
-                    </Stack>
-                  </CardContent>
-                </Card>
+                      {formatMoney(deal.amount, deal.currency)}
+                    </Typography>
+                    <Typography className="tabular" variant="caption">
+                      {deal.probability}%
+                    </Typography>
+                  </Stack>
+                </Box>
               ))}
             </Stack>
           </Box>

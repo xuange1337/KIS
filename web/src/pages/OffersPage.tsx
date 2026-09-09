@@ -1,9 +1,9 @@
 import {
+  Box,
   Alert,
   Grid,
   InputAdornment,
   MenuItem,
-  Paper,
   TextField,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -49,6 +49,9 @@ export function OffersPage() {
 
   const { data, isFetching, isError } = useOffers(query);
 
+  // Пустая выборка означает разное: предложений нет или фильтры узкие
+  const hasFilters = Boolean(debouncedSearch || status);
+
   const columns: GridColDef[] = [
     { field: 'number', headerName: 'Номер', width: 150 },
     {
@@ -71,6 +74,7 @@ export function OffersPage() {
       width: 150,
       align: 'right',
       headerAlign: 'right',
+      cellClassName: 'tabular',
       // Предложение наследует валюту своей сделки
       renderCell: (params) =>
         formatMoney(params.row.totalAmount, params.row.deal?.currency),
@@ -96,7 +100,7 @@ export function OffersPage() {
         </Alert>
       )}
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Box sx={{ mb: 2.5 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <TextField
@@ -132,8 +136,17 @@ export function OffersPage() {
             </TextField>
           </Grid>
         </Grid>
-      </Paper>
+      </Box>
 
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2.5,
+          bgcolor: 'background.paper',
+          overflow: 'hidden',
+        }}
+      >
       <DataTable<OfferDto>
         rows={data?.items ?? []}
         columns={columns}
@@ -144,12 +157,19 @@ export function OffersPage() {
         onPaginationModelChange={setPagination}
         sortModel={sortModel}
         onSortModelChange={setSortModel}
+        emptyTitle={hasFilters ? 'Ничего не найдено' : 'Предложений пока нет'}
+        emptyHint={
+          hasFilters
+            ? 'Измените условия поиска или сбросьте фильтры'
+            : 'Коммерческие предложения оформляются в карточке сделки'
+        }
         onRowClick={(params) => {
           const offer = data?.items.find((item) => item.offerId === params.id);
           // КП редактируются в карточке своей сделки
           if (offer) navigate(`/deals/${offer.dealId}`);
         }}
       />
+      </Box>
     </>
   );
 }

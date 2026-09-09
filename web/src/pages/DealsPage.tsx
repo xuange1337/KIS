@@ -1,10 +1,10 @@
 import {
+  Box,
   Alert,
   Button,
   Grid,
   InputAdornment,
   MenuItem,
-  Paper,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -75,6 +75,9 @@ export function DealsPage() {
 
   const { data, isFetching, isError } = useDeals(query);
 
+  // Пустая выборка означает разное: сделок нет или фильтры слишком узкие
+  const hasFilters = Boolean(debouncedSearch || stage || ownerUserId);
+
   const handleStageChange = async (dealId: number, nextStage: DealStage) => {
     setError(null);
     try {
@@ -106,6 +109,7 @@ export function DealsPage() {
       width: 150,
       align: 'right',
       headerAlign: 'right',
+      cellClassName: 'tabular',
       // Валюта берётся из самой сделки: в списке могут быть разные
       renderCell: (params) =>
         formatMoney(params.row.amount, params.row.currency),
@@ -180,7 +184,7 @@ export function DealsPage() {
         </Alert>
       )}
 
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Box sx={{ mb: 2.5 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <TextField
@@ -237,9 +241,18 @@ export function DealsPage() {
             </Grid>
           )}
         </Grid>
-      </Paper>
+      </Box>
 
       {view === 'list' ? (
+        <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2.5,
+          bgcolor: 'background.paper',
+          overflow: 'hidden',
+        }}
+      >
         <DataTable<DealDto>
           rows={data?.items ?? []}
           columns={columns}
@@ -251,7 +264,14 @@ export function DealsPage() {
           sortModel={sortModel}
           onSortModelChange={setSortModel}
           onRowClick={(params) => navigate(`/deals/${params.id}`)}
+          emptyTitle={hasFilters ? 'Ничего не найдено' : 'Сделок пока нет'}
+          emptyHint={
+            hasFilters
+              ? 'Измените условия поиска или сбросьте фильтры'
+              : 'Создайте сделку по одному из клиентов'
+          }
         />
+        </Box>
       ) : (
         <>
           {data && data.total > data.items.length && (

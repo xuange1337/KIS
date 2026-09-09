@@ -89,7 +89,7 @@ const SEED_USERS = [
   {
     login: 'manager',
     password: 'manager123',
-    fullName: 'Орлов Георгий Николаевич',
+    fullName: 'Орлов Григорий Николаевич',
     role: UserRole.MANAGER,
   },
   {
