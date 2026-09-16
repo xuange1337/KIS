@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { RefreshSession } from '../auth/refresh-session.entity';
 
 const BCRYPT_ROUNDS = 10;
 
@@ -17,6 +18,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly repo: Repository<User>,
+    @InjectRepository(RefreshSession)
+    private readonly sessionRepo: Repository<RefreshSession>,
   ) {}
 
   findAll(): Promise<User[]> {
@@ -64,7 +67,21 @@ export class UsersService {
     if (dto.password) {
       user.passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     }
-    return this.repo.save(user);
+    const saved = await this.repo.save(user);
+    if (dto.password || dto.isActive === false) {
+      await this.revokeSessions(userId);
+    }
+    return saved;
+  }
+
+  private async revokeSessions(userId: number): Promise<void> {
+    await this.sessionRepo
+      .createQueryBuilder()
+      .update(RefreshSession)
+      .set({ revokedAt: new Date() })
+      .where('user_id = :userId', { userId })
+      .andWhere('revoked_at IS NULL')
+      .execute();
   }
 
   /**
@@ -74,7 +91,9 @@ export class UsersService {
   async deactivate(userId: number): Promise<User> {
     const user = await this.findOne(userId);
     user.isActive = false;
-    return this.repo.save(user);
+    const saved = await this.repo.save(user);
+    await this.revokeSessions(userId);
+    return saved;
   }
 
   private async assertLoginFree(login: string): Promise<void> {

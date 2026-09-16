@@ -2,6 +2,12 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { bearer, createTestApp, login } from './setup';
 
+const csrfToken = (cookies: string[]): string => {
+  const cookie = cookies.find((value) => value.startsWith('crm_csrf='));
+  if (!cookie) throw new Error('CSRF cookie отсутствует');
+  return cookie.split(';')[0].slice('crm_csrf='.length);
+};
+
 describe('Авторизация и разграничение доступа (ТЗ п. 1.1)', () => {
   let app: INestApplication;
   let managerToken: string;
@@ -19,6 +25,16 @@ describe('Авторизация и разграничение доступа (�
 
   it('не пускает без токена', async () => {
     await request(app.getHttpServer()).get('/api/clients').expect(401);
+  });
+
+  it('публикует liveness и readiness без авторизации', async () => {
+    await request(app.getHttpServer())
+      .get('/api/health/live')
+      .expect(200, { status: 'ok' });
+
+    await request(app.getHttpServer())
+      .get('/api/health/ready')
+      .expect(200, { status: 'ok', database: 'up' });
   });
 
   it('отклоняет неверный пароль', async () => {
@@ -64,10 +80,116 @@ describe('Авторизация и разграничение доступа (�
     const response = await request(app.getHttpServer())
       .post('/api/auth/refresh')
       .set('Cookie', cookies)
+      .set('X-CSRF-Token', csrfToken(cookies))
       .expect(200);
 
     expect(response.body.accessToken).toEqual(expect.any(String));
     expect(response.body.user.login).toBe('manager');
+  });
+
+  it('отклоняет refresh без CSRF-заголовка', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ login: 'manager', password: 'manager123' })
+      .expect(200);
+
+    const cookies = loginResponse.headers['set-cookie'] as unknown as string[];
+    await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', cookies)
+      .expect(403);
+  });
+
+  it('ротирует refresh-токен и отклоняет повторное использование', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ login: 'manager', password: 'manager123' })
+      .expect(200);
+
+    const originalCookies = loginResponse.headers['set-cookie'] as unknown as string[];
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', originalCookies)
+      .set('X-CSRF-Token', csrfToken(originalCookies))
+      .expect(200);
+
+    const rotatedSetCookies = refreshResponse.headers['set-cookie'] as unknown as string[];
+    const originalCsrfCookie = originalCookies.find((value) =>
+      value.startsWith('crm_csrf='),
+    );
+    expect(originalCsrfCookie).toBeDefined();
+    const rotatedCookies = [...rotatedSetCookies, originalCsrfCookie as string];
+    expect(rotatedSetCookies[0]).not.toBe(originalCookies[0]);
+
+    await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', originalCookies)
+      .set('X-CSRF-Token', csrfToken(originalCookies))
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', rotatedCookies)
+      .set('X-CSRF-Token', csrfToken(rotatedCookies))
+      .expect(401);
+  });
+
+  it('отзывает refresh-сессию при выходе', async () => {
+    const loginResponse = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ login: 'manager', password: 'manager123' })
+      .expect(200);
+
+    const cookies = loginResponse.headers['set-cookie'] as unknown as string[];
+    await request(app.getHttpServer())
+      .post('/api/auth/logout')
+      .set('Cookie', cookies)
+      .set('X-CSRF-Token', csrfToken(cookies))
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', cookies)
+      .set('X-CSRF-Token', csrfToken(cookies))
+      .expect(401);
+  });
+
+  it('показывает и завершает активные сессии', async () => {
+    const first = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ login: 'manager', password: 'manager123' })
+      .expect(200);
+    const second = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ login: 'manager', password: 'manager123' })
+      .expect(200);
+
+    const sessions = await request(app.getHttpServer())
+      .get('/api/auth/sessions')
+      .set('Authorization', bearer(second.body.accessToken))
+      .expect(200);
+
+    expect(sessions.body.length).toBeGreaterThanOrEqual(2);
+    expect(sessions.body.some((session: { isCurrent: boolean }) => session.isCurrent)).toBe(true);
+
+    await request(app.getHttpServer())
+      .delete('/api/auth/sessions')
+      .set('Authorization', bearer(second.body.accessToken))
+      .expect(204);
+
+    const firstCookies = first.headers['set-cookie'] as unknown as string[];
+    await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', firstCookies)
+      .set('X-CSRF-Token', csrfToken(firstCookies))
+      .expect(401);
+
+    const secondCookies = second.headers['set-cookie'] as unknown as string[];
+    await request(app.getHttpServer())
+      .post('/api/auth/refresh')
+      .set('Cookie', secondCookies)
+      .set('X-CSRF-Token', csrfToken(secondCookies))
+      .expect(401);
   });
 
   it('менеджер видит только своих клиентов, руководитель — всех', async () => {

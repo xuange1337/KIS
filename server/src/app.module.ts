@@ -20,6 +20,7 @@ import { OffersModule } from './offers/offers.module';
 import { ReportsModule } from './reports/reports.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DictionariesModule } from './dictionaries/dictionaries.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { DictionariesModule } from './dictionaries/dictionaries.module';
     ReportsModule,
     DashboardModule,
     DictionariesModule,
+    HealthModule,
   ],
   providers: [
     // Ограничение частоты идёт первым: подбор пароля должен отсекаться

@@ -1,14 +1,19 @@
 import {
   Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Post,
+  Param,
+  ParseUUIDPipe,
   Req,
   Res,
 } from '@nestjs/common';
-import { LoginResponse, UserDto } from '@crm/shared';
+import { randomBytes, timingSafeEqual } from 'crypto';
+import { LoginResponse, SessionDto, UserDto } from '@crm/shared';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -21,6 +26,8 @@ import {
 } from '../common/decorators/current-user.decorator';
 
 const REFRESH_COOKIE = 'crm_refresh';
+const CSRF_COOKIE = 'crm_csrf';
+const CSRF_HEADER = 'x-csrf-token';
 const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Авторизация пользователя (экранная форма «Вход», ТЗ п. 2.5). */
@@ -42,6 +49,7 @@ export class AuthController {
   ): Promise<LoginResponse> {
     const { refreshToken, ...result } = await this.authService.login(dto);
     this.setRefreshCookie(res, refreshToken);
+    this.setCsrfCookie(res, randomBytes(32).toString('hex'));
     return result;
   }
 
@@ -52,6 +60,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LoginResponse> {
+    this.assertCsrf(req);
     const { refreshToken, ...result } = await this.authService.refresh(
       req.cookies?.[REFRESH_COOKIE],
     );
@@ -62,14 +71,40 @@ export class AuthController {
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Res({ passthrough: true }) res: Response): { success: true } {
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ success: true }> {
+    this.assertCsrf(req);
+    await this.authService.logout(req.cookies?.[REFRESH_COOKIE]);
     res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+    res.clearCookie(CSRF_COOKIE, { path: '/' });
     return { success: true };
   }
 
   @Get('me')
   me(@CurrentUser() user: AuthUser): Promise<UserDto> {
     return this.authService.profile(user.userId);
+  }
+
+  @Get('sessions')
+  sessions(@CurrentUser() user: AuthUser): Promise<SessionDto[]> {
+    return this.authService.listSessions(user.userId, user.sessionId);
+  }
+
+  @Delete('sessions/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeSession(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) sessionId: string,
+  ): Promise<void> {
+    await this.authService.revokeSession(user.userId, sessionId);
+  }
+
+  @Delete('sessions')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async revokeAllSessions(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.authService.revokeAllSessions(user.userId);
   }
 
   /**
@@ -84,5 +119,31 @@ export class AuthController {
       maxAge: REFRESH_MAX_AGE_MS,
       path: '/api/auth',
     });
+  }
+
+  private setCsrfCookie(res: Response, token: string): void {
+    res.cookie(CSRF_COOKIE, token, {
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: this.cookieSecure,
+      maxAge: REFRESH_MAX_AGE_MS,
+      path: '/',
+    });
+  }
+
+  private assertCsrf(req: Request): void {
+    const cookie = req.cookies?.[CSRF_COOKIE];
+    const header = req.get(CSRF_HEADER);
+    if (typeof cookie !== 'string' || typeof header !== 'string') {
+      throw new ForbiddenException('CSRF-проверка не пройдена');
+    }
+    const cookieBuffer = Buffer.from(cookie);
+    const headerBuffer = Buffer.from(header);
+    if (
+      cookieBuffer.length !== headerBuffer.length ||
+      !timingSafeEqual(cookieBuffer, headerBuffer)
+    ) {
+      throw new ForbiddenException('CSRF-проверка не пройдена');
+    }
   }
 }

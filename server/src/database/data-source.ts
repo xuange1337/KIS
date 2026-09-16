@@ -9,6 +9,7 @@ import { DealStageHistory } from '../deals/deal-stage-history.entity';
 import { Activity } from '../activities/activity.entity';
 import { Offer } from '../offers/offer.entity';
 import { AuditLog } from '../common/audit-log.entity';
+import { RefreshSession } from '../auth/refresh-session.entity';
 
 export const ENTITIES = [
   User,
@@ -19,6 +20,7 @@ export const ENTITIES = [
   Activity,
   Offer,
   AuditLog,
+  RefreshSession,
 ];
 
 /**

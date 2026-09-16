@@ -7,13 +7,14 @@ import { AuditLog } from '../common/audit-log.entity';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { RefreshSession } from './refresh-session.entity';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     JwtModule.register({}),
-    TypeOrmModule.forFeature([AuditLog]),
+    TypeOrmModule.forFeature([AuditLog, RefreshSession]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

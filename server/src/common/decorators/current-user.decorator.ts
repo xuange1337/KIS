@@ -7,6 +7,7 @@ export interface AuthUser {
   login: string;
   fullName: string;
   role: UserRole;
+  sessionId?: string;
 }
 
 /** Достаёт пользователя, помещённый в запрос JwtStrategy. */

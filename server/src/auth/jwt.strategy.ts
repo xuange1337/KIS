@@ -10,6 +10,8 @@ export interface JwtPayload {
   sub: number;
   login: string;
   role: UserRole;
+  sid?: string;
+  jti?: string;
 }
 
 /** Проверяет access-токен и кладёт пользователя в request.user. */
@@ -37,6 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       login: user.login,
       fullName: user.fullName,
       role: user.role,
+      sessionId: payload.sid,
     };
   }
 }

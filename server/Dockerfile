@@ -30,7 +30,8 @@ RUN npm ci --omit=dev --workspace @crm/server --include-workspace-root && npm ca
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/server/dist server/dist
 
-RUN mkdir -p /app/uploads
+RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 WORKDIR /app/server
+USER node
 EXPOSE 3000
 CMD ["node", "dist/main.js"]

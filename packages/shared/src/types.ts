@@ -43,6 +43,14 @@ export interface LoginResponse extends AuthTokens {
   user: UserDto;
 }
 
+export interface SessionDto {
+  sessionId: string;
+  createdAt: string;
+  lastUsedAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
+}
+
 export interface ClientDto {
   clientId: number;
   name: string;
