@@ -15,6 +15,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../../api/client';
 import { parseDateValue, toIsoDate } from '../../components/formatters';
 import { useDictionaries, useSaveOffer } from '../../api/hooks';
+import { closeUnlessBackdrop } from '../../components/dialogClose';
 
 interface OfferFormDialogProps {
   open: boolean;
@@ -88,7 +89,7 @@ export function OfferFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {offer ? 'Редактирование предложения' : 'Новое коммерческое предложение'}

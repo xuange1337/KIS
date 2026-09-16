@@ -15,6 +15,8 @@ export const NEUTRAL = {
   200: '#E3E3DF',
   300: '#CBCBC5',
   400: '#9A9A93',
+  /** Граница контролов и нейтральные маркеры: 3:1 к белому (WCAG 1.4.11). */
+  450: '#8E8E87',
   500: '#6E6E68',
   600: '#4E4E49',
   700: '#373733',
@@ -32,12 +34,20 @@ export const TOKENS = {
   surfaceHover: NEUTRAL[50],
   surfaceSunken: NEUTRAL[25],
 
+  /** Декоративные разделители: карточки, строки таблиц, линии секций. */
   border: NEUTRAL[200],
   borderStrong: NEUTRAL[300],
+  /**
+   * Граница, по которой опознаётся поле ввода. Отделена от декоративной:
+   * 1.4.11 требует для неё 3:1, тогда как разделители из-под нормы выведены.
+   */
+  borderControl: NEUTRAL[450],
 
   textPrimary: NEUTRAL[900],
-  textSecondary: NEUTRAL[500],
-  textMuted: NEUTRAL[400],
+  textSecondary: NEUTRAL[600],
+  textMuted: NEUTRAL[500],
+  /** Только для нетекстовых элементов: иконки-заглушки, выключенные контролы. */
+  textDisabled: NEUTRAL[400],
 
   /** Основное действие — почти чёрный, как в современных рабочих системах. */
   primary: NEUTRAL[900],
@@ -50,10 +60,12 @@ export const TOKENS = {
 
   success: '#2F7A3E',
   successSoft: '#EDF6EE',
-  warning: '#A9700F',
+  warning: '#8C5B0C',
   warningSoft: '#FBF4E6',
   danger: '#B3352C',
   dangerSoft: '#FBEFEE',
+  /** Рамка блока с просроченным: тревожная, но не кричащая. */
+  dangerBorder: '#E9C4C0',
 } as const;
 
 /**
@@ -70,6 +82,12 @@ export const DATA = {
   red: '#B03A32',
   violet: '#6B4E9B',
 } as const;
+
+/**
+ * Нейтральный маркер статуса. Шкала 400 даёт 2.83:1 к белому — точка такого
+ * цвета в плотной таблице теряется, поэтому маркеры берут отдельный токен.
+ */
+export const DOT_NEUTRAL = NEUTRAL[450];
 
 /** Единый шаг сетки: 4, 8, 12, 16, 20, 24, 32, 40 — кратные восьми и четырём. */
 export const SPACING = 8;

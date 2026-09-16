@@ -51,6 +51,7 @@ import {
   useDeleteClient,
   useDeleteContact,
 } from '../api/hooks';
+import { TOKENS } from '../theme/tokens';
 
 /** Карточка клиента: сведения, контакты, сделки, история взаимодействий (ТЗ п. 2.5). */
 export function ClientCardPage() {
@@ -177,7 +178,7 @@ export function ClientCardPage() {
         <Tabs
           value={tab}
           onChange={(_event, value) => setTab(value)}
-          sx={{ px: 2, borderBottom: '1px solid rgba(0,0,0,0.08)' }}
+          sx={{ px: 2, borderBottom: `1px solid ${TOKENS.border}` }}
         >
           <Tab label={`Контакты (${contacts?.length ?? 0})`} />
           <Tab label={`Сделки (${deals?.total ?? 0})`} />

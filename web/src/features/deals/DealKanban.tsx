@@ -9,7 +9,7 @@ import { DragEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatMoney } from '../../components/formatters';
 import { DEAL_STAGE_COLORS } from '../../components/StatusChip';
-import { NEUTRAL } from '../../theme/tokens';
+import { NEUTRAL, TOKENS } from '../../theme/tokens';
 
 /** Колонки доски: рабочие стадии плюс выигранные и проигранные. */
 const COLUMNS: DealStage[] = [
@@ -94,7 +94,7 @@ export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) 
               alignItems="baseline"
               sx={{ px: 0.5, mb: 0.25 }}
             >
-              <Typography sx={{ fontSize: 12.5, fontWeight: 600 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
                 {DEAL_STAGE_LABELS[stage]}
               </Typography>
               <Typography className="tabular" variant="caption">
@@ -103,20 +103,39 @@ export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) 
             </Stack>
             <Typography
               className="tabular"
-              sx={{ px: 0.5, display: 'block', mb: 1.5, fontSize: 12, color: NEUTRAL[500] }}
+              // Итог считается только по базовой валюте, и знак «+» в конце
+              // об этом не сообщал: сумма выглядела как полная
+              title={
+                hasOtherCurrency
+                  ? 'Итог только по сделкам в рублях; в колонке есть сделки в другой валюте'
+                  : undefined
+              }
+              sx={{ px: 0.5, display: 'block', mb: 1.5, fontSize: 12, color: TOKENS.textSecondary }}
             >
               {formatMoney(total)}
-              {hasOtherCurrency && ' +'}
+              {hasOtherCurrency && (
+                <Box component="span" sx={{ ml: 0.5, color: TOKENS.textMuted }}>
+                  + другие валюты
+                </Box>
+              )}
             </Typography>
 
             <Stack spacing={1}>
               {columnDeals.map((deal) => (
                 <Box
                   key={deal.dealId}
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`Сделка: ${deal.title}`}
                   draggable={!disabled}
                   onDragStart={() => setDraggedId(deal.dealId)}
                   onDragEnd={() => setDraggedId(null)}
                   onClick={() => navigate(`/deals/${deal.dealId}`)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    navigate(`/deals/${deal.dealId}`);
+                  }}
                   sx={{
                     cursor: disabled ? 'pointer' : 'grab',
                     opacity: draggedId === deal.dealId ? 0.35 : 1,
@@ -125,7 +144,11 @@ export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) 
                     borderRadius: 1.25,
                     p: 1.5,
                     transition: 'border-color 120ms',
-                    '&:hover': { borderColor: NEUTRAL[400] },
+                    '&:hover': { borderColor: NEUTRAL[600] },
+                    '&:focus-visible': {
+                      outline: `2px solid ${TOKENS.accent}`,
+                      outlineOffset: 2,
+                    },
                   }}
                 >
                   <Typography sx={{ fontSize: 13, fontWeight: 500, mb: 0.25 }} noWrap>

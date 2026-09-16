@@ -1,11 +1,13 @@
 import { Box } from '@mui/material';
 import {
   DataGrid,
+  GridCellParams,
   GridColDef,
   GridPaginationModel,
   GridRowParams,
   GridSortModel,
 } from '@mui/x-data-grid';
+import { KeyboardEvent } from 'react';
 import { EmptyState } from './EmptyState';
 import { NEUTRAL, TOKENS } from '../theme/tokens';
 
@@ -49,6 +51,15 @@ export function DataTable<T extends object>({
   emptyTitle = 'Записей не найдено',
   emptyHint,
 }: DataTableProps<T>) {
+  const handleCellKeyDown = (
+    params: GridCellParams,
+    event: KeyboardEvent<HTMLElement>,
+  ) => {
+    if (!onRowClick || event.key !== 'Enter') return;
+    event.preventDefault();
+    onRowClick({ id: params.id, row: params.row } as GridRowParams);
+  };
+
   return (
     <Box sx={{ height, width: '100%' }}>
       <DataGrid
@@ -64,6 +75,7 @@ export function DataTable<T extends object>({
         sortModel={sortModel}
         onSortModelChange={onSortModelChange}
         onRowClick={onRowClick}
+        onCellKeyDown={handleCellKeyDown}
         pageSizeOptions={[10, 25, 50, 100]}
         rowHeight={46}
         columnHeaderHeight={38}
@@ -83,20 +95,34 @@ export function DataTable<T extends object>({
           '& .MuiDataGrid-columnHeaders': {
             borderBottom: `1px solid ${NEUTRAL[200]}`,
           },
+          // Кольцо фокуса рисуется внутрь: outline снаружи обрезался бы
+          // границей ячейки и на краях таблицы был бы не виден.
+          // Правило идёт после сброса — при равной специфичности решает порядок
           '& .MuiDataGrid-columnHeader': {
             '&:focus, &:focus-within': { outline: 'none' },
+            '&:focus-visible': {
+              outline: `2px solid ${TOKENS.accent}`,
+              outlineOffset: -2,
+            },
           },
           '& .MuiDataGrid-columnHeaderTitle': {
             fontSize: 11,
             fontWeight: 600,
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
-            color: NEUTRAL[500],
+            color: TOKENS.textSecondary,
           },
 
           '& .MuiDataGrid-cell': {
             borderBottom: `1px solid ${NEUTRAL[100]}`,
+            // Мышью фокус ячейки показывать незачем — он приходит от щелчка;
+            // с клавиатуры без него не понять, где находишься
             '&:focus, &:focus-within': { outline: 'none' },
+            '&:focus-visible': {
+              outline: `2px solid ${TOKENS.accent}`,
+              outlineOffset: -2,
+              backgroundColor: TOKENS.accentSoft,
+            },
           },
           '& .MuiDataGrid-row': {
             cursor: onRowClick ? 'pointer' : 'default',
@@ -110,7 +136,7 @@ export function DataTable<T extends object>({
             borderTop: `1px solid ${NEUTRAL[200]}`,
             minHeight: 44,
           },
-          '& .MuiTablePagination-root': { fontSize: 12.5 },
+          '& .MuiTablePagination-root': { fontSize: 12 },
         }}
       />
     </Box>

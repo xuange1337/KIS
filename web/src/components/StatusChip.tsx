@@ -9,7 +9,7 @@ import {
   OFFER_STATUS_LABELS,
   OfferStatus,
 } from '@crm/shared';
-import { DATA, NEUTRAL } from '../theme/tokens';
+import { DATA, DOT_NEUTRAL, NEUTRAL, TOKENS } from '../theme/tokens';
 
 /**
  * Маркировка стадий и статусов.
@@ -22,7 +22,7 @@ import { DATA, NEUTRAL } from '../theme/tokens';
  */
 
 export const DEAL_STAGE_COLORS: Record<DealStage, string> = {
-  [DealStage.NEW]: NEUTRAL[400],
+  [DealStage.NEW]: DOT_NEUTRAL,
   [DealStage.QUALIFICATION]: DATA.slate,
   [DealStage.PROPOSAL]: DATA.indigo,
   [DealStage.NEGOTIATION]: DATA.amber,
@@ -31,26 +31,32 @@ export const DEAL_STAGE_COLORS: Record<DealStage, string> = {
 };
 
 const CLIENT_STATUS_COLORS: Record<ClientStatus, string> = {
-  [ClientStatus.LEAD]: NEUTRAL[400],
+  [ClientStatus.LEAD]: DOT_NEUTRAL,
   [ClientStatus.IN_WORK]: DATA.indigo,
   [ClientStatus.ACTIVE]: DATA.green,
-  [ClientStatus.ARCHIVED]: NEUTRAL[300],
+  [ClientStatus.ARCHIVED]: DOT_NEUTRAL,
 };
 
 const ACTIVITY_STATUS_COLORS: Record<ActivityStatus, string> = {
   [ActivityStatus.PLANNED]: DATA.indigo,
   [ActivityStatus.DONE]: DATA.green,
-  [ActivityStatus.CANCELED]: NEUTRAL[300],
+  [ActivityStatus.CANCELED]: DOT_NEUTRAL,
 };
 
 const OFFER_STATUS_COLORS: Record<OfferStatus, string> = {
-  [OfferStatus.DRAFT]: NEUTRAL[400],
+  [OfferStatus.DRAFT]: DOT_NEUTRAL,
   [OfferStatus.SENT]: DATA.indigo,
   [OfferStatus.ACCEPTED]: DATA.green,
   [OfferStatus.REJECTED]: DATA.red,
 };
 
-/** Точка с подписью — базовый элемент маркировки. */
+/**
+ * Точка с подписью — базовый элемент маркировки.
+ *
+ * Завершённые и отменённые состояния помечаются не бледной заливкой, а
+ * полой точкой: осветлять её дальше некуда, на белом она перестаёт
+ * различаться, а контур читается и остаётся отличим от активных стадий.
+ */
 function Marker({
   color,
   label,
@@ -71,19 +77,21 @@ function Marker({
     >
       <Box
         sx={{
-          width: 6,
-          height: 6,
+          width: 7,
+          height: 7,
           borderRadius: '50%',
-          bgcolor: color,
+          bgcolor: muted ? 'transparent' : color,
+          border: muted ? `1.5px solid ${color}` : 'none',
+          boxSizing: 'border-box',
           flexShrink: 0,
         }}
       />
       <Typography
         noWrap
         sx={{
-          fontSize: 12.5,
+          fontSize: 13,
           fontWeight: 500,
-          color: muted ? NEUTRAL[500] : NEUTRAL[800],
+          color: muted ? TOKENS.textSecondary : NEUTRAL[800],
         }}
       >
         {label}

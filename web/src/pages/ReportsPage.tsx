@@ -51,7 +51,7 @@ import {
 } from 'recharts';
 import { PageHeader } from '../components/PageHeader';
 import { DEAL_STAGE_COLORS } from '../components/StatusChip';
-import { DATA, NEUTRAL } from '../theme/tokens';
+import { DATA, NEUTRAL, TOKENS } from '../theme/tokens';
 import {
   formatDate,
   formatMoney,
@@ -137,7 +137,7 @@ export function ReportsPage() {
           onChange={(_event, value) => setTab(value)}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}
+          sx={{ borderBottom: `1px solid ${TOKENS.border}` }}
         >
           {REPORT_TABS.map((item) => (
             <Tab key={item.name} label={item.label} />

@@ -13,6 +13,7 @@ import { ContactDto } from '@crm/shared';
 import { FormEvent, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../../api/client';
 import { useDictionaries, useSaveContact } from '../../api/hooks';
+import { closeUnlessBackdrop } from '../../components/dialogClose';
 
 interface ContactFormDialogProps {
   open: boolean;
@@ -85,7 +86,7 @@ export function ContactFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {contact ? 'Редактирование контакта' : 'Новое контактное лицо'}

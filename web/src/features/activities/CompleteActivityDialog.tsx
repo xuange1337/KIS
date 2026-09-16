@@ -14,6 +14,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../../api/client';
 import { useCompleteActivity } from '../../api/hooks';
 import { formatDateTime } from '../../components/formatters';
+import { closeUnlessBackdrop } from '../../components/dialogClose';
 
 interface CompleteActivityDialogProps {
   open: boolean;
@@ -54,7 +55,7 @@ export function CompleteActivityDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Результат активности</DialogTitle>
         <DialogContent>

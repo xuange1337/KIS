@@ -44,9 +44,9 @@ export const theme = createTheme(
       error: { main: TOKENS.danger },
       info: { main: DATA.slate },
       text: {
-        primary: NEUTRAL[900],
-        secondary: NEUTRAL[500],
-        disabled: NEUTRAL[400],
+        primary: TOKENS.textPrimary,
+        secondary: TOKENS.textSecondary,
+        disabled: TOKENS.textDisabled,
       },
       divider: NEUTRAL[200],
       background: { default: NEUTRAL[50], paper: NEUTRAL[0] },
@@ -78,14 +78,14 @@ export const theme = createTheme(
       subtitle2: { fontSize: 13, fontWeight: 600 },
       body1: { fontSize: 14, lineHeight: 1.5 },
       body2: { fontSize: 13, lineHeight: 1.5 },
-      caption: { fontSize: 12, color: NEUTRAL[500] },
+      caption: { fontSize: 12, color: TOKENS.textSecondary },
       // Микрозаголовки разделов: капитель с разрядкой вместо крупного текста
       overline: {
         fontSize: 11,
         fontWeight: 600,
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
-        color: NEUTRAL[500],
+        color: TOKENS.textSecondary,
         lineHeight: 1.4,
       },
       button: { fontSize: 13, fontWeight: 500, textTransform: 'none' },
@@ -149,9 +149,15 @@ export const theme = createTheme(
             transition: `background-color ${DURATION.fast}ms, border-color ${DURATION.fast}ms`,
           },
           sizeLarge: { minHeight: CONTROL_SIZE, padding: '10px 18px' },
-          contained: {
+          // Только основной цвет: общий слот contained перебивал и containedError,
+          // из-за чего необратимое действие выглядело как обычное
+          containedPrimary: {
             backgroundColor: NEUTRAL[900],
             '&:hover': { backgroundColor: NEUTRAL[700] },
+          },
+          containedError: {
+            backgroundColor: TOKENS.danger,
+            '&:hover': { backgroundColor: '#8F2A22' },
           },
           outlined: {
             borderColor: NEUTRAL[300],
@@ -196,8 +202,8 @@ export const theme = createTheme(
           root: {
             borderRadius: RADIUS.sm,
             backgroundColor: NEUTRAL[0],
-            '& fieldset': { borderColor: NEUTRAL[200] },
-            '&:hover fieldset': { borderColor: NEUTRAL[300] },
+            '& fieldset': { borderColor: TOKENS.borderControl },
+            '&:hover fieldset': { borderColor: NEUTRAL[600] },
             '&.Mui-focused fieldset': {
               borderColor: NEUTRAL[900],
               borderWidth: 1,
@@ -240,7 +246,7 @@ export const theme = createTheme(
             fontWeight: 600,
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
-            color: NEUTRAL[500],
+            color: TOKENS.textSecondary,
             borderBottom: BORDER,
           },
         },

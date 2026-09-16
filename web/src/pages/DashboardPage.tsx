@@ -236,7 +236,7 @@ function Panel({
       </Box>
       <Box
         sx={{
-          border: `1px solid ${tone === 'danger' ? 'rgba(179, 53, 44, 0.28)' : TOKENS.border}`,
+          border: `1px solid ${tone === 'danger' ? TOKENS.dangerBorder : TOKENS.border}`,
           borderRadius: 2,
           bgcolor: TOKENS.surface,
           px: 2.5,

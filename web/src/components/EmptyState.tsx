@@ -35,11 +35,11 @@ export function EmptyState({
       sx={{ py: dense ? 3 : 5, px: 2, textAlign: 'center' }}
     >
       {icon && (
-        <Box sx={{ color: TOKENS.textMuted, display: 'flex', mb: 0.5 }}>
+        <Box sx={{ color: TOKENS.textDisabled, display: 'flex', mb: 0.5 }}>
           {icon}
         </Box>
       )}
-      <Typography sx={{ fontSize: 13.5, fontWeight: 500 }}>{title}</Typography>
+      <Typography sx={{ fontSize: 14, fontWeight: 500 }}>{title}</Typography>
       {hint && (
         <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 340 }}>
           {hint}

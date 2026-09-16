@@ -22,6 +22,7 @@ import {
   useUsers,
 } from '../../api/hooks';
 import { useAuth } from '../auth/AuthContext';
+import { closeUnlessBackdrop } from '../../components/dialogClose';
 
 interface DealFormDialogProps {
   open: boolean;
@@ -114,7 +115,7 @@ export function DealFormDialog({
     form.title.trim() && form.amount !== '' && (deal || form.clientId);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {deal ? 'Редактирование сделки' : 'Новая сделка'}

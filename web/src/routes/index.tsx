@@ -1,19 +1,43 @@
 import { UserRole } from '@crm/shared';
-import { ReactNode } from 'react';
+import { Box, CircularProgress } from '@mui/material';
+import { lazy, ReactNode, Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { useAuth } from '../features/auth/AuthContext';
-import { LoginPage } from '../pages/LoginPage';
-import { DashboardPage } from '../pages/DashboardPage';
-import { ClientsPage } from '../pages/ClientsPage';
-import { ClientCardPage } from '../pages/ClientCardPage';
-import { DealsPage } from '../pages/DealsPage';
-import { DealCardPage } from '../pages/DealCardPage';
-import { CalendarPage } from '../pages/CalendarPage';
-import { OffersPage } from '../pages/OffersPage';
-import { ReportsPage } from '../pages/ReportsPage';
-import { UsersPage } from '../pages/UsersPage';
-import { NotFoundPage } from '../pages/NotFoundPage';
+
+const LoginPage = lazy(() =>
+  import('../pages/LoginPage').then((module) => ({ default: module.LoginPage })),
+);
+const DashboardPage = lazy(() =>
+  import('../pages/DashboardPage').then((module) => ({ default: module.DashboardPage })),
+);
+const ClientsPage = lazy(() =>
+  import('../pages/ClientsPage').then((module) => ({ default: module.ClientsPage })),
+);
+const ClientCardPage = lazy(() =>
+  import('../pages/ClientCardPage').then((module) => ({ default: module.ClientCardPage })),
+);
+const DealsPage = lazy(() =>
+  import('../pages/DealsPage').then((module) => ({ default: module.DealsPage })),
+);
+const DealCardPage = lazy(() =>
+  import('../pages/DealCardPage').then((module) => ({ default: module.DealCardPage })),
+);
+const CalendarPage = lazy(() =>
+  import('../pages/CalendarPage').then((module) => ({ default: module.CalendarPage })),
+);
+const OffersPage = lazy(() =>
+  import('../pages/OffersPage').then((module) => ({ default: module.OffersPage })),
+);
+const ReportsPage = lazy(() =>
+  import('../pages/ReportsPage').then((module) => ({ default: module.ReportsPage })),
+);
+const UsersPage = lazy(() =>
+  import('../pages/UsersPage').then((module) => ({ default: module.UsersPage })),
+);
+const NotFoundPage = lazy(() =>
+  import('../pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })),
+);
 
 /** Пускает дальше только авторизованного пользователя. */
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -43,7 +67,14 @@ export function AppRoutes() {
   const { user } = useAuth();
 
   return (
-    <Routes>
+    <Suspense
+      fallback={
+        <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 240 }}>
+          <CircularProgress size={32} />
+        </Box>
+      }
+    >
+      <Routes>
       <Route
         path="/login"
         element={user ? <Navigate to="/" replace /> : <LoginPage />}
@@ -125,6 +156,7 @@ export function AppRoutes() {
       />
 
       <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

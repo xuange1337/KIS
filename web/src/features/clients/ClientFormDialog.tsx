@@ -14,6 +14,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../../api/client';
 import { useDictionaries, useSaveClient, useUsers } from '../../api/hooks';
 import { useAuth } from '../auth/AuthContext';
+import { closeUnlessBackdrop } from '../../components/dialogClose';
 
 interface ClientFormDialogProps {
   open: boolean;
@@ -104,7 +105,7 @@ export function ClientFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {client ? 'Редактирование клиента' : 'Новый клиент'}

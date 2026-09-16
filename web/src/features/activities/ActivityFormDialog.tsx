@@ -20,6 +20,7 @@ import {
   useDictionaries,
   useSaveActivity,
 } from '../../api/hooks';
+import { closeUnlessBackdrop } from '../../components/dialogClose';
 
 interface ActivityFormDialogProps {
   open: boolean;
@@ -113,7 +114,7 @@ export function ActivityFormDialog({
   const valid = form.subject.trim() && form.plannedAt && (activity || form.clientId);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {activity ? 'Редактирование активности' : 'Новая активность'}

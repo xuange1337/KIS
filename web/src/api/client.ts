@@ -10,6 +10,8 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 export const api = axios.create({
   baseURL: '/api',
   withCredentials: true,
+  xsrfCookieName: 'crm_csrf',
+  xsrfHeaderName: 'X-CSRF-Token',
 });
 
 let accessToken: string | null = null;
@@ -45,6 +47,8 @@ const refreshAccessToken = async (): Promise<string> => {
     refreshRequest = axios
       .post<{ accessToken: string }>('/api/auth/refresh', null, {
         withCredentials: true,
+        xsrfCookieName: 'crm_csrf',
+        xsrfHeaderName: 'X-CSRF-Token',
       })
       .then((response) => {
         setAccessToken(response.data.accessToken);
