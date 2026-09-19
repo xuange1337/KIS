@@ -1,4 +1,3 @@
-import { CssBaseline, ThemeProvider } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 // Для date-fns 3.x нужен отдельный адаптер: AdapterDateFns рассчитан
 // на вторую версию библиотеки и обращается к её внутренним модулям
@@ -13,7 +12,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import { App } from './App';
 import { AuthProvider } from './features/auth/AuthContext';
-import { theme } from './theme/theme';
+import { ThemeModeProvider } from './theme/ThemeModeContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,8 +27,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeModeProvider>
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
@@ -39,6 +37,6 @@ createRoot(document.getElementById('root')!).render(
           </BrowserRouter>
         </QueryClientProvider>
       </LocalizationProvider>
-    </ThemeProvider>
+    </ThemeModeProvider>
   </StrictMode>,
 );

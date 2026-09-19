@@ -51,7 +51,7 @@ import {
 } from 'recharts';
 import { PageHeader } from '../components/PageHeader';
 import { DEAL_STAGE_COLORS } from '../components/StatusChip';
-import { DATA, NEUTRAL, TOKENS } from '../theme/tokens';
+import { DATA, TOKENS } from '../theme/tokens';
 import {
   formatDate,
   formatMoney,
@@ -322,11 +322,11 @@ function FunnelReport({
             </Typography>
             <ResponsiveContainer width="100%" height={340}>
               <BarChart data={chartData} margin={{ left: 20 }}>
-                <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
+                <CartesianGrid stroke={TOKENS.border} vertical={false} />
                 <XAxis
                   dataKey="label"
                   fontSize={11}
-                  stroke={NEUTRAL[400]}
+                  stroke={TOKENS.textMuted}
                   interval={0}
                   angle={-15}
                   textAnchor="end"
@@ -334,7 +334,7 @@ function FunnelReport({
                 />
                 <YAxis
                   fontSize={11}
-                  stroke={NEUTRAL[400]}
+                  stroke={TOKENS.textMuted}
                   tickFormatter={(value: number) =>
                     `${Math.round(value / 1000)} тыс.`
                   }
@@ -405,11 +405,15 @@ function SalesDynamicsReport({
             ) : (
               <ResponsiveContainer width="100%" height={340}>
                 <LineChart data={chartData} margin={{ left: 20 }}>
-                  <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
-                  <XAxis dataKey="label" fontSize={11} stroke={NEUTRAL[400]} />
+                  <CartesianGrid stroke={TOKENS.border} vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    fontSize={11}
+                    stroke={TOKENS.textMuted}
+                  />
                   <YAxis
                     fontSize={11}
-                    stroke={NEUTRAL[400]}
+                    stroke={TOKENS.textMuted}
                     tickFormatter={(value: number) =>
                       `${Math.round(value / 1000)} тыс.`
                     }
@@ -469,15 +473,15 @@ function ManagerActivitiesReport({ rows }: { rows: ManagerActivityRow[] }) {
             ) : (
               <ResponsiveContainer width="100%" height={340}>
                 <BarChart data={rows} margin={{ left: 20 }}>
-                  <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
+                  <CartesianGrid stroke={TOKENS.border} vertical={false} />
                   <XAxis
                     dataKey="fullName"
                     fontSize={11}
-                    stroke={NEUTRAL[400]}
+                    stroke={TOKENS.textMuted}
                   />
                   <YAxis
                     fontSize={11}
-                    stroke={NEUTRAL[400]}
+                    stroke={TOKENS.textMuted}
                     allowDecimals={false}
                   />
                   <ChartTooltip />
@@ -645,7 +649,7 @@ function ReportTable({
                 <TableCell
                   key={index}
                   align={index === 0 ? 'left' : 'right'}
-                  sx={{ fontWeight: 600, bgcolor: 'grey.50' }}
+                  sx={{ fontWeight: 600, bgcolor: TOKENS.surfaceSunken }}
                 >
                   {cell}
                 </TableCell>

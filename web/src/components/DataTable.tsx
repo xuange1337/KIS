@@ -9,7 +9,7 @@ import {
 } from '@mui/x-data-grid';
 import { KeyboardEvent } from 'react';
 import { EmptyState } from './EmptyState';
-import { NEUTRAL, TOKENS } from '../theme/tokens';
+import { TOKENS } from '../theme/tokens';
 
 interface DataTableProps<T> {
   rows: T[];
@@ -90,10 +90,10 @@ export function DataTable<T extends object>({
         sx={{
           border: 'none',
           fontSize: 13,
-          '--DataGrid-rowBorderColor': NEUTRAL[100],
+          '--DataGrid-rowBorderColor': TOKENS.border,
 
           '& .MuiDataGrid-columnHeaders': {
-            borderBottom: `1px solid ${NEUTRAL[200]}`,
+            borderBottom: `1px solid ${TOKENS.border}`,
           },
           // Кольцо фокуса рисуется внутрь: outline снаружи обрезался бы
           // границей ячейки и на краях таблицы был бы не виден.
@@ -114,7 +114,7 @@ export function DataTable<T extends object>({
           },
 
           '& .MuiDataGrid-cell': {
-            borderBottom: `1px solid ${NEUTRAL[100]}`,
+            borderBottom: `1px solid ${TOKENS.border}`,
             // Мышью фокус ячейки показывать незачем — он приходит от щелчка;
             // с клавиатуры без него не понять, где находишься
             '&:focus, &:focus-within': { outline: 'none' },
@@ -133,7 +133,7 @@ export function DataTable<T extends object>({
           '& .MuiDataGrid-overlayWrapperInner': { height: 'auto !important' },
 
           '& .MuiDataGrid-footerContainer': {
-            borderTop: `1px solid ${NEUTRAL[200]}`,
+            borderTop: `1px solid ${TOKENS.border}`,
             minHeight: 44,
           },
           '& .MuiTablePagination-root': { fontSize: 12 },

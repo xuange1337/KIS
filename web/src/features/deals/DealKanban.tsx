@@ -9,7 +9,7 @@ import { DragEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatMoney } from '../../components/formatters';
 import { DEAL_STAGE_COLORS } from '../../components/StatusChip';
-import { NEUTRAL, TOKENS } from '../../theme/tokens';
+import { TOKENS } from '../../theme/tokens';
 
 /** Колонки доски: рабочие стадии плюс выигранные и проигранные. */
 const COLUMNS: DealStage[] = [
@@ -84,7 +84,8 @@ export function DealKanban({
               // Колонка обозначена цветной чертой сверху, а не заливкой:
               // фон отвлекал бы от карточек, ради которых доска и нужна
               borderTop: `2px solid ${DEAL_STAGE_COLORS[stage]}`,
-              bgcolor: hoverStage === stage ? NEUTRAL[100] : 'transparent',
+              bgcolor:
+                hoverStage === stage ? TOKENS.surfaceHover : 'transparent',
               borderRadius: 0.5,
               px: 1,
               pt: 1.5,
@@ -150,11 +151,11 @@ export function DealKanban({
                     cursor: disabled ? 'pointer' : 'grab',
                     opacity: draggedId === deal.dealId ? 0.35 : 1,
                     bgcolor: 'background.paper',
-                    border: `1px solid ${NEUTRAL[200]}`,
+                    border: `1px solid ${TOKENS.border}`,
                     borderRadius: 1.25,
                     p: 1.5,
                     transition: 'border-color 120ms',
-                    '&:hover': { borderColor: NEUTRAL[600] },
+                    '&:hover': { borderColor: TOKENS.borderControl },
                     '&:focus-visible': {
                       outline: `2px solid ${TOKENS.accent}`,
                       outlineOffset: 2,

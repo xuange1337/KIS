@@ -1,7 +1,7 @@
 import { Box, Breadcrumbs, Link, Stack, Typography } from '@mui/material';
 import { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { NEUTRAL, TOKENS } from '../theme/tokens';
+import { TOKENS } from '../theme/tokens';
 
 interface Crumb {
   label: string;
@@ -29,7 +29,7 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <Box sx={{ mb: 3, pb: 2.5, borderBottom: `1px solid ${NEUTRAL[200]}` }}>
+    <Box sx={{ mb: 3, pb: 2.5, borderBottom: `1px solid ${TOKENS.border}` }}>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumbs
           aria-label="Путь по разделам"
@@ -51,7 +51,7 @@ export function PageHeader({
                 sx={{
                   fontSize: 12,
                   color: TOKENS.textSecondary,
-                  '&:hover': { color: NEUTRAL[900] },
+                  '&:hover': { color: TOKENS.textPrimary },
                 }}
               >
                 {crumb.label}

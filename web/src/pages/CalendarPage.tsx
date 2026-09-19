@@ -47,7 +47,7 @@ import { formatDateTime } from '../components/formatters';
 import { ActivityFormDialog } from '../features/activities/ActivityFormDialog';
 import { CompleteActivityDialog } from '../features/activities/CompleteActivityDialog';
 import { useCalendarActivities, useUsers } from '../api/hooks';
-import { DATA, NEUTRAL } from '../theme/tokens';
+import { DATA, TOKENS } from '../theme/tokens';
 import { useAuth } from '../features/auth/AuthContext';
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -274,8 +274,10 @@ export function CalendarPage() {
                     minHeight: view === 'week' ? 220 : 132,
                     minWidth: 0,
                     p: 1,
-                    bgcolor: outsideMonth ? 'grey.50' : 'background.paper',
-                    borderColor: today ? NEUTRAL[900] : undefined,
+                    bgcolor: outsideMonth
+                      ? TOKENS.surfaceSunken
+                      : TOKENS.surface,
+                    borderColor: today ? TOKENS.primary : undefined,
                     opacity: outsideMonth ? 0.6 : 1,
                     cursor: 'pointer',
                   }}
@@ -310,7 +312,7 @@ export function CalendarPage() {
                               height: 22,
                               bgcolor:
                                 activity.status === ActivityStatus.DONE
-                                  ? 'grey.200'
+                                  ? TOKENS.border
                                   : `${TYPE_COLORS[activity.type]}18`,
                               color:
                                 activity.status === ActivityStatus.DONE

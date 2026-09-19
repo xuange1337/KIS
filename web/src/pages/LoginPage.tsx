@@ -11,7 +11,7 @@ import { FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { extractErrorMessage } from '../api/client';
 import { useAuth } from '../features/auth/AuthContext';
-import { NEUTRAL } from '../theme/tokens';
+import { TOKENS } from '../theme/tokens';
 
 interface LocationState {
   from?: { pathname: string };
@@ -79,8 +79,8 @@ export function LoginPage() {
           display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
           justifyContent: 'space-between',
-          bgcolor: NEUTRAL[900],
-          color: NEUTRAL[0],
+          bgcolor: TOKENS.primary,
+          color: TOKENS.surface,
           p: 6,
         }}
       >
@@ -106,7 +106,9 @@ export function LoginPage() {
             <br />
             по работе с клиентами
           </Typography>
-          <Typography sx={{ fontSize: 14, color: NEUTRAL[400], maxWidth: 420 }}>
+          <Typography
+            sx={{ fontSize: 14, color: TOKENS.textDisabled, maxWidth: 420 }}
+          >
             Клиентская база, история взаимодействий, контроль сделок и
             отчётность отдела продаж.
           </Typography>
@@ -122,7 +124,7 @@ export function LoginPage() {
               <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
                 {title}
               </Typography>
-              <Typography sx={{ fontSize: 12, color: NEUTRAL[500] }}>
+              <Typography sx={{ fontSize: 12, color: TOKENS.textMuted }}>
                 {note}
               </Typography>
             </Box>
@@ -200,13 +202,13 @@ export function LoginPage() {
                   mx: -1,
                   borderRadius: 1,
                   cursor: 'pointer',
-                  '&:hover': { bgcolor: NEUTRAL[100] },
+                  '&:hover': { bgcolor: TOKENS.surfaceHover },
                 }}
               >
                 <Typography sx={{ fontSize: 12.5 }}>{account.role}</Typography>
                 <Typography
                   className="tabular"
-                  sx={{ fontSize: 12, color: NEUTRAL[500] }}
+                  sx={{ fontSize: 12, color: TOKENS.textMuted }}
                 >
                   {account.login} / {account.password}
                 </Typography>

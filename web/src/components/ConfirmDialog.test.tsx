@@ -5,10 +5,12 @@ import { theme } from '../theme/theme';
 import { TOKENS } from '../theme/tokens';
 import { ConfirmDialog } from './ConfirmDialog';
 
-/** #B3352C → rgb(179, 53, 44): jsdom отдаёт вычисленный цвет в rgb(). */
-const toRgb = (hex: string) =>
-  `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
-
+/**
+ * Цвета задаются CSS-переменными, и сравнивается именно ссылка на
+ * переменную: конкретное значение зависит от схемы оформления, а
+ * проверяется здесь не оттенок, а то, что кнопка взяла цвет опасного
+ * действия, а не какой-то другой.
+ */
 function renderDialog() {
   render(
     <ThemeProvider theme={theme}>
@@ -29,16 +31,12 @@ describe('ConfirmDialog', () => {
   it('подтверждение удаления окрашено в цвет опасного действия', () => {
     renderDialog();
     const confirm = screen.getByRole('button', { name: 'Удалить' });
-    expect(getComputedStyle(confirm).backgroundColor).toBe(
-      toRgb(TOKENS.danger),
-    );
+    expect(getComputedStyle(confirm).backgroundColor).toBe(TOKENS.danger);
   });
 
   it('отмена не выглядит как основное действие', () => {
     renderDialog();
     const cancel = screen.getByRole('button', { name: 'Отмена' });
-    expect(getComputedStyle(cancel).backgroundColor).not.toBe(
-      toRgb(TOKENS.danger),
-    );
+    expect(getComputedStyle(cancel).backgroundColor).not.toBe(TOKENS.danger);
   });
 });

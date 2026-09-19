@@ -9,7 +9,7 @@ import {
   OFFER_STATUS_LABELS,
   OfferStatus,
 } from '@crm/shared';
-import { DATA, DOT_NEUTRAL, NEUTRAL, TOKENS } from '../theme/tokens';
+import { DATA, DOT_NEUTRAL, TOKENS } from '../theme/tokens';
 
 /**
  * Маркировка стадий и статусов.
@@ -91,7 +91,7 @@ function Marker({
         sx={{
           fontSize: 13,
           fontWeight: 500,
-          color: muted ? TOKENS.textSecondary : NEUTRAL[800],
+          color: muted ? TOKENS.textSecondary : TOKENS.textPrimary,
         }}
       >
         {label}

@@ -22,13 +22,31 @@ import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrow
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
+import SettingsBrightnessOutlinedIcon from '@mui/icons-material/SettingsBrightnessOutlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
 import { USER_ROLE_LABELS, UserRole } from '@crm/shared';
 import { ReactNode, useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
-import { DURATION, NEUTRAL, TOKENS } from '../theme/tokens';
+import { DURATION, TOKENS } from '../theme/tokens';
+import { useThemeMode } from '../theme/ThemeModeContext';
+
+/**
+ * Подписи переключателя схемы. Три состояния, а не два: «как в системе»
+ * должно оставаться доступным после того, как пользователь однажды
+ * выбрал схему вручную.
+ */
+const THEME_LABELS: Record<string, string> = {
+  system: 'Оформление: как в системе',
+  light: 'Оформление: светлое',
+  dark: 'Оформление: тёмное',
+};
+
+const nextPreference = (current: string): 'system' | 'light' | 'dark' =>
+  current === 'system' ? 'light' : current === 'light' ? 'dark' : 'system';
 
 const RAIL_WIDTH = 228;
 const RAIL_WIDTH_COLLAPSED = 60;
@@ -76,6 +94,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const muiTheme = useTheme();
+  const { preference, setPreference } = useThemeMode();
   /**
    * На телефоне меню убирается в выдвижную панель.
    *
@@ -94,7 +113,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
-    const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+    // Хранилище недоступно в приватном режиме и при запрете хранить
+    // данные: из-за состояния меню приложение открываться не должно
+    let stored: string | null = null;
+    try {
+      stored = window.localStorage?.getItem(COLLAPSE_STORAGE_KEY) ?? null;
+    } catch {
+      stored = null;
+    }
     if (stored !== null) return stored === 'true';
     return window.innerWidth < AUTO_COLLAPSE_WIDTH;
   });
@@ -111,7 +137,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   const toggleCollapsed = () => {
     setCollapsed((previous) => {
-      window.localStorage.setItem(COLLAPSE_STORAGE_KEY, String(!previous));
+      try {
+        window.localStorage?.setItem(COLLAPSE_STORAGE_KEY, String(!previous));
+      } catch {
+        // Выбор не переживёт перезагрузку — приемлемо
+      }
       return !previous;
     });
   };
@@ -225,12 +255,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 height: 38,
                 borderRadius: 1,
                 textDecoration: 'none',
-                color: active ? NEUTRAL[0] : TOKENS.textSecondary,
+                color: active ? TOKENS.surface : TOKENS.textSecondary,
                 bgcolor: active ? TOKENS.primary : 'transparent',
                 transition: `background-color ${DURATION.fast}ms, color ${DURATION.fast}ms`,
                 '&:hover': {
-                  bgcolor: active ? TOKENS.primary : NEUTRAL[100],
-                  color: active ? NEUTRAL[0] : TOKENS.textPrimary,
+                  bgcolor: active ? TOKENS.primary : TOKENS.surfaceHover,
+                  color: active ? TOKENS.surface : TOKENS.textPrimary,
                 },
                 '& svg': { fontSize: 18, flexShrink: 0 },
               }}
@@ -307,6 +337,21 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {user && USER_ROLE_LABELS[user.role]}
               </Typography>
             </Box>
+            <Tooltip title={THEME_LABELS[preference]}>
+              <IconButton
+                size="small"
+                aria-label={THEME_LABELS[preference]}
+                onClick={() => setPreference(nextPreference(preference))}
+              >
+                {preference === 'dark' ? (
+                  <DarkModeOutlinedIcon sx={{ fontSize: 17 }} />
+                ) : preference === 'light' ? (
+                  <LightModeOutlinedIcon sx={{ fontSize: 17 }} />
+                ) : (
+                  <SettingsBrightnessOutlinedIcon sx={{ fontSize: 17 }} />
+                )}
+              </IconButton>
+            </Tooltip>
             <Tooltip title="Выйти из системы">
               <IconButton
                 size="small"
