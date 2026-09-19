@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/auth/login": {
+    "/api/v1/auth/login": {
       "post": {
-        "operationId": "AuthController_login",
+        "operationId": "AuthController_login[0]_v1",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -25,9 +25,61 @@
         ]
       }
     },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/auth/refresh": {
       "post": {
-        "operationId": "AuthController_refresh",
+        "operationId": "AuthController_refresh[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -41,7 +93,21 @@
     },
     "/api/auth/logout": {
       "post": {
-        "operationId": "AuthController_logout",
+        "operationId": "AuthController_logout[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -55,7 +121,7 @@
     },
     "/api/auth/me": {
       "get": {
-        "operationId": "AuthController_me",
+        "operationId": "AuthController_me[1]",
         "parameters": [],
         "responses": {
           "200": {
@@ -67,9 +133,9 @@
         ]
       }
     },
-    "/api/auth/sessions": {
+    "/api/v1/auth/sessions": {
       "get": {
-        "operationId": "AuthController_sessions",
+        "operationId": "AuthController_sessions[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -81,7 +147,7 @@
         ]
       },
       "delete": {
-        "operationId": "AuthController_revokeAllSessions",
+        "operationId": "AuthController_revokeAllSessions[0]_v1",
         "parameters": [],
         "responses": {
           "204": {
@@ -93,9 +159,35 @@
         ]
       }
     },
-    "/api/auth/sessions/{id}": {
+    "/api/auth/sessions": {
+      "get": {
+        "operationId": "AuthController_sessions[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      },
       "delete": {
-        "operationId": "AuthController_revokeSession",
+        "operationId": "AuthController_revokeAllSessions[1]",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions/{id}": {
+      "delete": {
+        "operationId": "AuthController_revokeSession[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -116,9 +208,32 @@
         ]
       }
     },
-    "/api/users": {
+    "/api/auth/sessions/{id}": {
+      "delete": {
+        "operationId": "AuthController_revokeSession[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/users": {
       "get": {
-        "operationId": "UsersController_findAll",
+        "operationId": "UsersController_findAll[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -130,7 +245,7 @@
         ]
       },
       "post": {
-        "operationId": "UsersController_create",
+        "operationId": "UsersController_create[0]_v1",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -152,9 +267,45 @@
         ]
       }
     },
-    "/api/users/{id}": {
+    "/api/users": {
       "get": {
-        "operationId": "UsersController_findOne",
+        "operationId": "UsersController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -175,7 +326,7 @@
         ]
       },
       "patch": {
-        "operationId": "UsersController_update",
+        "operationId": "UsersController_update[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -206,7 +357,7 @@
         ]
       },
       "delete": {
-        "operationId": "UsersController_deactivate",
+        "operationId": "UsersController_deactivate[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -227,9 +378,84 @@
         ]
       }
     },
-    "/api/clients": {
+    "/api/users/{id}": {
       "get": {
-        "operationId": "ClientsController_findAll",
+        "operationId": "UsersController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_deactivate[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/clients": {
+      "get": {
+        "operationId": "ClientsController_findAll[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -241,7 +467,7 @@
         ]
       },
       "post": {
-        "operationId": "ClientsController_create",
+        "operationId": "ClientsController_create[0]_v1",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -263,9 +489,45 @@
         ]
       }
     },
-    "/api/clients/{id}": {
+    "/api/clients": {
       "get": {
-        "operationId": "ClientsController_findOne",
+        "operationId": "ClientsController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      },
+      "post": {
+        "operationId": "ClientsController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/v1/clients/{id}": {
+      "get": {
+        "operationId": "ClientsController_findOne[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -286,7 +548,7 @@
         ]
       },
       "patch": {
-        "operationId": "ClientsController_update",
+        "operationId": "ClientsController_update[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -317,7 +579,7 @@
         ]
       },
       "delete": {
-        "operationId": "ClientsController_remove",
+        "operationId": "ClientsController_remove[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -346,9 +608,92 @@
         ]
       }
     },
-    "/api/clients/{clientId}/contacts": {
+    "/api/clients/{id}": {
       "get": {
-        "operationId": "ContactsController_findByClient",
+        "operationId": "ClientsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      },
+      "patch": {
+        "operationId": "ClientsController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      },
+      "delete": {
+        "operationId": "ClientsController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/v1/clients/{clientId}/contacts": {
+      "get": {
+        "operationId": "ContactsController_findByClient[0]_v1",
         "parameters": [
           {
             "name": "clientId",
@@ -369,9 +714,32 @@
         ]
       }
     },
-    "/api/contacts/{id}": {
+    "/api/clients/{clientId}/contacts": {
       "get": {
-        "operationId": "ContactsController_findOne",
+        "operationId": "ContactsController_findByClient[1]",
+        "parameters": [
+          {
+            "name": "clientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contacts"
+        ]
+      }
+    },
+    "/api/v1/contacts/{id}": {
+      "get": {
+        "operationId": "ContactsController_findOne[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -392,7 +760,7 @@
         ]
       },
       "patch": {
-        "operationId": "ContactsController_update",
+        "operationId": "ContactsController_update[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -423,7 +791,7 @@
         ]
       },
       "delete": {
-        "operationId": "ContactsController_remove",
+        "operationId": "ContactsController_remove[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -444,9 +812,84 @@
         ]
       }
     },
-    "/api/contacts": {
+    "/api/contacts/{id}": {
+      "get": {
+        "operationId": "ContactsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contacts"
+        ]
+      },
+      "patch": {
+        "operationId": "ContactsController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contacts"
+        ]
+      },
+      "delete": {
+        "operationId": "ContactsController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contacts"
+        ]
+      }
+    },
+    "/api/v1/contacts": {
       "post": {
-        "operationId": "ContactsController_create",
+        "operationId": "ContactsController_create[0]_v1",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -468,9 +911,33 @@
         ]
       }
     },
-    "/api/deals": {
+    "/api/contacts": {
+      "post": {
+        "operationId": "ContactsController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contacts"
+        ]
+      }
+    },
+    "/api/v1/deals": {
       "get": {
-        "operationId": "DealsController_findAll",
+        "operationId": "DealsController_findAll[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -482,7 +949,7 @@
         ]
       },
       "post": {
-        "operationId": "DealsController_create",
+        "operationId": "DealsController_create[0]_v1",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -504,9 +971,45 @@
         ]
       }
     },
-    "/api/deals/{id}": {
+    "/api/deals": {
       "get": {
-        "operationId": "DealsController_findOne",
+        "operationId": "DealsController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ]
+      },
+      "post": {
+        "operationId": "DealsController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDealDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ]
+      }
+    },
+    "/api/v1/deals/{id}": {
+      "get": {
+        "operationId": "DealsController_findOne[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -527,7 +1030,7 @@
         ]
       },
       "patch": {
-        "operationId": "DealsController_update",
+        "operationId": "DealsController_update[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -558,7 +1061,7 @@
         ]
       },
       "delete": {
-        "operationId": "DealsController_remove",
+        "operationId": "DealsController_remove[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -587,9 +1090,92 @@
         ]
       }
     },
-    "/api/deals/{id}/history": {
+    "/api/deals/{id}": {
       "get": {
-        "operationId": "DealsController_findHistory",
+        "operationId": "DealsController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ]
+      },
+      "patch": {
+        "operationId": "DealsController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDealDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ]
+      },
+      "delete": {
+        "operationId": "DealsController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ]
+      }
+    },
+    "/api/v1/deals/{id}/history": {
+      "get": {
+        "operationId": "DealsController_findHistory[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -610,9 +1196,32 @@
         ]
       }
     },
-    "/api/deals/{id}/stage": {
+    "/api/deals/{id}/history": {
+      "get": {
+        "operationId": "DealsController_findHistory[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ]
+      }
+    },
+    "/api/v1/deals/{id}/stage": {
       "patch": {
-        "operationId": "DealsController_changeStage",
+        "operationId": "DealsController_changeStage[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -643,9 +1252,42 @@
         ]
       }
     },
-    "/api/activities": {
+    "/api/deals/{id}/stage": {
+      "patch": {
+        "operationId": "DealsController_changeStage[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeStageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Deals"
+        ]
+      }
+    },
+    "/api/v1/activities": {
       "get": {
-        "operationId": "ActivitiesController_findAll",
+        "operationId": "ActivitiesController_findAll[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -657,7 +1299,7 @@
         ]
       },
       "post": {
-        "operationId": "ActivitiesController_create",
+        "operationId": "ActivitiesController_create[0]_v1",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -679,9 +1321,73 @@
         ]
       }
     },
+    "/api/activities": {
+      "get": {
+        "operationId": "ActivitiesController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      },
+      "post": {
+        "operationId": "ActivitiesController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateActivityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      }
+    },
+    "/api/v1/activities/calendar": {
+      "get": {
+        "operationId": "ActivitiesController_findForCalendar[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      }
+    },
     "/api/activities/calendar": {
       "get": {
-        "operationId": "ActivitiesController_findForCalendar",
+        "operationId": "ActivitiesController_findForCalendar[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      }
+    },
+    "/api/v1/activities/overdue": {
+      "get": {
+        "operationId": "ActivitiesController_findOverdue[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -695,7 +1401,7 @@
     },
     "/api/activities/overdue": {
       "get": {
-        "operationId": "ActivitiesController_findOverdue",
+        "operationId": "ActivitiesController_findOverdue[1]",
         "parameters": [],
         "responses": {
           "200": {
@@ -707,9 +1413,9 @@
         ]
       }
     },
-    "/api/activities/{id}": {
+    "/api/v1/activities/{id}": {
       "get": {
-        "operationId": "ActivitiesController_findOne",
+        "operationId": "ActivitiesController_findOne[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -730,7 +1436,7 @@
         ]
       },
       "patch": {
-        "operationId": "ActivitiesController_update",
+        "operationId": "ActivitiesController_update[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -761,7 +1467,7 @@
         ]
       },
       "delete": {
-        "operationId": "ActivitiesController_remove",
+        "operationId": "ActivitiesController_remove[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -782,9 +1488,84 @@
         ]
       }
     },
-    "/api/activities/{id}/complete": {
+    "/api/activities/{id}": {
+      "get": {
+        "operationId": "ActivitiesController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      },
       "patch": {
-        "operationId": "ActivitiesController_complete",
+        "operationId": "ActivitiesController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateActivityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      },
+      "delete": {
+        "operationId": "ActivitiesController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      }
+    },
+    "/api/v1/activities/{id}/complete": {
+      "patch": {
+        "operationId": "ActivitiesController_complete[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -815,9 +1596,42 @@
         ]
       }
     },
-    "/api/offers": {
+    "/api/activities/{id}/complete": {
+      "patch": {
+        "operationId": "ActivitiesController_complete[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteActivityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Activities"
+        ]
+      }
+    },
+    "/api/v1/offers": {
       "get": {
-        "operationId": "OffersController_findAll",
+        "operationId": "OffersController_findAll[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -829,7 +1643,7 @@
         ]
       },
       "post": {
-        "operationId": "OffersController_create",
+        "operationId": "OffersController_create[0]_v1",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -851,9 +1665,45 @@
         ]
       }
     },
-    "/api/deals/{dealId}/offers": {
+    "/api/offers": {
       "get": {
-        "operationId": "OffersController_findByDeal",
+        "operationId": "OffersController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Offers"
+        ]
+      },
+      "post": {
+        "operationId": "OffersController_create[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOfferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Offers"
+        ]
+      }
+    },
+    "/api/v1/deals/{dealId}/offers": {
+      "get": {
+        "operationId": "OffersController_findByDeal[0]_v1",
         "parameters": [
           {
             "name": "dealId",
@@ -874,9 +1724,32 @@
         ]
       }
     },
-    "/api/offers/{id}": {
+    "/api/deals/{dealId}/offers": {
       "get": {
-        "operationId": "OffersController_findOne",
+        "operationId": "OffersController_findByDeal[1]",
+        "parameters": [
+          {
+            "name": "dealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Offers"
+        ]
+      }
+    },
+    "/api/v1/offers/{id}": {
+      "get": {
+        "operationId": "OffersController_findOne[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -897,7 +1770,7 @@
         ]
       },
       "patch": {
-        "operationId": "OffersController_update",
+        "operationId": "OffersController_update[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -928,7 +1801,7 @@
         ]
       },
       "delete": {
-        "operationId": "OffersController_remove",
+        "operationId": "OffersController_remove[0]_v1",
         "parameters": [
           {
             "name": "id",
@@ -949,9 +1822,112 @@
         ]
       }
     },
+    "/api/offers/{id}": {
+      "get": {
+        "operationId": "OffersController_findOne[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Offers"
+        ]
+      },
+      "patch": {
+        "operationId": "OffersController_update[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOfferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Offers"
+        ]
+      },
+      "delete": {
+        "operationId": "OffersController_remove[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Offers"
+        ]
+      }
+    },
+    "/api/v1/reports/funnel": {
+      "get": {
+        "operationId": "ReportsController_funnel[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
     "/api/reports/funnel": {
       "get": {
-        "operationId": "ReportsController_funnel",
+        "operationId": "ReportsController_funnel[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/sales-dynamics": {
+      "get": {
+        "operationId": "ReportsController_salesDynamics[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -965,7 +1941,21 @@
     },
     "/api/reports/sales-dynamics": {
       "get": {
-        "operationId": "ReportsController_salesDynamics",
+        "operationId": "ReportsController_salesDynamics[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/manager-activities": {
+      "get": {
+        "operationId": "ReportsController_managerActivities[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -979,7 +1969,21 @@
     },
     "/api/reports/manager-activities": {
       "get": {
-        "operationId": "ReportsController_managerActivities",
+        "operationId": "ReportsController_managerActivities[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/overdue-activities": {
+      "get": {
+        "operationId": "ReportsController_overdueActivities[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -993,7 +1997,21 @@
     },
     "/api/reports/overdue-activities": {
       "get": {
-        "operationId": "ReportsController_overdueActivities",
+        "operationId": "ReportsController_overdueActivities[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/top": {
+      "get": {
+        "operationId": "ReportsController_top[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -1007,7 +2025,7 @@
     },
     "/api/reports/top": {
       "get": {
-        "operationId": "ReportsController_top",
+        "operationId": "ReportsController_top[1]",
         "parameters": [],
         "responses": {
           "200": {
@@ -1019,9 +2037,9 @@
         ]
       }
     },
-    "/api/reports/{report}/export": {
+    "/api/v1/reports/{report}/export": {
       "get": {
-        "operationId": "ReportsController_export",
+        "operationId": "ReportsController_export[0]_v1",
         "parameters": [
           {
             "name": "report",
@@ -1050,9 +2068,40 @@
         ]
       }
     },
-    "/api/dashboard": {
+    "/api/reports/{report}/export": {
       "get": {
-        "operationId": "DashboardController_summary",
+        "operationId": "ReportsController_export[1]",
+        "parameters": [
+          {
+            "name": "report",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/dashboard": {
+      "get": {
+        "operationId": "DashboardController_summary[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -1064,9 +2113,23 @@
         ]
       }
     },
-    "/api/dictionaries": {
+    "/api/dashboard": {
       "get": {
-        "operationId": "DictionariesController_findAll",
+        "operationId": "DashboardController_summary[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dictionaries": {
+      "get": {
+        "operationId": "DictionariesController_findAll[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -1078,9 +2141,51 @@
         ]
       }
     },
+    "/api/dictionaries": {
+      "get": {
+        "operationId": "DictionariesController_findAll[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dictionaries"
+        ]
+      }
+    },
+    "/api/v1/health/live": {
+      "get": {
+        "operationId": "HealthController_live[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
     "/api/health/live": {
       "get": {
-        "operationId": "HealthController_live",
+        "operationId": "HealthController_live[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready[0]_v1",
         "parameters": [],
         "responses": {
           "200": {
@@ -1094,7 +2199,7 @@
     },
     "/api/health/ready": {
       "get": {
-        "operationId": "HealthController_ready",
+        "operationId": "HealthController_ready[1]",
         "parameters": [],
         "responses": {
           "200": {
@@ -1105,11 +2210,39 @@
           "Health"
         ]
       }
+    },
+    "/api/v1/diagnostics": {
+      "get": {
+        "operationId": "DiagnosticsController_summary[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Diagnostics"
+        ]
+      }
+    },
+    "/api/diagnostics": {
+      "get": {
+        "operationId": "DiagnosticsController_summary[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Diagnostics"
+        ]
+      }
     }
   },
   "info": {
     "title": "CRM API",
-    "description": "API АРМ менеджера по работе с клиентами. Все маршруты требуют access-токена, кроме входа, обновления токена и проверок состояния. Ошибки возвращаются единым форматом: statusCode, code, message, path, requestId, timestamp.",
+    "description": "API АРМ менеджера по работе с клиентами. Все маршруты требуют access-токена, кроме входа, обновления токена и проверок состояния. Ошибки возвращаются единым форматом: statusCode, code, message, path, requestId, timestamp. Каждый маршрут описан дважды: с версией (/api/v1/...) и без неё. Версионный путь — основной, путь без версии сохранён для ранее написанных клиентов и будет объявлен устаревшим отдельно. Операции создания принимают заголовок Idempotency-Key: повтор с тем же ключом возвращает результат первой попытки.",
     "version": "1.0.0",
     "contact": {}
   },

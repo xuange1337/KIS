@@ -18,7 +18,12 @@ export const buildOpenApiDocument = (app: INestApplication): OpenAPIObject => {
       'API АРМ менеджера по работе с клиентами. ' +
         'Все маршруты требуют access-токена, кроме входа, обновления ' +
         'токена и проверок состояния. Ошибки возвращаются единым форматом: ' +
-        'statusCode, code, message, path, requestId, timestamp.',
+        'statusCode, code, message, path, requestId, timestamp. ' +
+        'Каждый маршрут описан дважды: с версией (/api/v1/...) и без неё. ' +
+        'Версионный путь — основной, путь без версии сохранён для ранее ' +
+        'написанных клиентов и будет объявлен устаревшим отдельно. ' +
+        'Операции создания принимают заголовок Idempotency-Key: повтор ' +
+        'с тем же ключом возвращает результат первой попытки.',
     )
     .setVersion(API_VERSION)
     .addBearerAuth(

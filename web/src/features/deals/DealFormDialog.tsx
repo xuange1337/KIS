@@ -23,6 +23,8 @@ import {
 } from '../../api/hooks';
 import { useAuth } from '../auth/AuthContext';
 import { closeUnlessBackdrop } from '../../components/dialogClose';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { useUnsavedChanges } from '../../components/useUnsavedChanges';
 
 interface DealFormDialogProps {
   open: boolean;
@@ -63,24 +65,32 @@ export function DealFormDialog({
   const saveDeal = useSaveDeal();
 
   const [form, setForm] = useState(EMPTY);
+  const [initial, setInitial] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
+
+  // Сравнение с исходным состоянием; см. ClientFormDialog
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial);
+  const { requestClose, confirmOpen, discard, keepEditing } = useUnsavedChanges(
+    isDirty,
+    onClose,
+  );
 
   useEffect(() => {
     if (!open) return;
     setError(null);
-    setForm(
-      deal
-        ? {
-            clientId: String(deal.clientId),
-            title: deal.title,
-            stage: deal.stage,
-            amount: String(deal.amount),
-            currency: deal.currency,
-            plannedClose: deal.plannedClose ?? '',
-            ownerUserId: deal.ownerUserId ? String(deal.ownerUserId) : '',
-          }
-        : { ...EMPTY, clientId: clientId ? String(clientId) : '' },
-    );
+    const next = deal
+      ? {
+          clientId: String(deal.clientId),
+          title: deal.title,
+          stage: deal.stage,
+          amount: String(deal.amount),
+          currency: deal.currency,
+          plannedClose: deal.plannedClose ?? '',
+          ownerUserId: deal.ownerUserId ? String(deal.ownerUserId) : '',
+        }
+      : { ...EMPTY, clientId: clientId ? String(clientId) : '' };
+    setForm(next);
+    setInitial(next);
   }, [open, deal, clientId]);
 
   const setField = (field: keyof typeof EMPTY) => (value: string) =>
@@ -111,6 +121,7 @@ export function DealFormDialog({
         ...(deal ? { version: deal.version } : {}),
       });
       onSaved?.(saved);
+      setInitial(form);
       onClose();
     } catch (caught) {
       setError(extractErrorMessage(caught, 'Не удалось сохранить сделку'));
@@ -123,7 +134,7 @@ export function DealFormDialog({
   return (
     <Dialog
       open={open}
-      onClose={closeUnlessBackdrop(onClose)}
+      onClose={closeUnlessBackdrop(requestClose)}
       maxWidth="sm"
       fullWidth
     >
@@ -251,7 +262,7 @@ export function DealFormDialog({
           </Grid>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={onClose}>Отмена</Button>
+          <Button onClick={requestClose}>Отмена</Button>
           <Button
             type="submit"
             variant="contained"
@@ -261,6 +272,14 @@ export function DealFormDialog({
           </Button>
         </DialogActions>
       </form>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Закрыть без сохранения?"
+        message="Введённые данные не сохранятся."
+        confirmLabel="Закрыть"
+        onConfirm={discard}
+        onCancel={keepEditing}
+      />
     </Dialog>
   );
 }

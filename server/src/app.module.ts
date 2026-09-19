@@ -23,6 +23,7 @@ import { ReportsModule } from './reports/reports.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DictionariesModule } from './dictionaries/dictionaries.module';
 import { HealthModule } from './health/health.module';
+import { DiagnosticsModule } from './diagnostics/diagnostics.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { HealthModule } from './health/health.module';
     DashboardModule,
     DictionariesModule,
     HealthModule,
+    DiagnosticsModule,
   ],
   providers: [
     // Ограничение частоты идёт первым: подбор пароля должен отсекаться

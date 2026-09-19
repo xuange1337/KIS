@@ -265,6 +265,73 @@ describe('Контракт API и наблюдаемость', () => {
     });
   });
 
+  describe('Диагностика администратора', () => {
+    it('отдаёт состояние экземпляра и показатели организации', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/diagnostics')
+        .set('Authorization', bearer(adminToken))
+        .expect(200);
+
+      expect(response.body.instance.nodeVersion).toMatch(/^v\d+/);
+      expect(response.body.instance.uptimeSeconds).toBeGreaterThanOrEqual(0);
+      expect(response.body.database.schemaVersion).toEqual(expect.any(String));
+      expect(response.body.database.latencyMs).toBeGreaterThanOrEqual(0);
+      expect(response.body.organization.clients).toBeGreaterThan(0);
+      expect(response.body.organization.users).toBeGreaterThan(0);
+    });
+
+    it('считает показатели в пределах организации', async () => {
+      const otherAdminToken = await login(app, 'other-admin', 'other123');
+      const mine = await request(app.getHttpServer())
+        .get('/api/diagnostics')
+        .set('Authorization', bearer(adminToken))
+        .expect(200);
+      const theirs = await request(app.getHttpServer())
+        .get('/api/diagnostics')
+        .set('Authorization', bearer(otherAdminToken))
+        .expect(200);
+
+      // Диагностика — тоже данные организации: администратор соседней
+      // не должен видеть даже объём чужой базы клиентов
+      expect(theirs.body.organization.organizationId).not.toBe(
+        mine.body.organization.organizationId,
+      );
+      expect(theirs.body.organization.clients).toBe(1);
+      expect(theirs.body.organization.users).toBe(2);
+    });
+
+    it('закрыта для менеджера', async () => {
+      await request(app.getHttpServer())
+        .get('/api/diagnostics')
+        .set('Authorization', bearer(managerToken))
+        .expect(403);
+    });
+  });
+
+  describe('Версионирование API', () => {
+    it('отвечает и на версионный путь, и на прежний', async () => {
+      const versioned = await request(app.getHttpServer())
+        .get('/api/v1/clients?limit=1')
+        .set('Authorization', bearer(managerToken))
+        .expect(200);
+      const neutral = await request(app.getHttpServer())
+        .get('/api/clients?limit=1')
+        .set('Authorization', bearer(managerToken))
+        .expect(200);
+
+      // Прежний путь оставлен намеренно: уже написанные клиенты,
+      // включая собственный интерфейс, ломать незачем
+      expect(versioned.body.total).toBe(neutral.body.total);
+    });
+
+    it('не отвечает на несуществующую версию', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v2/clients')
+        .set('Authorization', bearer(managerToken))
+        .expect(404);
+    });
+  });
+
   describe('Готовность экземпляра', () => {
     it('подтверждает, что схема базы соответствует коду', async () => {
       // С непримененными миграциями экземпляр не должен принимать трафик:

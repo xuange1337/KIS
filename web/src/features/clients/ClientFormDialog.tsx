@@ -15,6 +15,8 @@ import { extractErrorMessage } from '../../api/client';
 import { useDictionaries, useSaveClient, useUsers } from '../../api/hooks';
 import { useAuth } from '../auth/AuthContext';
 import { closeUnlessBackdrop } from '../../components/dialogClose';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { useUnsavedChanges } from '../../components/useUnsavedChanges';
 
 interface ClientFormDialogProps {
   open: boolean;
@@ -57,24 +59,33 @@ export function ClientFormDialog({
   const saveClient = useSaveClient();
 
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [initial, setInitial] = useState<FormState>(EMPTY);
   const [error, setError] = useState<string | null>(null);
+
+  // Сравнение с исходным состоянием, а не флаг «пользователь что-то нажал»:
+  // возврат значения обратно вручную не должен считаться правкой
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial);
+  const { requestClose, confirmOpen, discard, keepEditing } = useUnsavedChanges(
+    isDirty,
+    onClose,
+  );
 
   useEffect(() => {
     if (!open) return;
     setError(null);
-    setForm(
-      client
-        ? {
-            name: client.name,
-            inn: client.inn ?? '',
-            industry: client.industry ?? '',
-            status: client.status,
-            source: client.source ?? '',
-            address: client.address ?? '',
-            ownerUserId: client.ownerUserId ? String(client.ownerUserId) : '',
-          }
-        : EMPTY,
-    );
+    const next = client
+      ? {
+          name: client.name,
+          inn: client.inn ?? '',
+          industry: client.industry ?? '',
+          status: client.status,
+          source: client.source ?? '',
+          address: client.address ?? '',
+          ownerUserId: client.ownerUserId ? String(client.ownerUserId) : '',
+        }
+      : EMPTY;
+    setForm(next);
+    setInitial(next);
   }, [open, client]);
 
   const setField = (field: keyof FormState) => (value: string) =>
@@ -102,6 +113,7 @@ export function ClientFormDialog({
         ...(client ? { version: client.version } : {}),
       });
       onSaved?.(saved);
+      setInitial(form);
       onClose();
     } catch (caught) {
       setError(extractErrorMessage(caught, 'Не удалось сохранить клиента'));
@@ -111,7 +123,7 @@ export function ClientFormDialog({
   return (
     <Dialog
       open={open}
-      onClose={closeUnlessBackdrop(onClose)}
+      onClose={closeUnlessBackdrop(requestClose)}
       maxWidth="sm"
       fullWidth
     >
@@ -224,7 +236,7 @@ export function ClientFormDialog({
           </Grid>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={onClose}>Отмена</Button>
+          <Button onClick={requestClose}>Отмена</Button>
           <Button
             type="submit"
             variant="contained"
@@ -234,6 +246,14 @@ export function ClientFormDialog({
           </Button>
         </DialogActions>
       </form>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Закрыть без сохранения?"
+        message="Введённые данные не сохранятся."
+        confirmLabel="Закрыть"
+        onConfirm={discard}
+        onCancel={keepEditing}
+      />
     </Dialog>
   );
 }

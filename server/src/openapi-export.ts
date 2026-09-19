@@ -3,6 +3,7 @@ import { writeFileSync } from 'fs';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { buildOpenApiDocument } from './common/openapi';
+import { configureApp } from './common/app-setup';
 
 /**
  * Выгружает спецификацию API в файл.
@@ -14,9 +15,10 @@ import { buildOpenApiDocument } from './common/openapi';
 async function exportOpenApi(): Promise<void> {
   const target = process.argv[2] ?? 'docs/openapi.json';
   const app = await NestFactory.create(AppModule, { logger: false });
-  // Префикс задаётся так же, как в main.ts: иначе в спецификации окажутся
-  // пути без /api, и сгенерированный клиент не попадёт ни в один маршрут
-  app.setGlobalPrefix('api');
+  // Приложение настраивается так же, как при запуске: иначе в
+  // спецификации окажутся пути без префикса и без версии, и
+  // сгенерированный клиент не попадёт ни в один маршрут
+  configureApp(app);
   const document = buildOpenApiDocument(app);
   writeFileSync(target, `${JSON.stringify(document, null, 2)}\n`, 'utf8');
   await app.close();
