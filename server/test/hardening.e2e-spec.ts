@@ -222,6 +222,103 @@ describe('Укрепление сессий, прав и списков', () => 
     });
   });
 
+  describe('Одновременная правка не затирается', () => {
+    it('отклоняет сохранение по устаревшей версии карточки', async () => {
+      const created = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(adminToken))
+        .send({ name: 'ООО «Проверка версий»' })
+        .expect(201);
+      const clientId = created.body.clientId;
+      const staleVersion = created.body.version;
+      expect(staleVersion).toBeGreaterThanOrEqual(1);
+
+      // Первый пользователь сохранил правку
+      const updated = await request(app.getHttpServer())
+        .patch(`/api/clients/${clientId}`)
+        .set('Authorization', bearer(adminToken))
+        .send({ industry: 'Логистика', version: staleVersion })
+        .expect(200);
+      expect(updated.body.version).toBe(staleVersion + 1);
+
+      // Второй открыл карточку раньше и сохраняет поверх: раньше его
+      // правка молча затирала первую, обе операции отвечали 200
+      const conflict = await request(app.getHttpServer())
+        .patch(`/api/clients/${clientId}`)
+        .set('Authorization', bearer(adminToken))
+        .send({ address: 'Москва', version: staleVersion })
+        .expect(409);
+      expect(conflict.body.currentVersion).toBe(staleVersion + 1);
+      expect(conflict.body.sentVersion).toBe(staleVersion);
+
+      // Первая правка сохранилась, вторая не применилась
+      const actual = await request(app.getHttpServer())
+        .get(`/api/clients/${clientId}`)
+        .set('Authorization', bearer(adminToken))
+        .expect(200);
+      expect(actual.body.industry).toBe('Логистика');
+      expect(actual.body.address).toBeNull();
+
+      await request(app.getHttpServer())
+        .delete(`/api/clients/${clientId}`)
+        .set('Authorization', bearer(adminToken))
+        .expect(200);
+    });
+
+    it('сохраняет без версии, не ломая прежних клиентов API', async () => {
+      const created = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(adminToken))
+        .send({ name: 'ООО «Совместимость»' })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .patch(`/api/clients/${created.body.clientId}`)
+        .set('Authorization', bearer(adminToken))
+        .send({ industry: 'Торговля' })
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .delete(`/api/clients/${created.body.clientId}`)
+        .set('Authorization', bearer(adminToken))
+        .expect(200);
+    });
+
+    it('отклоняет устаревшую версию сделки', async () => {
+      const clients = await request(app.getHttpServer())
+        .get('/api/clients?limit=1')
+        .set('Authorization', bearer(adminToken))
+        .expect(200);
+
+      const deal = await request(app.getHttpServer())
+        .post('/api/deals')
+        .set('Authorization', bearer(adminToken))
+        .send({
+          clientId: clients.body.items[0].clientId,
+          title: 'Сделка для проверки версий',
+          amount: 1000,
+        })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .patch(`/api/deals/${deal.body.dealId}`)
+        .set('Authorization', bearer(adminToken))
+        .send({ title: 'Первая правка', version: deal.body.version })
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .patch(`/api/deals/${deal.body.dealId}`)
+        .set('Authorization', bearer(adminToken))
+        .send({ title: 'Вторая правка', version: deal.body.version })
+        .expect(409);
+
+      await request(app.getHttpServer())
+        .delete(`/api/deals/${deal.body.dealId}?force=true`)
+        .set('Authorization', bearer(adminToken))
+        .expect(200);
+    });
+  });
+
   describe('Журнал действий не хранит лишнего', () => {
     it('заменяет свободный текст пометкой вместо содержимого', async () => {
       const clients = await request(app.getHttpServer())

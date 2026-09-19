@@ -8,6 +8,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  VersionColumn,
 } from 'typeorm';
 import { Organization } from '../organizations/organization.entity';
 import { User } from '../users/user.entity';
@@ -57,6 +58,13 @@ export class Client {
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'owner_user_id' })
   owner: User | null;
+
+  /**
+   * Версия записи: увеличивается при каждом сохранении.
+   * Нужна, чтобы одновременная правка двумя людьми не затиралась молча.
+   */
+  @VersionColumn({ type: 'int', default: 1 })
+  version: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

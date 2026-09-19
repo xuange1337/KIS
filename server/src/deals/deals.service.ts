@@ -28,6 +28,7 @@ import {
 import { applyTenantScope } from '../common/helpers/tenant-scope';
 import { UsersService } from '../users/users.service';
 import { paginate } from '../common/helpers/paginate';
+import { assertVersionMatches } from '../common/helpers/optimistic-lock';
 
 const SORTABLE = ['createdAt', 'amount', 'plannedClose', 'title', 'stage'];
 
@@ -162,7 +163,8 @@ export class DealsService {
     user: AuthUser,
   ): Promise<Deal> {
     const deal = await this.findOne(dealId, user);
-    const { ownerUserId, ...rest } = dto;
+    const { ownerUserId, version, ...rest } = dto;
+    assertVersionMatches(deal.version, version, 'Сделка');
     Object.assign(deal, rest);
     if (ownerUserId !== undefined && canSeeAll(user)) {
       await this.assertOwnerInTenant(ownerUserId, user);

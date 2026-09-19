@@ -107,6 +107,8 @@ export function DealFormDialog({
         ...(canSeeAll && form.ownerUserId
           ? { ownerUserId: Number(form.ownerUserId) }
           : {}),
+        // Версия открытой карточки: см. ClientFormDialog
+        ...(deal ? { version: deal.version } : {}),
       });
       onSaved?.(saved);
       onClose();

@@ -96,6 +96,10 @@ export function ClientFormDialog({
         ...(canSeeAll && form.ownerUserId
           ? { ownerUserId: Number(form.ownerUserId) }
           : {}),
+        // Версия той карточки, которую пользователь открыл: если за время
+        // правки её изменил кто-то другой, сервер откажет, а не затрёт
+        // чужую правку молча
+        ...(client ? { version: client.version } : {}),
       });
       onSaved?.(saved);
       onClose();

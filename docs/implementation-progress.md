@@ -61,7 +61,7 @@
 - [x] OpenAPI
 - [ ] API versioning
 - [x] Ограничение body и файлов
-- [ ] Optimistic locking
+- [x] Optimistic locking
 - [ ] Idempotency key критических операций
 - [ ] Метрики и диагностика администратора
 - [ ] Фоновые задания и очистка результатов
@@ -103,9 +103,10 @@
 - [x] Проверка лицензий
 - [x] `THIRD_PARTY_LICENSES.md`
 - [ ] Browser e2e критических потоков
-- [ ] Нагрузочный smoke test
-- [ ] Миграционный тест с предыдущей схемы
+- [x] Нагрузочный smoke test
+- [x] Миграционный тест с предыдущей схемы
 - [x] Docker build и smoke test в CI
+- [x] CI на сервере (GitHub Actions)
 - [x] `CHANGELOG.md`
 - [x] Production release checklist
 

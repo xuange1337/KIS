@@ -21,6 +21,7 @@ import {
 import { applyTenantScope } from '../common/helpers/tenant-scope';
 import { UsersService } from '../users/users.service';
 import { paginate } from '../common/helpers/paginate';
+import { assertVersionMatches } from '../common/helpers/optimistic-lock';
 
 /** Поля, по которым разрешена сортировка списка (первое — по умолчанию). */
 const SORTABLE = ['createdAt', 'name', 'status', 'industry'];
@@ -118,7 +119,8 @@ export class ClientsService {
     user: AuthUser,
   ): Promise<Client> {
     const client = await this.findOne(clientId, user);
-    const { ownerUserId, ...rest } = dto;
+    const { ownerUserId, version, ...rest } = dto;
+    assertVersionMatches(client.version, version, 'Карточка клиента');
     Object.assign(client, rest);
     if (ownerUserId !== undefined && canSeeAll(user)) {
       await this.assertOwnerInTenant(ownerUserId, user);

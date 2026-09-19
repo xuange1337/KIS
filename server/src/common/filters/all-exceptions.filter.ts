@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { QueryFailedError } from 'typeorm';
+import { OptimisticLockVersionMismatchError, QueryFailedError } from 'typeorm';
 import { currentRequestId } from '../logging/request-context';
 import { describeDatabaseError } from './database-errors';
 
@@ -104,6 +104,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ...rest
       } = payload as Record<string, unknown>;
       return { status, body: rest };
+    }
+
+    /**
+     * Гонка на уровне СУБД: запись изменилась между чтением и записью.
+     * TypeORM сообщает об этом отдельной ошибкой; без обработки она
+     * выглядела бы как внутренний сбой, хотя это обычный конфликт правок.
+     */
+    if (exception instanceof OptimisticLockVersionMismatchError) {
+      return {
+        status: HttpStatus.CONFLICT,
+        body: {
+          message:
+            'Запись изменена другим пользователем, пока вы её редактировали. ' +
+            'Обновите данные и повторите правку',
+        },
+      };
     }
 
     if (exception instanceof QueryFailedError) {

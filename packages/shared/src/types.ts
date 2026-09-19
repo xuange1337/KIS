@@ -61,6 +61,12 @@ export interface ClientDto {
   address: string | null;
   ownerUserId: number | null;
   owner?: UserDto | null;
+  /**
+   * Версия записи. Возвращается вместе с карточкой и отправляется
+   * обратно при сохранении: так одновременная правка двумя людьми
+   * не затирается молча, а отклоняется с понятным сообщением.
+   */
+  version: number;
   createdAt: string;
   /** Агрегаты для списка — заполняются выборкой списка клиентов. */
   dealsCount?: number;
@@ -90,6 +96,8 @@ export interface DealDto {
   plannedClose: string | null;
   ownerUserId: number | null;
   owner?: UserDto | null;
+  /** Версия записи; см. ClientDto.version. */
+  version: number;
   closedAt: string | null;
   createdAt: string;
 }

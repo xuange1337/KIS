@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Отменяем прошлый прогон той же ветки: держать очередь ради
+# промежуточного коммита незачем
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Проверки и тесты
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: crm
+          POSTGRES_USER: crm
+          POSTGRES_PASSWORD: ci_password
+          TZ: Europe/Moscow
+          PGTZ: Europe/Moscow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U crm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: ci_password
+      # Секреты сборочного окружения одноразовые и к стендам отношения
+      # не имеют: приложение без них не стартует, а тесты подписывают ими
+      # токены внутри прогона
+      JWT_ACCESS_SECRET: ci-access-secret-0123456789abcdef0123456789
+      JWT_REFRESH_SECRET: ci-refresh-secret-0123456789abcdef0123456789
+      TZ: Europe/Moscow
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Форматирование
+        run: npm run format:check
+
+      - name: Линтер
+        run: npm run lint
+
+      - name: Сборка
+        run: npm run build
+
+      - name: Бюджет размера бандла
+        run: npm run check:bundle
+
+      - name: Тесты клиента
+        run: npm run test:web
+
+      - name: Тесты API
+        run: npm run test:api
+
+      - name: Лицензии
+        run: npm run licenses:check
+
+      - name: Секреты
+        run: npm run check:secrets
+
+      - name: Уязвимости production-зависимостей
+        run: npm run audit:production
+
+  docker:
+    name: Образы и smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Подготовка окружения
+        run: |
+          cp .env.example .env
+          {
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)"
+            echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)"
+          } >> .env
+
+      - name: Конфигурация compose
+        run: npm run check:docker
+
+      - name: Сборка образов, запуск и проверка
+        run: scripts/smoke.sh
+
+      - name: Нагрузочный smoke
+        run: node scripts/load-test.mjs
+
+      - name: Резервная копия и проверка восстановления
+        run: |
+          BACKUP_DIR=/tmp/crm-backups scripts/backup.sh
+          scripts/restore.sh "$(ls -d /tmp/crm-backups/*)" --verify
+
+      - name: Логи при сбое
+        if: failure()
+        run: docker compose logs --tail 100
+
+      - name: Остановка
+        if: always()
+        run: docker compose down -v

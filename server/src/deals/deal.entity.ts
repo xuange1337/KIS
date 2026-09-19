@@ -8,6 +8,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  VersionColumn,
 } from 'typeorm';
 import { Organization } from '../organizations/organization.entity';
 import { Client } from '../clients/client.entity';
@@ -74,6 +75,13 @@ export class Deal {
   @Index('idx_deals_closed_at')
   @Column({ name: 'closed_at', type: 'timestamptz', nullable: true })
   closedAt: Date | null;
+
+  /**
+   * Версия записи: увеличивается при каждом сохранении.
+   * Нужна, чтобы одновременная правка двумя людьми не затиралась молча.
+   */
+  @VersionColumn({ type: 'int', default: 1 })
+  version: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

@@ -28,7 +28,8 @@
     "restore": "scripts/restore.sh",
     "ci": "npm run format:check && npm run lint && npm run build && npm run check:bundle && npm run test:web && npm run test:api && npm run licenses:check && npm run check:secrets && npm run check:docker",
     "check:bundle": "node scripts/check-bundle-size.mjs",
-    "smoke": "scripts/smoke.sh"
+    "smoke": "scripts/smoke.sh",
+    "test:load": "node scripts/load-test.mjs"
   },
   "overrides": {
     "multer": "2.4.0"

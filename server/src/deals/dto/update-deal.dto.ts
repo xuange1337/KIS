@@ -1,4 +1,6 @@
 import { OmitType, PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Min } from 'class-validator';
 import { CreateDealDto } from './create-deal.dto';
 
 /**
@@ -10,4 +12,11 @@ import { CreateDealDto } from './create-deal.dto';
  */
 export class UpdateDealDto extends PartialType(
   OmitType(CreateDealDto, ['clientId', 'stage', 'probability'] as const),
-) {}
+) {
+  /** Версия записи; см. UpdateClientDto. */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  version?: number;
+}
