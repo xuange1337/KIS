@@ -8,7 +8,12 @@
 -- именами ограничений и комментариями к таблицам и полям.
 --
 -- Порядок создания объектов учитывает зависимости по внешним ключам:
--- users -> clients -> contacts -> deals -> deal_stage_history/activities/offers
+-- organizations -> users -> clients -> contacts -> deals ->
+-- deal_stage_history/activities/offers
+--
+-- Организация — граница изоляции данных: каждая бизнес-запись принадлежит
+-- ровно одной организации, и все выборки приложения ограничены
+-- организацией текущего пользователя.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -50,10 +55,28 @@ CREATE TYPE audit_action AS ENUM ('create', 'update', 'delete', 'login', 'export
 
 
 -- -----------------------------------------------------------------------------
+-- Organizations — организации-арендаторы
+-- -----------------------------------------------------------------------------
+CREATE TABLE organizations (
+    organization_id SERIAL       PRIMARY KEY,
+    name            VARCHAR(255) NOT NULL,
+    is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_organizations_name ON organizations (name);
+
+COMMENT ON TABLE organizations IS
+    'Организация-арендатор: граница изоляции всех бизнес-данных';
+
+
+-- -----------------------------------------------------------------------------
 -- Users — пользователи системы
 -- -----------------------------------------------------------------------------
 CREATE TABLE users (
-    user_id       SERIAL       PRIMARY KEY,
+    user_id         SERIAL     PRIMARY KEY,
+    organization_id INTEGER    NOT NULL REFERENCES organizations (organization_id)
+                               ON DELETE RESTRICT,
     login         VARCHAR(64)  NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name     VARCHAR(160) NOT NULL,
@@ -65,6 +88,10 @@ CREATE TABLE users (
 );
 
 CREATE UNIQUE INDEX idx_users_login ON users (login);
+CREATE INDEX idx_users_organization ON users (organization_id);
+
+-- Логин уникален во всей системе, а не внутри организации: страница входа
+-- одна, и по одному логину не должно находиться двух учётных записей
 
 COMMENT ON TABLE  users               IS 'Пользователи АРМ: менеджеры, руководитель, администратор';
 COMMENT ON COLUMN users.password_hash IS 'Хеш пароля (bcrypt), в открытом виде пароль не хранится';
@@ -76,6 +103,8 @@ COMMENT ON COLUMN users.is_active     IS 'Признак активности; �
 -- -----------------------------------------------------------------------------
 CREATE TABLE clients (
     client_id     SERIAL        PRIMARY KEY,
+    organization_id INTEGER  NOT NULL REFERENCES organizations (organization_id)
+                             ON DELETE RESTRICT,
     name          VARCHAR(255)  NOT NULL,
     inn           VARCHAR(12),
     industry      VARCHAR(120),
@@ -88,6 +117,8 @@ CREATE TABLE clients (
     CONSTRAINT fk_clients_owner FOREIGN KEY (owner_user_id)
         REFERENCES users (user_id) ON DELETE SET NULL
 );
+
+CREATE INDEX idx_clients_organization ON clients (organization_id);
 
 CREATE INDEX idx_clients_name  ON clients (name);
 CREATE INDEX idx_clients_owner ON clients (owner_user_id);
@@ -102,6 +133,8 @@ COMMENT ON COLUMN clients.owner_user_id IS 'Ответственный мене�
 -- -----------------------------------------------------------------------------
 CREATE TABLE contacts (
     contact_id        SERIAL       PRIMARY KEY,
+    organization_id INTEGER  NOT NULL REFERENCES organizations (organization_id)
+                             ON DELETE RESTRICT,
     client_id         INTEGER      NOT NULL,
     full_name         VARCHAR(160) NOT NULL,
     position          VARCHAR(120),
@@ -114,6 +147,8 @@ CREATE TABLE contacts (
         REFERENCES clients (client_id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_contacts_organization ON contacts (organization_id);
+
 CREATE INDEX idx_contacts_client ON contacts (client_id);
 
 COMMENT ON TABLE  contacts                   IS 'Контактные лица клиентов';
@@ -125,6 +160,8 @@ COMMENT ON COLUMN contacts.preferred_channel IS 'Предпочитаемый с
 -- -----------------------------------------------------------------------------
 CREATE TABLE deals (
     deal_id       SERIAL         PRIMARY KEY,
+    organization_id INTEGER  NOT NULL REFERENCES organizations (organization_id)
+                             ON DELETE RESTRICT,
     client_id     INTEGER        NOT NULL,
     title         VARCHAR(255)   NOT NULL,
     stage         deal_stage     NOT NULL DEFAULT 'new',
@@ -144,6 +181,8 @@ CREATE TABLE deals (
     CONSTRAINT ck_deals_amount CHECK (amount >= 0)
 );
 
+CREATE INDEX idx_deals_organization ON deals (organization_id);
+
 CREATE INDEX idx_deals_stage_owner ON deals (stage, owner_user_id);
 CREATE INDEX idx_deals_closed_at   ON deals (closed_at);
 -- Разграничение доступа фильтрует по одному owner_user_id, поэтому
@@ -161,6 +200,8 @@ COMMENT ON COLUMN deals.closed_at   IS 'Дата закрытия; заполн�
 -- -----------------------------------------------------------------------------
 CREATE TABLE deal_stage_history (
     id         SERIAL      PRIMARY KEY,
+    organization_id INTEGER  NOT NULL REFERENCES organizations (organization_id)
+                             ON DELETE RESTRICT,
     deal_id    INTEGER     NOT NULL,
     from_stage deal_stage,
     to_stage   deal_stage  NOT NULL,
@@ -173,6 +214,8 @@ CREATE TABLE deal_stage_history (
         REFERENCES users (user_id) ON DELETE SET NULL
 );
 
+CREATE INDEX idx_deal_stage_history_organization ON deal_stage_history (organization_id);
+
 CREATE INDEX idx_stage_history_deal ON deal_stage_history (deal_id);
 
 COMMENT ON TABLE  deal_stage_history            IS 'Журнал перемещения сделок по воронке продаж';
@@ -184,6 +227,8 @@ COMMENT ON COLUMN deal_stage_history.from_stage IS 'NULL означает зап
 -- -----------------------------------------------------------------------------
 CREATE TABLE activities (
     activity_id   SERIAL          PRIMARY KEY,
+    organization_id INTEGER  NOT NULL REFERENCES organizations (organization_id)
+                             ON DELETE RESTRICT,
     client_id     INTEGER         NOT NULL,
     deal_id       INTEGER,
     type          activity_type   NOT NULL,
@@ -202,6 +247,8 @@ CREATE TABLE activities (
     CONSTRAINT fk_activities_owner FOREIGN KEY (owner_user_id)
         REFERENCES users (user_id) ON DELETE SET NULL
 );
+
+CREATE INDEX idx_activities_organization ON activities (organization_id);
 
 -- Индекс покрывает выборки календаря и отчёт о просроченных активностях
 CREATE INDEX idx_activities_planning ON activities (planned_at, owner_user_id, status);
@@ -222,6 +269,8 @@ COMMENT ON COLUMN activities.result     IS 'Результат коммуник�
 -- -----------------------------------------------------------------------------
 CREATE TABLE commercial_offers (
     offer_id     SERIAL         PRIMARY KEY,
+    organization_id INTEGER  NOT NULL REFERENCES organizations (organization_id)
+                             ON DELETE RESTRICT,
     deal_id      INTEGER        NOT NULL,
     number       VARCHAR(64)    NOT NULL,
     date         DATE           NOT NULL,
@@ -233,6 +282,8 @@ CREATE TABLE commercial_offers (
         REFERENCES deals (deal_id) ON DELETE CASCADE,
     CONSTRAINT ck_offers_amount CHECK (total_amount >= 0)
 );
+
+CREATE INDEX idx_commercial_offers_organization ON commercial_offers (organization_id);
 
 CREATE INDEX idx_offers_deal ON commercial_offers (deal_id);
 
@@ -246,6 +297,10 @@ COMMENT ON COLUMN commercial_offers.file_ref IS 'Ссылка на файл вл
 -- -----------------------------------------------------------------------------
 CREATE TABLE audit_log (
     id         SERIAL       PRIMARY KEY,
+    -- NULL допустим: неудачный вход записывается до того, как известна
+    -- учётная запись, и не относится ни к какой организации
+    organization_id INTEGER REFERENCES organizations (organization_id)
+                            ON DELETE RESTRICT,
     user_id    INTEGER,
     entity     VARCHAR(64)  NOT NULL,
     entity_id  VARCHAR(64),
@@ -254,7 +309,8 @@ CREATE TABLE audit_log (
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_user    ON audit_log (user_id);
+CREATE INDEX idx_audit_user             ON audit_log (user_id);
+CREATE INDEX idx_audit_log_organization ON audit_log (organization_id);
 CREATE INDEX idx_audit_created ON audit_log (created_at);
 
 COMMENT ON TABLE  audit_log         IS 'Журнал изменяющих операций и входов в систему';
@@ -265,6 +321,10 @@ COMMENT ON COLUMN audit_log.payload IS 'Параметры запроса; па�
 -- =============================================================================
 -- Запросы, лежащие в основе отчётов (п. 2.4)
 -- =============================================================================
+
+-- Во всех запросах ниже подразумевается ограничение организацией текущего
+-- пользователя: WHERE organization_id = :organizationId. Приложение
+-- добавляет его централизованно (server/src/common/helpers/tenant-scope.ts).
 
 -- 1. Воронка продаж: количество и сумма сделок по стадиям
 --    SELECT stage, COUNT(*), SUM(amount) FROM deals GROUP BY stage;

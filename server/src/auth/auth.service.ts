@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuditAction, LoginResponse, SessionDto, UserDto } from '@crm/shared';
 import * as bcrypt from 'bcryptjs';
-import { createHash, randomUUID, timingSafeEqual } from 'crypto';
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'crypto';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { toUserDto } from '../users/user.mapper';
@@ -18,6 +18,17 @@ import { configuration } from '../config/configuration';
 import { JwtPayload } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
 import { RefreshSession } from './refresh-session.entity';
+
+/**
+ * Хеш заведомо недостижимого пароля: используется, когда логина не
+ * существует, чтобы проверка занимала столько же времени, сколько обычная.
+ * Пароль — случайная строка, сгенерированная при старте процесса, поэтому
+ * совпасть с ним нельзя даже теоретически.
+ */
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
+  randomBytes(32).toString('hex'),
+  10,
+);
 
 @Injectable()
 export class AuthService implements OnModuleInit, OnModuleDestroy {
@@ -36,7 +47,10 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     await this.cleanupSessions();
-    this.cleanupTimer = setInterval(() => void this.cleanupSessions(), 6 * 60 * 60 * 1000);
+    this.cleanupTimer = setInterval(
+      () => void this.cleanupSessions(),
+      6 * 60 * 60 * 1000,
+    );
     this.cleanupTimer.unref();
   }
 
@@ -45,21 +59,34 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Проверяет учётные данные и выдаёт пару токенов. */
-  async login(dto: LoginDto): Promise<LoginResponse & { refreshToken: string }> {
+  async login(
+    dto: LoginDto,
+  ): Promise<LoginResponse & { refreshToken: string }> {
     const user = await this.usersService.findByLoginWithPassword(dto.login);
     // Одинаковое сообщение для неверного логина и пароля — не подсказываем,
     // какая часть пары неверна
     const invalid = new UnauthorizedException('Неверный логин или пароль');
-    if (!user) throw invalid;
 
-    const passwordMatches = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!passwordMatches) throw invalid;
+    /**
+     * Хеш сверяется и для несуществующего логина.
+     *
+     * Ранний выход экономил ~80 мс bcrypt, и по времени ответа несуществующий
+     * логин отличался от существующего с неверным паролем: перебором
+     * словаря логинов собирался список действующих учётных записей,
+     * а дальше подбор шёл только по ним.
+     */
+    const passwordMatches = await bcrypt.compare(
+      dto.password,
+      user?.passwordHash ?? DUMMY_PASSWORD_HASH,
+    );
+    if (!user || !passwordMatches) throw invalid;
     if (!user.isActive) {
       throw new UnauthorizedException('Учётная запись заблокирована');
     }
 
     await this.auditRepo
       .save({
+        organizationId: user.organizationId,
         userId: user.userId,
         entity: 'auth',
         entityId: String(user.userId),
@@ -72,7 +99,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Обновляет access-токен по refresh-токену из httpOnly cookie. */
-  async refresh(refreshToken: string | undefined): Promise<LoginResponse & { refreshToken: string }> {
+  async refresh(
+    refreshToken: string | undefined,
+  ): Promise<LoginResponse & { refreshToken: string }> {
     if (!refreshToken) {
       throw new UnauthorizedException('Сессия не найдена, войдите заново');
     }
@@ -100,8 +129,21 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         return null;
       }
       if (!this.hashesEqual(session.tokenHash, tokenHash)) {
-        session.revokedAt = new Date();
-        await repo.save(session);
+        /**
+         * Предъявлен старый токен этой сессии: либо он был украден, либо
+         * украден текущий, а старый предъявляет законный владелец. Отличить
+         * одно от другого нельзя, поэтому отзывается не только эта сессия,
+         * но и все остальные сессии пользователя: у злоумышленника могла
+         * остаться ещё одна пара токенов, выпущенная тем же украденным
+         * токеном раньше.
+         */
+        await repo
+          .createQueryBuilder()
+          .update(RefreshSession)
+          .set({ revokedAt: new Date() })
+          .where('user_id = :userId', { userId: session.userId })
+          .andWhere('revoked_at IS NULL')
+          .execute();
         return null;
       }
       const user = await manager.getRepository(User).findOne({
@@ -113,7 +155,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         return null;
       }
       const tokens = this.issueTokens(user, session.sessionId);
-      const decoded = this.jwtService.decode(tokens.refreshToken) as { exp: number };
+      const decoded = this.jwtService.decode(tokens.refreshToken) as {
+        exp: number;
+      };
       session.tokenHash = this.hashToken(tokens.refreshToken);
       session.expiresAt = new Date(decoded.exp * 1000);
       session.lastUsedAt = new Date();
@@ -130,9 +174,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   async logout(refreshToken: string | undefined): Promise<void> {
     if (!refreshToken) return;
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
-        secret: this.config.jwt.refreshSecret,
-      });
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+        {
+          secret: this.config.jwt.refreshSecret,
+        },
+      );
       if (payload.sid) {
         await this.sessionRepo.update(
           { sessionId: payload.sid, revokedAt: IsNull() },
@@ -144,7 +191,10 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async listSessions(userId: number, currentSessionId?: string): Promise<SessionDto[]> {
+  async listSessions(
+    userId: number,
+    currentSessionId?: string,
+  ): Promise<SessionDto[]> {
     const sessions = await this.sessionRepo.find({
       where: { userId, revokedAt: IsNull() },
       order: { lastUsedAt: 'DESC' },
@@ -175,6 +225,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   async profile(userId: number): Promise<UserDto> {
+    // Организация здесь не передаётся: пользователь запрашивает сам себя
     return toUserDto(await this.usersService.findOne(userId));
   }
 
@@ -183,7 +234,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const sessionId = randomUUID();
     const tokens = this.issueTokens(user, sessionId);
-    const decoded = this.jwtService.decode(tokens.refreshToken) as { exp: number };
+    const decoded = this.jwtService.decode(tokens.refreshToken) as {
+      exp: number;
+    };
     await this.sessionRepo.save({
       sessionId,
       userId: user.userId,
@@ -210,13 +263,16 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         secret: this.config.jwt.accessSecret,
         expiresIn: this.config.jwt.accessTtl,
       }),
-      refreshToken: this.jwtService.sign({
-        ...payload,
-        jti: randomUUID(),
-      }, {
-        secret: this.config.jwt.refreshSecret,
-        expiresIn: this.config.jwt.refreshTtl,
-      }),
+      refreshToken: this.jwtService.sign(
+        {
+          ...payload,
+          jti: randomUUID(),
+        },
+        {
+          secret: this.config.jwt.refreshSecret,
+          expiresIn: this.config.jwt.refreshTtl,
+        },
+      ),
     };
   }
 

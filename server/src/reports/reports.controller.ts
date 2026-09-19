@@ -139,7 +139,8 @@ export class ReportsController {
 
   /** Подзаголовок выгрузки: период и валюта денежных показателей. */
   private describePeriod(query: ReportQueryDto): string {
-    const format = (value: string) => new Date(value).toLocaleDateString('ru-RU');
+    const format = (value: string) =>
+      new Date(value).toLocaleDateString('ru-RU');
     const period =
       query.from && query.to
         ? `Период: ${format(query.from)} — ${format(query.to)}`

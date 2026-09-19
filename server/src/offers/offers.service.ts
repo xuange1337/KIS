@@ -9,6 +9,7 @@ import { QueryOffersDto } from './dto/query-offers.dto';
 import { DealsService } from '../deals/deals.service';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { applyOwnerScope } from '../common/helpers/owner-scope';
+import { applyTenantScope } from '../common/helpers/tenant-scope';
 import { paginate } from '../common/helpers/paginate';
 
 const SORTABLE = ['date', 'totalAmount', 'number', 'status'];
@@ -25,12 +26,16 @@ export class OffersService {
     private readonly dealsService: DealsService,
   ) {}
 
-  async findAll(query: QueryOffersDto, user: AuthUser): Promise<Paginated<Offer>> {
+  async findAll(
+    query: QueryOffersDto,
+    user: AuthUser,
+  ): Promise<Paginated<Offer>> {
     const qb = this.repo
       .createQueryBuilder('offer')
       .leftJoinAndSelect('offer.deal', 'deal')
       .leftJoinAndSelect('deal.client', 'client');
 
+    applyTenantScope(qb, user, 'offer');
     // У КП нет своего владельца, поэтому скоуп накладывается на сделку
     applyOwnerScope(qb, user, 'deal');
 
@@ -51,12 +56,15 @@ export class OffersService {
 
   async findByDeal(dealId: number, user: AuthUser): Promise<Offer[]> {
     await this.dealsService.findOne(dealId, user);
-    return this.repo.find({ where: { dealId }, order: { date: 'DESC' } });
+    return this.repo.find({
+      where: { dealId, organizationId: user.organizationId },
+      order: { date: 'DESC' },
+    });
   }
 
   async findOne(offerId: number, user: AuthUser): Promise<Offer> {
     const offer = await this.repo.findOne({
-      where: { offerId },
+      where: { offerId, organizationId: user.organizationId },
       relations: { deal: true },
     });
     if (!offer) {
@@ -68,7 +76,9 @@ export class OffersService {
 
   async create(dto: CreateOfferDto, user: AuthUser): Promise<Offer> {
     await this.dealsService.findOne(dto.dealId, user);
-    const saved = await this.repo.save(this.repo.create(dto));
+    const saved = await this.repo.save(
+      this.repo.create({ ...dto, organizationId: user.organizationId }),
+    );
     return this.findOne(saved.offerId, user);
   }
 

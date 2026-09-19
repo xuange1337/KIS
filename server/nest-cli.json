@@ -11,6 +11,15 @@
         "outDir": "dist",
         "watchAssets": true
       }
+    ],
+    "plugins": [
+      {
+        "name": "@nestjs/swagger",
+        "options": {
+          "introspectComments": true,
+          "dtoFileNameSuffix": [".dto.ts", ".entity.ts"]
+        }
+      }
     ]
   }
 }

@@ -7,6 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Organization } from '../organizations/organization.entity';
 import { Client } from '../clients/client.entity';
 import { Deal } from '../deals/deal.entity';
 import { User } from '../users/user.entity';
@@ -17,6 +18,15 @@ import { User } from '../users/user.entity';
 export class Activity {
   @PrimaryGeneratedColumn({ name: 'activity_id' })
   activityId: number;
+
+  /** Организация-владелец записи: граница изоляции данных. */
+  @Index('idx_activities_organization')
+  @Column({ name: 'organization_id', type: 'int' })
+  organizationId: number;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @Column({ name: 'client_id', type: 'int' })
   clientId: number;
@@ -47,7 +57,11 @@ export class Activity {
   @Column({ name: 'done_at', type: 'timestamptz', nullable: true })
   doneAt: Date | null;
 
-  @Column({ type: 'enum', enum: ActivityStatus, default: ActivityStatus.PLANNED })
+  @Column({
+    type: 'enum',
+    enum: ActivityStatus,
+    default: ActivityStatus.PLANNED,
+  })
   status: ActivityStatus;
 
   @Column({ type: 'text', nullable: true })

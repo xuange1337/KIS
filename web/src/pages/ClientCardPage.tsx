@@ -33,10 +33,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import {
-  ClientStatusChip,
-  DealStageChip,
-} from '../components/StatusChip';
+import { ClientStatusChip, DealStageChip } from '../components/StatusChip';
 import { formatDate, formatMoney } from '../components/formatters';
 import { ClientFormDialog } from '../features/clients/ClientFormDialog';
 import { ContactFormDialog } from '../features/contacts/ContactFormDialog';
@@ -115,8 +112,8 @@ export function ClientCardPage() {
       setDeleteTarget(null);
     } catch (caught) {
       const message =
-        (caught as { response?: { data?: { message?: string } } }).response?.data
-          ?.message ?? 'Не удалось удалить запись';
+        (caught as { response?: { data?: { message?: string } } }).response
+          ?.data?.message ?? 'Не удалось удалить запись';
       setDeleteError(message);
     }
   };
@@ -146,7 +143,11 @@ export function ClientCardPage() {
       />
 
       {deleteError && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setDeleteError(null)}>
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          onClose={() => setDeleteError(null)}
+        >
           {deleteError}
         </Alert>
       )}
@@ -383,7 +384,13 @@ export function ClientCardPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <Grid item xs={6} sm={4} md={2}>
       <Typography variant="caption" color="text.secondary" display="block">
@@ -398,7 +405,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function EmptyText({ text }: { text: string }) {
   return (
-    <Typography variant="body2" color="text.secondary" sx={{ py: 3 }} align="center">
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{ py: 3 }}
+      align="center"
+    >
       {text}
     </Typography>
   );

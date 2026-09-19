@@ -7,6 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Organization } from '../organizations/organization.entity';
 import { Deal } from '../deals/deal.entity';
 import { numericTransformer } from '../common/helpers/numeric.transformer';
 
@@ -15,6 +16,15 @@ import { numericTransformer } from '../common/helpers/numeric.transformer';
 export class Offer {
   @PrimaryGeneratedColumn({ name: 'offer_id' })
   offerId: number;
+
+  /** Организация-владелец записи: граница изоляции данных. */
+  @Index('idx_commercial_offers_organization')
+  @Column({ name: 'organization_id', type: 'int' })
+  organizationId: number;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @Index('idx_offers_deal')
   @Column({ name: 'deal_id', type: 'int' })

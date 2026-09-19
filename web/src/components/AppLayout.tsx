@@ -118,7 +118,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const width = collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: TOKENS.background }}>
+    <Box
+      sx={{ display: 'flex', minHeight: '100vh', bgcolor: TOKENS.background }}
+    >
       <Box
         component="nav"
         aria-label="Разделы системы"
@@ -144,11 +146,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {!collapsed && (
             <Box sx={{ minWidth: 0 }}>
               <Typography
-                sx={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}
+                sx={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.1,
+                }}
               >
                 АРМ · CRM
               </Typography>
-              <Typography variant="caption" sx={{ display: 'block', mt: 0.125 }}>
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', mt: 0.125 }}
+              >
                 работа с клиентами
               </Typography>
             </Box>
@@ -171,7 +181,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
         <Stack
           component="ul"
-          sx={{ gap: 0.25, listStyle: 'none', m: 0, px: collapsed ? 1 : 1.5, py: 0 }}
+          sx={{
+            gap: 0.25,
+            listStyle: 'none',
+            m: 0,
+            px: collapsed ? 1 : 1.5,
+            py: 0,
+          }}
         >
           {visibleItems.map((item) => {
             const active = isActive(item.to);
@@ -202,7 +218,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
               >
                 {item.icon}
                 {!collapsed && (
-                  <Typography sx={{ fontSize: 13.5, fontWeight: active ? 600 : 500 }} noWrap>
+                  <Typography
+                    sx={{ fontSize: 13.5, fontWeight: active ? 600 : 500 }}
+                    noWrap
+                  >
                     {item.label}
                   </Typography>
                 )}
@@ -230,11 +249,27 @@ export function AppLayout({ children }: { children: ReactNode }) {
           direction="row"
           alignItems="center"
           spacing={1.25}
-          sx={{ px: collapsed ? 1 : 1.75, py: 1.5, justifyContent: collapsed ? 'center' : undefined }}
+          sx={{
+            px: collapsed ? 1 : 1.75,
+            py: 1.5,
+            justifyContent: collapsed ? 'center' : undefined,
+          }}
         >
-          <Tooltip title={collapsed ? `${user?.fullName} · ${user && USER_ROLE_LABELS[user.role]}` : ''}>
+          <Tooltip
+            title={
+              collapsed
+                ? `${user?.fullName} · ${user && USER_ROLE_LABELS[user.role]}`
+                : ''
+            }
+          >
             <Avatar
-              sx={{ width: 30, height: 30, bgcolor: TOKENS.primary, fontSize: 12, fontWeight: 600 }}
+              sx={{
+                width: 30,
+                height: 30,
+                bgcolor: TOKENS.primary,
+                fontSize: 12,
+                fontWeight: 600,
+              }}
             >
               {initials}
             </Avatar>
@@ -243,7 +278,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {!collapsed && (
             <>
               <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-                <Typography sx={{ fontSize: 12.5, fontWeight: 600, lineHeight: 1.3 }} noWrap>
+                <Typography
+                  sx={{ fontSize: 12.5, fontWeight: 600, lineHeight: 1.3 }}
+                  noWrap
+                >
                   {user?.fullName}
                 </Typography>
                 <Typography variant="caption" noWrap sx={{ display: 'block' }}>

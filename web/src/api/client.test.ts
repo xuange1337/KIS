@@ -56,7 +56,10 @@ describe('Извлечение сообщения из ответа-Blob', () =>
     const blob = new Blob(['<html>ошибка шлюза</html>'], { type: 'text/html' });
 
     await expect(
-      extractBlobErrorMessage(axiosErrorWith(blob), 'Не удалось сформировать выгрузку'),
+      extractBlobErrorMessage(
+        axiosErrorWith(blob),
+        'Не удалось сформировать выгрузку',
+      ),
     ).resolves.toBe('Не удалось сформировать выгрузку');
   });
 

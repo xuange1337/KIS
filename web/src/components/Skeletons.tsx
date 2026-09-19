@@ -15,7 +15,11 @@ export function MetricsSkeleton({ count = 4 }: { count?: number }) {
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: `repeat(${count}, 1fr)` },
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: '1fr 1fr',
+          lg: `repeat(${count}, 1fr)`,
+        },
         border: `1px solid ${TOKENS.border}`,
         borderRadius: 2,
         bgcolor: TOKENS.surface,
@@ -28,7 +32,9 @@ export function MetricsSkeleton({ count = 4 }: { count?: number }) {
           sx={{
             px: 2.5,
             py: 2.25,
-            borderRight: { lg: index < count - 1 ? `1px solid ${TOKENS.border}` : 'none' },
+            borderRight: {
+              lg: index < count - 1 ? `1px solid ${TOKENS.border}` : 'none',
+            },
           }}
         >
           <Skeleton variant="text" width={110} height={12} />
@@ -52,7 +58,8 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
           spacing={1.5}
           sx={{
             py: 1.25,
-            borderBottom: index < rows - 1 ? `1px solid ${TOKENS.border}` : 'none',
+            borderBottom:
+              index < rows - 1 ? `1px solid ${TOKENS.border}` : 'none',
           }}
         >
           <Skeleton variant="circular" width={16} height={16} />

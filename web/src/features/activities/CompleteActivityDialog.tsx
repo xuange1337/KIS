@@ -55,7 +55,12 @@ export function CompleteActivityDialog({
   };
 
   return (
-    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={closeUnlessBackdrop(onClose)}
+      maxWidth="sm"
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>Результат активности</DialogTitle>
         <DialogContent>

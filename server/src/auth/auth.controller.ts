@@ -65,6 +65,16 @@ export class AuthController {
       req.cookies?.[REFRESH_COOKIE],
     );
     this.setRefreshCookie(res, refreshToken);
+    /**
+     * CSRF-cookie продлевается вместе с refresh-токеном.
+     *
+     * Срок жизни у них одинаковый, но refresh-cookie переустанавливается
+     * при каждом обновлении, а CSRF-cookie раньше выдавалась только при
+     * входе. У пользователя, который не выходил из системы неделю, она
+     * истекала первой, и все последующие обновления получали 403 без
+     * внятной причины: сессия ещё жива, а проверка уже не проходит.
+     */
+    this.setCsrfCookie(res, randomBytes(32).toString('hex'));
     return result;
   }
 

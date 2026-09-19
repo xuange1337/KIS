@@ -29,14 +29,20 @@ const activity = (
 const renderList = (activities: ActivityDto[], props = {}) =>
   render(
     <MemoryRouter>
-      <ActivityList activities={activities} emptyText="Активностей нет" {...props} />
+      <ActivityList
+        activities={activities}
+        emptyText="Активностей нет"
+        {...props}
+      />
     </MemoryRouter>,
   );
 
 describe('Лента активностей', () => {
   it('подписывает срок словами вместо голой даты', () => {
     renderList([
-      activity({ plannedAt: new Date(Date.now() + 3 * 3600 * 1000).toISOString() }),
+      activity({
+        plannedAt: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
+      }),
     ]);
     expect(screen.getByText(/Сегодня/)).toBeInTheDocument();
   });

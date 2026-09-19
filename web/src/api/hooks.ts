@@ -64,9 +64,11 @@ export function useClient(clientId: number | undefined) {
   return useQuery({
     queryKey: ['client', clientId],
     queryFn: async () =>
-      (await api.get<ClientDto & { contacts: ContactDto[] }>(
-        `/clients/${clientId}`,
-      )).data,
+      (
+        await api.get<ClientDto & { contacts: ContactDto[] }>(
+          `/clients/${clientId}`,
+        )
+      ).data,
     enabled: Boolean(clientId),
   });
 }
@@ -201,7 +203,9 @@ export function useChangeDealStage() {
     onSuccess: (deal) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       queryClient.invalidateQueries({ queryKey: ['deal', deal.dealId] });
-      queryClient.invalidateQueries({ queryKey: ['deal-history', deal.dealId] });
+      queryClient.invalidateQueries({
+        queryKey: ['deal-history', deal.dealId],
+      });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['report'] });
     },
@@ -329,7 +333,9 @@ export function useSaveOffer() {
         : (await api.post<OfferDto>('/offers', payload)).data,
     onSuccess: (offer) => {
       queryClient.invalidateQueries({ queryKey: ['offers'] });
-      queryClient.invalidateQueries({ queryKey: ['deal-offers', offer.dealId] });
+      queryClient.invalidateQueries({
+        queryKey: ['deal-offers', offer.dealId],
+      });
     },
   });
 }
@@ -370,7 +376,8 @@ export function useReport<T extends ReportRow>(
 ) {
   return useQuery({
     queryKey: ['report', report, params],
-    queryFn: async () => (await api.get<T[]>(`/reports/${report}`, { params })).data,
+    queryFn: async () =>
+      (await api.get<T[]>(`/reports/${report}`, { params })).data,
   });
 }
 

@@ -29,7 +29,9 @@ export class ContactsService {
   }
 
   async findOne(contactId: number, user: AuthUser): Promise<Contact> {
-    const contact = await this.repo.findOne({ where: { contactId } });
+    const contact = await this.repo.findOne({
+      where: { contactId, organizationId: user.organizationId },
+    });
     if (!contact) {
       throw new NotFoundException('Контактное лицо не найдено');
     }
@@ -39,7 +41,9 @@ export class ContactsService {
 
   async create(dto: CreateContactDto, user: AuthUser): Promise<Contact> {
     await this.clientsService.findOne(dto.clientId, user);
-    return this.repo.save(this.repo.create(dto));
+    return this.repo.save(
+      this.repo.create({ ...dto, organizationId: user.organizationId }),
+    );
   }
 
   async update(

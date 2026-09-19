@@ -1,0 +1,12 @@
+dist
+node_modules
+coverage
+package-lock.json
+docs/openapi.json
+docs/diagrams
+docs/screenshots
+backups
+
+# Документация вычитана и перенесена по строкам вручную:
+# переформатирование Markdown ломает эту разметку без пользы
+*.md

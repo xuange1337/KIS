@@ -21,6 +21,7 @@ import { Deal } from '../../deals/deal.entity';
 import { DealStageHistory } from '../../deals/deal-stage-history.entity';
 import { Activity } from '../../activities/activity.entity';
 import { Offer } from '../../offers/offer.entity';
+import { Organization } from '../../organizations/organization.entity';
 import {
   ACTIVITY_RESULTS,
   ACTIVITY_SUBJECTS,
@@ -34,6 +35,12 @@ import {
  * Генератор детерминированный: при одинаковом состоянии базы результат
  * повторяется, поэтому отчёты и скриншоты стабильны между прогонами.
  */
+
+/** Организация демонстрационных данных. */
+const DEMO_ORGANIZATION = 'ООО «Демонстрация»';
+
+/** Вторая организация: на ней проверяется изоляция данных. */
+const OTHER_ORGANIZATION = 'ЗАО «Соседняя компания»';
 
 /** Линейный конгруэнтный генератор — вместо Math.random, чтобы данные не «плавали». */
 class Random {
@@ -134,12 +141,22 @@ export async function seed(
     return;
   }
 
+  log('Создание организации...');
+  const organizationRepo = dataSource.getRepository(Organization);
+  const organization =
+    (await organizationRepo.findOne({ where: { name: DEMO_ORGANIZATION } })) ??
+    (await organizationRepo.save(
+      organizationRepo.create({ name: DEMO_ORGANIZATION }),
+    ));
+  const organizationId = organization.organizationId;
+
   log('Создание пользователей...');
   const users: User[] = [];
   for (const seedUser of SEED_USERS) {
     users.push(
       await userRepo.save(
         userRepo.create({
+          organizationId,
           login: seedUser.login,
           fullName: seedUser.fullName,
           role: seedUser.role,
@@ -161,6 +178,7 @@ export async function seed(
   for (const [index, seedClient] of CLIENT_SEEDS.entries()) {
     const client = await clientRepo.save(
       clientRepo.create({
+        organizationId,
         name: seedClient.name,
         inn: seedClient.inn,
         industry: seedClient.industry,
@@ -176,6 +194,7 @@ export async function seed(
     for (const seedContact of seedClient.contacts) {
       await contactRepo.save(
         contactRepo.create({
+          organizationId,
           clientId: client.clientId,
           fullName: seedContact.fullName,
           position: seedContact.position,
@@ -218,6 +237,7 @@ export async function seed(
 
     const deal = await dealRepo.save(
       dealRepo.create({
+        organizationId,
         clientId: client.clientId,
         title: `${rnd.pick(DEAL_TITLES)} — ${client.name}`,
         stage,
@@ -238,6 +258,7 @@ export async function seed(
     for (const [step, pathStage] of path.entries()) {
       await historyRepo.save(
         historyRepo.create({
+          organizationId,
           dealId: deal.dealId,
           fromStage: previous,
           toStage: pathStage,
@@ -268,11 +289,11 @@ export async function seed(
         : bucket === 1
           ? shiftDays(-rnd.int(1, 45), rnd.int(9, 18))
           : shiftDays(rnd.int(0, 14), rnd.int(9, 18));
-    const status =
-      bucket === 1 ? ActivityStatus.DONE : ActivityStatus.PLANNED;
+    const status = bucket === 1 ? ActivityStatus.DONE : ActivityStatus.PLANNED;
 
     await activityRepo.save(
       activityRepo.create({
+        organizationId,
         clientId: deal.clientId,
         dealId: index % 4 === 3 ? null : deal.dealId,
         type,
@@ -283,7 +304,8 @@ export async function seed(
           status === ActivityStatus.DONE
             ? new Date(plannedAt.getTime() + rnd.int(0, 6) * 60 * 60 * 1000)
             : null,
-        result: status === ActivityStatus.DONE ? rnd.pick(ACTIVITY_RESULTS) : null,
+        result:
+          status === ActivityStatus.DONE ? rnd.pick(ACTIVITY_RESULTS) : null,
         comment:
           index % 5 === 0
             ? `${ACTIVITY_TYPE_LABELS[type]} по инициативе клиента`
@@ -304,6 +326,7 @@ export async function seed(
   for (const [index, deal] of offerDeals.slice(0, 14).entries()) {
     await offerRepo.save(
       offerRepo.create({
+        organizationId,
         dealId: deal.dealId,
         number: `КП-2026/${String(index + 1).padStart(3, '0')}`,
         date: toDateOnly(shiftDays(-rnd.int(5, 90))),
@@ -318,6 +341,8 @@ export async function seed(
     );
   }
 
+  await seedSecondOrganization(dataSource, log);
+
   const counts = {
     пользователи: users.length,
     клиенты: clients.length,
@@ -330,6 +355,103 @@ export async function seed(
 
   // Чужое подключение закрывает тот, кто его открыл
   if (!external) await dataSource.destroy();
+}
+
+/**
+ * Вторая организация с собственными данными.
+ *
+ * Изоляция организаций проверяется только на данных двух организаций:
+ * пока в базе одна, любой запрос выглядит корректным. Набор намеренно
+ * маленький — он нужен как контрольный, а не как демонстрационный.
+ */
+async function seedSecondOrganization(
+  dataSource: DataSource,
+  log: (...args: unknown[]) => void,
+): Promise<void> {
+  log('Создание контрольной организации...');
+  const organizationRepo = dataSource.getRepository(Organization);
+  const organization = await organizationRepo.save(
+    organizationRepo.create({ name: OTHER_ORGANIZATION }),
+  );
+  const organizationId = organization.organizationId;
+
+  const userRepo = dataSource.getRepository(User);
+  const passwordHash = await bcrypt.hash('other123', 10);
+  const otherAdmin = await userRepo.save(
+    userRepo.create({
+      organizationId,
+      login: 'other-admin',
+      fullName: 'Администратор Другой Организации',
+      role: UserRole.ADMIN,
+      isActive: true,
+      passwordHash,
+    }),
+  );
+  const otherManager = await userRepo.save(
+    userRepo.create({
+      organizationId,
+      login: 'other-manager',
+      fullName: 'Менеджер Другой Организации',
+      role: UserRole.MANAGER,
+      isActive: true,
+      passwordHash,
+    }),
+  );
+
+  const client = await dataSource.getRepository(Client).save({
+    organizationId,
+    name: 'ЗАО «Соседний Заказчик»',
+    inn: '7701234567',
+    industry: 'Логистика',
+    ownerUserId: otherManager.userId,
+  } as Client);
+
+  await dataSource.getRepository(Contact).save({
+    organizationId,
+    clientId: client.clientId,
+    fullName: 'Петров Пётр Петрович',
+    position: 'Директор',
+    phone: '+7 495 000-00-00',
+  } as Contact);
+
+  const deal = await dataSource.getRepository(Deal).save({
+    organizationId,
+    clientId: client.clientId,
+    title: 'Поставка соседней организации',
+    stage: DealStage.PROPOSAL,
+    amount: 500000,
+    currency: Currency.RUB,
+    probability: DEAL_STAGE_PROBABILITY[DealStage.PROPOSAL],
+    ownerUserId: otherManager.userId,
+  } as Deal);
+
+  await dataSource.getRepository(DealStageHistory).save({
+    organizationId,
+    dealId: deal.dealId,
+    fromStage: null,
+    toStage: DealStage.PROPOSAL,
+    changedBy: otherAdmin.userId,
+  } as DealStageHistory);
+
+  await dataSource.getRepository(Activity).save({
+    organizationId,
+    clientId: client.clientId,
+    dealId: deal.dealId,
+    type: ActivityType.CALL,
+    subject: 'Звонок соседней организации',
+    plannedAt: shiftDays(1),
+    status: ActivityStatus.PLANNED,
+    ownerUserId: otherManager.userId,
+  } as Activity);
+
+  await dataSource.getRepository(Offer).save({
+    organizationId,
+    dealId: deal.dealId,
+    number: 'КП-СОСЕД/001',
+    date: toDateOnly(shiftDays(-3)),
+    totalAmount: 500000,
+    status: OfferStatus.SENT,
+  } as Offer);
 }
 
 /** Последовательность стадий, пройденных сделкой до текущей. */

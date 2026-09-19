@@ -4,6 +4,8 @@ import { UserRole } from '@crm/shared';
 /** Данные пользователя, извлечённые из access-токена. */
 export interface AuthUser {
   userId: number;
+  /** Организация пользователя: граница видимости всех данных. */
+  organizationId: number;
   login: string;
   fullName: string;
   role: UserRole;

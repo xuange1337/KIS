@@ -42,6 +42,9 @@ describe('Целостность данных', () => {
         .send({
           clientId,
           title: 'Сделка с переполнением',
+          // Значение заведомо не помещается ни в numeric(14,2), ни в
+          // точность double: именно такой ввод и проверяется
+          // eslint-disable-next-line no-loss-of-precision
           amount: 999999999999999999,
         })
         .expect(400);
@@ -71,6 +74,7 @@ describe('Целостность данных', () => {
           dealId: deal.body.dealId,
           number: 'КП-ТЕСТ',
           date: '2026-09-01',
+          // eslint-disable-next-line no-loss-of-precision
           totalAmount: 999999999999999999,
         })
         .expect(400);

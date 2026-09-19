@@ -17,12 +17,31 @@
     "test:web": "npm run test -w @crm/web",
     "audit:production": "npm audit --omit=dev --audit-level=high",
     "licenses:check": "node scripts/check-licenses.mjs",
-    "check:docker": "docker compose config --quiet"
+    "check:docker": "docker compose config --quiet",
+    "openapi": "npm run openapi -w @crm/server",
+    "lint": "eslint . --max-warnings 20",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,mjs,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,mjs,json}\"",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "backup": "scripts/backup.sh",
+    "restore": "scripts/restore.sh",
+    "ci": "npm run format:check && npm run lint && npm run build && npm run check:bundle && npm run test:web && npm run test:api && npm run licenses:check && npm run check:secrets && npm run check:docker",
+    "check:bundle": "node scripts/check-bundle-size.mjs",
+    "smoke": "scripts/smoke.sh"
   },
   "overrides": {
     "multer": "2.4.0"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.8",
+    "typescript-eslint": "^8.70.0"
   }
 }

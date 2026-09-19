@@ -105,7 +105,12 @@ export function ClientFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={closeUnlessBackdrop(onClose)}
+      maxWidth="sm"
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {client ? 'Редактирование клиента' : 'Новый клиент'}

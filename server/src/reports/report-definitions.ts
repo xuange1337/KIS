@@ -74,7 +74,8 @@ export const REPORT_DEFINITIONS: Record<ReportName, ReportDefinition> = {
       {
         header: 'Тип',
         width: 14,
-        value: (row) => ACTIVITY_TYPE_LABELS[row.type as ActivityType] ?? row.type,
+        value: (row) =>
+          ACTIVITY_TYPE_LABELS[row.type as ActivityType] ?? row.type,
       },
       { header: 'Тема', width: 34, value: (row) => row.subject },
       { header: 'Клиент', width: 28, value: (row) => row.clientName },

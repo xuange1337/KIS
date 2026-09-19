@@ -31,7 +31,11 @@ interface DealKanbanProps {
  * Канбан-доска сделок: перетаскивание карточки между колонками
  * вызывает смену стадии, которая фиксируется в истории на сервере.
  */
-export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) {
+export function DealKanban({
+  deals,
+  onStageChange,
+  disabled,
+}: DealKanbanProps) {
   const navigate = useNavigate();
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [hoverStage, setHoverStage] = useState<DealStage | null>(null);
@@ -110,7 +114,13 @@ export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) 
                   ? 'Итог только по сделкам в рублях; в колонке есть сделки в другой валюте'
                   : undefined
               }
-              sx={{ px: 0.5, display: 'block', mb: 1.5, fontSize: 12, color: TOKENS.textSecondary }}
+              sx={{
+                px: 0.5,
+                display: 'block',
+                mb: 1.5,
+                fontSize: 12,
+                color: TOKENS.textSecondary,
+              }}
             >
               {formatMoney(total)}
               {hasOtherCurrency && (
@@ -151,10 +161,17 @@ export function DealKanban({ deals, onStageChange, disabled }: DealKanbanProps) 
                     },
                   }}
                 >
-                  <Typography sx={{ fontSize: 13, fontWeight: 500, mb: 0.25 }} noWrap>
+                  <Typography
+                    sx={{ fontSize: 13, fontWeight: 500, mb: 0.25 }}
+                    noWrap
+                  >
                     {deal.title}
                   </Typography>
-                  <Typography variant="caption" noWrap sx={{ display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    noWrap
+                    sx={{ display: 'block' }}
+                  >
                     {deal.client?.name}
                   </Typography>
                   <Stack

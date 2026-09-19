@@ -85,7 +85,11 @@ export class ExportService {
 
   private async toXlsx(
     title: string,
-    columns: { header: string; width: number; value: (row: any) => string | number }[],
+    columns: {
+      header: string;
+      width: number;
+      value: (row: any) => string | number;
+    }[],
     rows: Record<string, any>[],
   ): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
@@ -118,7 +122,11 @@ export class ExportService {
   private toPdf(
     title: string,
     period: string,
-    columns: { header: string; width: number; value: (row: any) => string | number }[],
+    columns: {
+      header: string;
+      width: number;
+      value: (row: any) => string | number;
+    }[],
     rows: Record<string, any>[],
   ): Promise<Buffer> {
     const landscape = columns.length > 4;

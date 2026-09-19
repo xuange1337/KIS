@@ -52,7 +52,11 @@ export function ActivityFormDialog({
   onClose,
 }: ActivityFormDialogProps) {
   const { data: dictionaries } = useDictionaries();
-  const { data: clients } = useClients({ limit: 200, sort: 'name', order: 'ASC' });
+  const { data: clients } = useClients({
+    limit: 200,
+    sort: 'name',
+    order: 'ASC',
+  });
   const saveActivity = useSaveActivity();
 
   const [form, setForm] = useState(EMPTY);
@@ -111,10 +115,16 @@ export function ActivityFormDialog({
     }
   };
 
-  const valid = form.subject.trim() && form.plannedAt && (activity || form.clientId);
+  const valid =
+    form.subject.trim() && form.plannedAt && (activity || form.clientId);
 
   return (
-    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={closeUnlessBackdrop(onClose)}
+      maxWidth="sm"
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {activity ? 'Редактирование активности' : 'Новая активность'}
@@ -169,7 +179,9 @@ export function ActivityFormDialog({
               <DateTimePicker
                 label="Дата и время"
                 value={parseDateValue(form.plannedAt)}
-                onChange={(value) => setField('plannedAt')(toIsoDateTime(value))}
+                onChange={(value) =>
+                  setField('plannedAt')(toIsoDateTime(value))
+                }
                 ampm={false}
                 slotProps={{ textField: { required: true, fullWidth: true } }}
               />

@@ -14,6 +14,7 @@ import { ActivitiesService } from '../activities/activities.service';
 import { ReportsService } from '../reports/reports.service';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { applyOwnerScope } from '../common/helpers/owner-scope';
+import { applyTenantScope } from '../common/helpers/tenant-scope';
 
 const UPCOMING_LIMIT = 10;
 const OVERDUE_LIMIT = 10;
@@ -79,6 +80,7 @@ export class DashboardService {
       .addSelect('COALESCE(SUM(deal.amount), 0)', 'amount')
       .where('deal.stage NOT IN (:...closed)', { closed: DEAL_CLOSED_STAGES })
       .andWhere('deal.currency = :currency', { currency: BASE_CURRENCY });
+    applyTenantScope(qb, user, 'deal');
     applyOwnerScope(qb, user, 'deal');
     return this.readAggregate(qb);
   }
@@ -94,6 +96,7 @@ export class DashboardService {
       .where('deal.stage = :won', { won: DealStage.WON })
       .andWhere('deal.closedAt >= :since', { since })
       .andWhere('deal.currency = :currency', { currency: BASE_CURRENCY });
+    applyTenantScope(qb, user, 'deal');
     applyOwnerScope(qb, user, 'deal');
     return this.readAggregate(qb);
   }
@@ -104,6 +107,7 @@ export class DashboardService {
       .createQueryBuilder('activity')
       .where('activity.status = :planned', { planned: ActivityStatus.PLANNED })
       .andWhere('activity.plannedAt < NOW()');
+    applyTenantScope(qb, user, 'activity');
     applyOwnerScope(qb, user, 'activity');
     return qb.getCount();
   }
@@ -120,6 +124,7 @@ export class DashboardService {
         from,
         to,
       });
+    applyTenantScope(qb, user, 'activity');
     applyOwnerScope(qb, user, 'activity');
     return qb.getCount();
   }
@@ -133,6 +138,7 @@ export class DashboardService {
       .leftJoinAndSelect('activity.owner', 'owner')
       .where('activity.status = :planned', { planned: ActivityStatus.PLANNED })
       .andWhere('activity.plannedAt >= :from', { from });
+    applyTenantScope(qb, user, 'activity');
     applyOwnerScope(qb, user, 'activity');
     return qb
       .orderBy('activity.plannedAt', 'ASC')
@@ -140,9 +146,9 @@ export class DashboardService {
       .getMany();
   }
 
-  private async readAggregate(
-    qb: { getRawOne: () => Promise<any> },
-  ): Promise<{ count: number; amount: number }> {
+  private async readAggregate(qb: {
+    getRawOne: () => Promise<any>;
+  }): Promise<{ count: number; amount: number }> {
     const raw = await qb.getRawOne();
     return { count: Number(raw?.count ?? 0), amount: Number(raw?.amount ?? 0) };
   }

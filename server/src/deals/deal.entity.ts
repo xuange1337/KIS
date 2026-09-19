@@ -9,6 +9,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Organization } from '../organizations/organization.entity';
 import { Client } from '../clients/client.entity';
 import { User } from '../users/user.entity';
 import { DealStageHistory } from './deal-stage-history.entity';
@@ -20,6 +21,15 @@ import { numericTransformer } from '../common/helpers/numeric.transformer';
 export class Deal {
   @PrimaryGeneratedColumn({ name: 'deal_id' })
   dealId: number;
+
+  /** Организация-владелец записи: граница изоляции данных. */
+  @Index('idx_deals_organization')
+  @Column({ name: 'organization_id', type: 'int' })
+  organizationId: number;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @Column({ name: 'client_id', type: 'int' })
   clientId: number;

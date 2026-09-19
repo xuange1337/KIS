@@ -9,7 +9,7 @@ import { AuditLog } from './common/audit-log.entity';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
-import { QueryFailedFilter } from './common/filters/query-failed.filter';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ClientsModule } from './clients/clients.module';
@@ -55,8 +55,9 @@ import { HealthModule } from './health/health.module';
     { provide: APP_GUARD, useClass: RolesGuard },
     // Журналирование изменяющих запросов (ТЗ п. 1.1)
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
-    // Ошибки ограничений БД отдаются как ошибки ввода, а не как сбой сервера
-    { provide: APP_FILTER, useClass: QueryFailedFilter },
+    // Единый формат ответа об ошибке: и для исключений приложения,
+    // и для ошибок ограничений БД, и для непредвиденных сбоев
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
 export class AppModule {}

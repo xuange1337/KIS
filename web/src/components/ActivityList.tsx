@@ -116,7 +116,9 @@ export function ActivityList({
   const navigate = useNavigate();
 
   if (activities.length === 0) {
-    return emptyText ? <EmptyState title={emptyText} hint={emptyHint} dense /> : null;
+    return emptyText ? (
+      <EmptyState title={emptyText} hint={emptyHint} dense />
+    ) : null;
   }
 
   return (
@@ -145,7 +147,9 @@ export function ActivityList({
               mx: -1,
               borderRadius: 1,
               borderBottom:
-                index < activities.length - 1 ? `1px solid ${TOKENS.border}` : 'none',
+                index < activities.length - 1
+                  ? `1px solid ${TOKENS.border}`
+                  : 'none',
               transition: `background-color ${DURATION.fast}ms`,
               '&:hover': { bgcolor: TOKENS.surfaceHover },
               '&:hover .quick-actions': { opacity: 1, pointerEvents: 'auto' },
@@ -161,7 +165,12 @@ export function ActivityList({
               <Typography sx={{ fontSize: 13, fontWeight: 500 }} noWrap>
                 {activity.subject}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                noWrap
+                sx={{ display: 'block' }}
+              >
                 {secondary}
               </Typography>
               {showResult && activity.result && (
@@ -179,7 +188,11 @@ export function ActivityList({
               className="quick-actions"
               direction="row"
               spacing={0.25}
-              sx={{ opacity: 0, pointerEvents: 'none', transition: `opacity ${DURATION.fast}ms` }}
+              sx={{
+                opacity: 0,
+                pointerEvents: 'none',
+                transition: `opacity ${DURATION.fast}ms`,
+              }}
             >
               {onComplete && activity.status === ActivityStatus.PLANNED && (
                 <Tooltip title="Отметить выполнение">

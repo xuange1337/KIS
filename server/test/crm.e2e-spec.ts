@@ -241,7 +241,9 @@ describe('Модули CRM: клиенты, контакты, сделки, ак
         .set('Authorization', bearer(token))
         .expect(200);
 
-      const ids = response.body.map((item: { activityId: number }) => item.activityId);
+      const ids = response.body.map(
+        (item: { activityId: number }) => item.activityId,
+      );
       expect(ids).toContain(activityId);
     });
 

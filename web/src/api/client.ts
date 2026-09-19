@@ -67,7 +67,12 @@ api.interceptors.response.use(
     const request = error.config as RetriableRequest | undefined;
     const isAuthRoute = request?.url?.includes('/auth/');
 
-    if (error.response?.status === 401 && request && !request._retried && !isAuthRoute) {
+    if (
+      error.response?.status === 401 &&
+      request &&
+      !request._retried &&
+      !isAuthRoute
+    ) {
       request._retried = true;
       try {
         const token = await refreshAccessToken();

@@ -120,7 +120,9 @@ describe('Отчётность: валюты, периоды и выгрузки
         `SELECT DATE_TRUNC('month', TIMESTAMPTZ '2026-09-15 12:00') AS start`,
       );
       // Начало сентября по Москве — 31 августа 21:00 UTC
-      expect(new Date(row.start).toISOString()).toBe('2026-08-31T21:00:00.000Z');
+      expect(new Date(row.start).toISOString()).toBe(
+        '2026-08-31T21:00:00.000Z',
+      );
     });
 
     it('верхняя граница периода включает весь последний день', async () => {
@@ -234,7 +236,9 @@ describe('Отчётность: валюты, периоды и выгрузки
         .expect(200);
 
       const listTotal = deals.body.items
-        .filter((deal: { currency: Currency }) => deal.currency === Currency.RUB)
+        .filter(
+          (deal: { currency: Currency }) => deal.currency === Currency.RUB,
+        )
         .reduce(
           (sum: number, deal: { amount: number }) => sum + Number(deal.amount),
           0,
@@ -252,9 +256,9 @@ describe('Отчётность: валюты, периоды и выгрузки
       response.body.forEach((row: { period: string }) => {
         expect(new Date(row.period).getTime()).toBeLessThanOrEqual(Date.now());
       });
-      expect(response.body.every((row: { count: number }) => row.count > 0)).toBe(
-        true,
-      );
+      expect(
+        response.body.every((row: { count: number }) => row.count > 0),
+      ).toBe(true);
     });
   });
 

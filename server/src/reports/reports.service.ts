@@ -18,6 +18,7 @@ import { Activity } from '../activities/activity.entity';
 import { Client } from '../clients/client.entity';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { applyOwnerScope, canSeeAll } from '../common/helpers/owner-scope';
+import { applyTenantScope } from '../common/helpers/tenant-scope';
 import {
   ReportQueryDto,
   SalesDynamicsQueryDto,
@@ -76,7 +77,10 @@ export class ReportsService {
 
     const qb = this.dealsRepo
       .createQueryBuilder('deal')
-      .select(`TO_CHAR(DATE_TRUNC('${granularity}', deal.closedAt), 'YYYY-MM-DD')`, 'period')
+      .select(
+        `TO_CHAR(DATE_TRUNC('${granularity}', deal.closedAt), 'YYYY-MM-DD')`,
+        'period',
+      )
       .addSelect('COUNT(*)::int', 'count')
       .addSelect('COALESCE(SUM(deal.amount), 0)', 'amount')
       .where('deal.stage = :won', { won: DealStage.WON })
@@ -161,7 +165,8 @@ export class ReportsService {
 
   /** 5. ТОП клиентов или сделок по сумме. */
   async top(query: TopQueryDto, user: AuthUser): Promise<TopRow[]> {
-    const limit = query.limit && query.limit > 0 ? Math.min(query.limit, 50) : 10;
+    const limit =
+      query.limit && query.limit > 0 ? Math.min(query.limit, 50) : 10;
 
     if (query.entity === 'deals') {
       const qb = this.dealsRepo
@@ -226,6 +231,9 @@ export class ReportsService {
     alias: string,
     dateColumn: string,
   ): void {
+    // Организация ограничивает выборку раньше ролей: отчёт не должен
+    // суммировать чужие сделки даже для администратора
+    applyTenantScope(qb, user, alias);
     applyOwnerScope(qb, user, alias);
 
     if (query.ownerUserId && canSeeAll(user)) {

@@ -46,7 +46,10 @@ export class ActivitiesController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.activitiesService.findOne(id, user);
   }
 

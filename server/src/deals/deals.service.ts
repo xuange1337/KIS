@@ -25,6 +25,8 @@ import {
   canAccess,
   canSeeAll,
 } from '../common/helpers/owner-scope';
+import { applyTenantScope } from '../common/helpers/tenant-scope';
+import { UsersService } from '../users/users.service';
 import { paginate } from '../common/helpers/paginate';
 
 const SORTABLE = ['createdAt', 'amount', 'plannedClose', 'title', 'stage'];
@@ -37,15 +39,20 @@ export class DealsService {
     @InjectRepository(DealStageHistory)
     private readonly historyRepo: Repository<DealStageHistory>,
     private readonly clientsService: ClientsService,
+    private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll(query: QueryDealsDto, user: AuthUser): Promise<Paginated<Deal>> {
+  async findAll(
+    query: QueryDealsDto,
+    user: AuthUser,
+  ): Promise<Paginated<Deal>> {
     const qb = this.repo
       .createQueryBuilder('deal')
       .leftJoinAndSelect('deal.client', 'client')
       .leftJoinAndSelect('deal.owner', 'owner');
 
+    applyTenantScope(qb, user, 'deal');
     applyOwnerScope(qb, user, 'deal');
 
     if (query.q) {
@@ -84,7 +91,9 @@ export class DealsService {
 
   async findOne(dealId: number, user: AuthUser): Promise<Deal> {
     const deal = await this.repo.findOne({
-      where: { dealId },
+      // Организация в условии выборки: чужая сделка неотличима от
+      // несуществующей, иначе перебор идентификаторов раскрывает состав
+      where: { dealId, organizationId: user.organizationId },
       relations: { client: true, owner: true },
     });
     if (!deal) {
@@ -112,11 +121,16 @@ export class DealsService {
   async create(dto: CreateDealDto, user: AuthUser): Promise<Deal> {
     // Сделку можно завести только по доступному клиенту
     await this.clientsService.findOne(dto.clientId, user);
+    // Проверяется только то значение, которое будет применено
+    if (canSeeAll(user)) {
+      await this.assertOwnerInTenant(dto.ownerUserId, user);
+    }
     const stage = dto.stage ?? DealStage.NEW;
 
     return this.dataSource.transaction(async (manager) => {
       const deal = manager.getRepository(Deal).create({
         ...dto,
+        organizationId: user.organizationId,
         stage,
         probability: dto.probability ?? DEAL_STAGE_PROBABILITY[stage],
         closedAt: isClosedStage(stage) ? new Date() : null,
@@ -128,6 +142,7 @@ export class DealsService {
 
       // Первая запись истории фиксирует стадию, с которой сделка заведена
       await manager.getRepository(DealStageHistory).save({
+        organizationId: user.organizationId,
         dealId: saved.dealId,
         fromStage: null,
         toStage: stage,
@@ -150,6 +165,7 @@ export class DealsService {
     const { ownerUserId, ...rest } = dto;
     Object.assign(deal, rest);
     if (ownerUserId !== undefined && canSeeAll(user)) {
+      await this.assertOwnerInTenant(ownerUserId, user);
       deal.ownerUserId = ownerUserId;
     }
     await this.repo.save(deal);
@@ -194,6 +210,7 @@ export class DealsService {
       await manager.getRepository(Deal).save(deal);
 
       await manager.getRepository(DealStageHistory).save({
+        organizationId: user.organizationId,
         dealId,
         fromStage,
         toStage: stage,
@@ -236,6 +253,23 @@ export class DealsService {
 
     await this.repo.remove(deal);
     return { success: true };
+  }
+
+  /** Ответственный должен работать в той же организации. */
+  private async assertOwnerInTenant(
+    ownerUserId: number | null | undefined,
+    user: AuthUser,
+  ): Promise<void> {
+    if (ownerUserId === null || ownerUserId === undefined) return;
+    const exists = await this.usersService.existsInOrganization(
+      ownerUserId,
+      user.organizationId,
+    );
+    if (!exists) {
+      throw new BadRequestException(
+        'Ответственный не найден в вашей организации',
+      );
+    }
   }
 
   /** Сколько записей будет затронуто удалением сделки. */

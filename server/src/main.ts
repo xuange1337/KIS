@@ -1,15 +1,21 @@
 import 'reflect-metadata';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { configureApp } from './common/app-setup';
 import { configuration } from './config/configuration';
+import { JsonLogger } from './common/logging/json.logger';
+import { setupOpenApi } from './common/openapi';
 
 async function bootstrap(): Promise<void> {
   const config = configuration();
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const isProduction = config.nodeEnv === 'production';
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    // В production логи собираются машиной, в разработке читаются человеком
+    logger: isProduction ? new JsonLogger() : undefined,
+  });
 
   // За nginx все запросы приходят с адреса контейнера-прокси. Без доверия
   // к X-Forwarded-For ограничение частоты считалось бы общим на всех
@@ -17,7 +23,6 @@ async function bootstrap(): Promise<void> {
   // остальным. Доверяем ровно одному прокси — своему.
   app.set('trust proxy', 1);
 
-  app.setGlobalPrefix('api');
   // Заголовки безопасности на уровне API: статику закрывает nginx,
   // но API доступен и напрямую (порт 3000 в разработке)
   app.use(
@@ -27,24 +32,20 @@ async function bootstrap(): Promise<void> {
       crossOriginResourcePolicy: { policy: 'same-site' },
     }),
   );
-  app.use(cookieParser());
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: false,
-    }),
-  );
+  configureApp(app);
 
   // В разработке клиент поднимается отдельно на Vite-порту;
   // в production оба контейнера за одним nginx, и CORS не нужен
-  if (config.nodeEnv !== 'production') {
+  if (!isProduction) {
     app.enableCors({ origin: true, credentials: true });
   }
 
+  setupOpenApi(app);
+
   await app.listen(config.apiPort, '0.0.0.0');
-  // eslint-disable-next-line no-console
-  console.log(`API запущен на порту ${config.apiPort}`);
+  // Через логгер, а не console.log: иначе единственная строка о старте
+  // выпадает из структурированного вывода и теряется в сборщике логов
+  new Logger('Bootstrap').log(`API запущен на порту ${config.apiPort}`);
 }
 
 void bootstrap();

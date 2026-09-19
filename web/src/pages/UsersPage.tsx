@@ -35,8 +35,12 @@ export function UsersPage() {
   const { data: users, isFetching } = useUsers();
   const deactivateUser = useDeactivateUser();
 
-  const [formUser, setFormUser] = useState<UserDto | null | undefined>(undefined);
-  const [deactivateTarget, setDeactivateTarget] = useState<UserDto | null>(null);
+  const [formUser, setFormUser] = useState<UserDto | null | undefined>(
+    undefined,
+  );
+  const [deactivateTarget, setDeactivateTarget] = useState<UserDto | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const handleDeactivate = async () => {
@@ -46,7 +50,9 @@ export function UsersPage() {
       await deactivateUser.mutateAsync(deactivateTarget.userId);
       setDeactivateTarget(null);
     } catch (caught) {
-      setError(extractErrorMessage(caught, 'Не удалось заблокировать учётную запись'));
+      setError(
+        extractErrorMessage(caught, 'Не удалось заблокировать учётную запись'),
+      );
     }
   };
 
@@ -201,7 +207,9 @@ function UserFormDialog({
       });
       onClose();
     } catch (caught) {
-      setError(extractErrorMessage(caught, 'Не удалось сохранить пользователя'));
+      setError(
+        extractErrorMessage(caught, 'Не удалось сохранить пользователя'),
+      );
     }
   };
 

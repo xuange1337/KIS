@@ -86,7 +86,12 @@ export function ContactFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={closeUnlessBackdrop(onClose)}
+      maxWidth="sm"
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {contact ? 'Редактирование контакта' : 'Новое контактное лицо'}

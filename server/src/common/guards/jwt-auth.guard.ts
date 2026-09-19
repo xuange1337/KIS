@@ -1,4 +1,8 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -19,5 +23,23 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
     return isPublic ? true : super.canActivate(context);
+  }
+
+  /**
+   * Сообщение об отсутствии токена задаётся явно: Passport отдаёт своё
+   * английское «Unauthorized», и оно одно выбивалось из русскоязычных
+   * ответов API, попадая прямо в интерфейс.
+   */
+  handleRequest<TUser>(
+    error: unknown,
+    user: TUser,
+    _info: unknown,
+    _context: ExecutionContext,
+  ): TUser {
+    if (error) throw error;
+    if (!user) {
+      throw new UnauthorizedException('Требуется авторизация');
+    }
+    return user;
   }
 }

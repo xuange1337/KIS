@@ -7,6 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Organization } from '../organizations/organization.entity';
 import { Client } from '../clients/client.entity';
 
 /** Контактное лицо клиента (Приложение А, таблица Contacts). */
@@ -14,6 +15,15 @@ import { Client } from '../clients/client.entity';
 export class Contact {
   @PrimaryGeneratedColumn({ name: 'contact_id' })
   contactId: number;
+
+  /** Организация-владелец записи: граница изоляции данных. */
+  @Index('idx_contacts_organization')
+  @Column({ name: 'organization_id', type: 'int' })
+  organizationId: number;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @Index('idx_contacts_client')
   @Column({ name: 'client_id', type: 'int' })

@@ -38,7 +38,11 @@ export const theme = createTheme(
         contrastText: NEUTRAL[0],
       },
       // Акцент отмечает интерактивность: ссылки, выбранное, кольцо фокуса
-      secondary: { main: TOKENS.accent, dark: TOKENS.accentHover, contrastText: NEUTRAL[0] },
+      secondary: {
+        main: TOKENS.accent,
+        dark: TOKENS.accentHover,
+        contrastText: NEUTRAL[0],
+      },
       success: { main: TOKENS.success },
       warning: { main: TOKENS.warning },
       error: { main: TOKENS.danger },
@@ -71,8 +75,18 @@ export const theme = createTheme(
       fontFamily: FONT_SANS,
       // Плотная типографика: крупные заголовки со сжатым межбуквенным
       // расстоянием читаются собраннее и не выглядят «шаблонно»
-      h4: { fontSize: 30, fontWeight: 600, letterSpacing: '-0.025em', lineHeight: 1.15 },
-      h5: { fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.2 },
+      h4: {
+        fontSize: 30,
+        fontWeight: 600,
+        letterSpacing: '-0.025em',
+        lineHeight: 1.15,
+      },
+      h5: {
+        fontSize: 22,
+        fontWeight: 600,
+        letterSpacing: '-0.02em',
+        lineHeight: 1.2,
+      },
       h6: { fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' },
       subtitle1: { fontSize: 14, fontWeight: 600 },
       subtitle2: { fontSize: 13, fontWeight: 600 },
@@ -213,7 +227,9 @@ export const theme = createTheme(
         },
       },
       MuiInputLabel: { styleOverrides: { root: { fontSize: 14 } } },
-      MuiFormHelperText: { styleOverrides: { root: { fontSize: 12, marginLeft: 2 } } },
+      MuiFormHelperText: {
+        styleOverrides: { root: { fontSize: 12, marginLeft: 2 } },
+      },
 
       MuiTabs: {
         styleOverrides: {
@@ -284,10 +300,22 @@ export const theme = createTheme(
       MuiAlert: {
         styleOverrides: {
           root: { borderRadius: RADIUS.sm, fontSize: 13 },
-          standardError: { backgroundColor: TOKENS.dangerSoft, color: TOKENS.danger },
-          standardWarning: { backgroundColor: TOKENS.warningSoft, color: TOKENS.warning },
-          standardSuccess: { backgroundColor: TOKENS.successSoft, color: TOKENS.success },
-          standardInfo: { backgroundColor: TOKENS.accentSoft, color: TOKENS.accentHover },
+          standardError: {
+            backgroundColor: TOKENS.dangerSoft,
+            color: TOKENS.danger,
+          },
+          standardWarning: {
+            backgroundColor: TOKENS.warningSoft,
+            color: TOKENS.warning,
+          },
+          standardSuccess: {
+            backgroundColor: TOKENS.successSoft,
+            color: TOKENS.success,
+          },
+          standardInfo: {
+            backgroundColor: TOKENS.accentSoft,
+            color: TOKENS.accentHover,
+          },
         },
       },
 

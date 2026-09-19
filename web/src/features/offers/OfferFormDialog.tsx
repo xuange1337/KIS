@@ -89,10 +89,17 @@ export function OfferFormDialog({
   };
 
   return (
-    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={closeUnlessBackdrop(onClose)}
+      maxWidth="sm"
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>
-          {offer ? 'Редактирование предложения' : 'Новое коммерческое предложение'}
+          {offer
+            ? 'Редактирование предложения'
+            : 'Новое коммерческое предложение'}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0 }}>
@@ -124,7 +131,9 @@ export function OfferFormDialog({
                 label="Сумма предложения"
                 type="number"
                 value={form.totalAmount}
-                onChange={(event) => setField('totalAmount')(event.target.value)}
+                onChange={(event) =>
+                  setField('totalAmount')(event.target.value)
+                }
                 required
                 fullWidth
               />
@@ -152,7 +161,9 @@ export function OfferFormDialog({
             type="submit"
             variant="contained"
             disabled={
-              saveOffer.isPending || !form.number.trim() || form.totalAmount === ''
+              saveOffer.isPending ||
+              !form.number.trim() ||
+              form.totalAmount === ''
             }
           >
             Сохранить

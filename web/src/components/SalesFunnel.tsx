@@ -32,7 +32,8 @@ export function SalesFunnel({
 
   const workingAmount = working.reduce((sum, row) => sum + row.amount, 0);
   const closed = (won?.count ?? 0) + (lost?.count ?? 0);
-  const conversion = closed > 0 ? Math.round(((won?.count ?? 0) / closed) * 100) : null;
+  const conversion =
+    closed > 0 ? Math.round(((won?.count ?? 0) / closed) * 100) : null;
 
   return (
     <Box>
@@ -47,18 +48,31 @@ export function SalesFunnel({
                 spacing={1.5}
                 sx={{ mb: 0.625 }}
               >
-                <Typography sx={{ fontSize: 13, flexGrow: 1, minWidth: 0 }} noWrap>
+                <Typography
+                  sx={{ fontSize: 13, flexGrow: 1, minWidth: 0 }}
+                  noWrap
+                >
                   {DEAL_STAGE_LABELS[row.stage]}
                 </Typography>
                 <Typography
                   className="tabular"
-                  sx={{ fontSize: 12.5, color: TOKENS.textSecondary, width: 28, textAlign: 'right' }}
+                  sx={{
+                    fontSize: 12.5,
+                    color: TOKENS.textSecondary,
+                    width: 28,
+                    textAlign: 'right',
+                  }}
                 >
                   {formatNumber(row.count)}
                 </Typography>
                 <Typography
                   className="tabular"
-                  sx={{ fontSize: 12.5, fontWeight: 500, width: 116, textAlign: 'right' }}
+                  sx={{
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    width: 116,
+                    textAlign: 'right',
+                  }}
                 >
                   {formatMoney(row.amount, currency)}
                 </Typography>
@@ -98,13 +112,24 @@ export function SalesFunnel({
             </Typography>
             <Typography
               className="tabular"
-              sx={{ fontSize: 12.5, color: TOKENS.textSecondary, width: 28, textAlign: 'right' }}
+              sx={{
+                fontSize: 12.5,
+                color: TOKENS.textSecondary,
+                width: 28,
+                textAlign: 'right',
+              }}
             >
               {formatNumber(won.count)}
             </Typography>
             <Typography
               className="tabular"
-              sx={{ fontSize: 13, fontWeight: 600, color: TOKENS.success, width: 116, textAlign: 'right' }}
+              sx={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: TOKENS.success,
+                width: 116,
+                textAlign: 'right',
+              }}
             >
               {formatMoney(won.amount, currency)}
             </Typography>
@@ -113,10 +138,15 @@ export function SalesFunnel({
 
         {conversion !== null && (
           <Stack direction="row" alignItems="baseline" spacing={1.5}>
-            <Typography sx={{ fontSize: 12.5, color: TOKENS.textSecondary, flexGrow: 1 }}>
+            <Typography
+              sx={{ fontSize: 12.5, color: TOKENS.textSecondary, flexGrow: 1 }}
+            >
               Конверсия закрытых сделок
             </Typography>
-            <Typography className="tabular" sx={{ fontSize: 12.5, fontWeight: 500 }}>
+            <Typography
+              className="tabular"
+              sx={{ fontSize: 12.5, fontWeight: 500 }}
+            >
               {conversion}%
             </Typography>
           </Stack>

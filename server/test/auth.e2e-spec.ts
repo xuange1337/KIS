@@ -34,7 +34,7 @@ describe('Авторизация и разграничение доступа (�
 
     await request(app.getHttpServer())
       .get('/api/health/ready')
-      .expect(200, { status: 'ok', database: 'up' });
+      .expect(200, { status: 'ok', database: 'up', schema: 'current' });
   });
 
   it('отклоняет неверный пароль', async () => {
@@ -100,26 +100,32 @@ describe('Авторизация и разграничение доступа (�
       .expect(403);
   });
 
+  // Повторное использование refresh-токена отзывает все сессии учётной
+  // записи, поэтому проверка идёт на отдельном пользователе: иначе она
+  // закрывала бы общий managerToken остальных тестов файла
   it('ротирует refresh-токен и отклоняет повторное использование', async () => {
     const loginResponse = await request(app.getHttpServer())
       .post('/api/auth/login')
-      .send({ login: 'manager', password: 'manager123' })
+      .send({ login: 'manager2', password: 'manager123' })
       .expect(200);
 
-    const originalCookies = loginResponse.headers['set-cookie'] as unknown as string[];
+    const originalCookies = loginResponse.headers[
+      'set-cookie'
+    ] as unknown as string[];
     const refreshResponse = await request(app.getHttpServer())
       .post('/api/auth/refresh')
       .set('Cookie', originalCookies)
       .set('X-CSRF-Token', csrfToken(originalCookies))
       .expect(200);
 
-    const rotatedSetCookies = refreshResponse.headers['set-cookie'] as unknown as string[];
-    const originalCsrfCookie = originalCookies.find((value) =>
-      value.startsWith('crm_csrf='),
+    // Обновление возвращает и новый refresh-токен, и новую CSRF-cookie
+    const rotatedCookies = refreshResponse.headers[
+      'set-cookie'
+    ] as unknown as string[];
+    expect(rotatedCookies.some((value) => value.startsWith('crm_csrf='))).toBe(
+      true,
     );
-    expect(originalCsrfCookie).toBeDefined();
-    const rotatedCookies = [...rotatedSetCookies, originalCsrfCookie as string];
-    expect(rotatedSetCookies[0]).not.toBe(originalCookies[0]);
+    expect(rotatedCookies[0]).not.toBe(originalCookies[0]);
 
     await request(app.getHttpServer())
       .post('/api/auth/refresh')
@@ -154,14 +160,17 @@ describe('Авторизация и разграничение доступа (�
       .expect(401);
   });
 
+  // Проверка завершает все сессии учётной записи, поэтому выполняется на
+  // отдельном пользователе: access-токен теперь привязан к сессии, и общий
+  // managerToken перестал бы работать в остальных тестах файла
   it('показывает и завершает активные сессии', async () => {
     const first = await request(app.getHttpServer())
       .post('/api/auth/login')
-      .send({ login: 'manager', password: 'manager123' })
+      .send({ login: 'manager2', password: 'manager123' })
       .expect(200);
     const second = await request(app.getHttpServer())
       .post('/api/auth/login')
-      .send({ login: 'manager', password: 'manager123' })
+      .send({ login: 'manager2', password: 'manager123' })
       .expect(200);
 
     const sessions = await request(app.getHttpServer())
@@ -170,7 +179,11 @@ describe('Авторизация и разграничение доступа (�
       .expect(200);
 
     expect(sessions.body.length).toBeGreaterThanOrEqual(2);
-    expect(sessions.body.some((session: { isCurrent: boolean }) => session.isCurrent)).toBe(true);
+    expect(
+      sessions.body.some(
+        (session: { isCurrent: boolean }) => session.isCurrent,
+      ),
+    ).toBe(true);
 
     await request(app.getHttpServer())
       .delete('/api/auth/sessions')

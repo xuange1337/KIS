@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -17,6 +18,8 @@ import {
   canAccess,
   canSeeAll,
 } from '../common/helpers/owner-scope';
+import { applyTenantScope } from '../common/helpers/tenant-scope';
+import { UsersService } from '../users/users.service';
 import { paginate } from '../common/helpers/paginate';
 
 /** Поля, по которым разрешена сортировка списка (первое — по умолчанию). */
@@ -30,6 +33,7 @@ export class ClientsService {
   constructor(
     @InjectRepository(Client)
     private readonly repo: Repository<Client>,
+    private readonly usersService: UsersService,
   ) {}
 
   /** Список клиентов с поиском, фильтрами и разграничением по ролям. */
@@ -41,6 +45,7 @@ export class ClientsService {
       .createQueryBuilder('client')
       .leftJoinAndSelect('client.owner', 'owner');
 
+    applyTenantScope(qb, user, 'client');
     applyOwnerScope(qb, user, 'client');
 
     if (query.q) {
@@ -70,7 +75,10 @@ export class ClientsService {
   /** Карточка клиента со связанными контактами (ТЗ п. 2.5). */
   async findOne(clientId: number, user: AuthUser): Promise<Client> {
     const client = await this.repo.findOne({
-      where: { clientId },
+      // Организация в условии выборки, а не проверкой после неё: запись
+      // соседней организации не должна отличаться от несуществующей,
+      // иначе перебором идентификаторов виден её состав
+      where: { clientId, organizationId: user.organizationId },
       relations: { owner: true, contacts: true },
     });
     if (!client) {
@@ -83,8 +91,14 @@ export class ClientsService {
   }
 
   async create(dto: CreateClientDto, user: AuthUser): Promise<Client> {
+    // Проверяется только то значение, которое будет применено: у менеджера
+    // поле игнорируется, и ошибка на него сбивала бы с толку
+    if (canSeeAll(user)) {
+      await this.assertOwnerInTenant(dto.ownerUserId, user);
+    }
     const client = this.repo.create({
       ...dto,
+      organizationId: user.organizationId,
       // Менеджер всегда становится владельцем создаваемой карточки,
       // назначить другого ответственного может только руководитель
       ownerUserId: canSeeAll(user)
@@ -107,6 +121,7 @@ export class ClientsService {
     const { ownerUserId, ...rest } = dto;
     Object.assign(client, rest);
     if (ownerUserId !== undefined && canSeeAll(user)) {
+      await this.assertOwnerInTenant(ownerUserId, user);
       client.ownerUserId = ownerUserId;
     }
     await this.repo.save(client);
@@ -163,6 +178,30 @@ export class ClientsService {
       throw error;
     }
     return { success: true };
+  }
+
+  /**
+   * Ответственный должен работать в той же организации.
+   *
+   * Внешний ключ проверяет только существование пользователя, поэтому без
+   * этой проверки руководитель мог назначить ответственным сотрудника
+   * соседней организации: запись пропадала из его списков и становилась
+   * видна тому, кто к ней отношения не имеет.
+   */
+  private async assertOwnerInTenant(
+    ownerUserId: number | null | undefined,
+    user: AuthUser,
+  ): Promise<void> {
+    if (ownerUserId === null || ownerUserId === undefined) return;
+    const exists = await this.usersService.existsInOrganization(
+      ownerUserId,
+      user.organizationId,
+    );
+    if (!exists) {
+      throw new BadRequestException(
+        'Ответственный не найден в вашей организации',
+      );
+    }
   }
 
   /** Сколько записей будет затронуто удалением клиента. */

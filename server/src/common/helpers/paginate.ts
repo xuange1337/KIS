@@ -24,9 +24,25 @@ export async function paginate<T extends object>(
     query.sort && sortable.includes(query.sort) ? query.sort : sortable[0];
   const order = query.order === 'ASC' ? 'ASC' : 'DESC';
 
-  qb.orderBy(`${alias}.${sort}`, order)
-    .skip((page - 1) * limit)
-    .take(limit);
+  qb.orderBy(`${alias}.${sort}`, order);
+
+  /**
+   * Вторичная сортировка по первичному ключу.
+   *
+   * PostgreSQL не гарантирует порядок строк с одинаковым значением ключа
+   * сортировки, и порядок действительно меняется от запроса к запросу
+   * (другой план, другой параллельный проход). При постраничном выводе это
+   * значит, что запись с распространённым значением — например, сделки в
+   * одной стадии или клиенты одного статуса — попадала и на первую, и на
+   * вторую страницу, а какая-то другая не попадала никуда. Ключ уникален,
+   * поэтому добавление его в ORDER BY делает порядок устойчивым.
+   */
+  const primaryKey = qb.expressionMap.mainAlias?.metadata.primaryColumns[0];
+  if (primaryKey && primaryKey.propertyName !== sort) {
+    qb.addOrderBy(`${alias}.${primaryKey.propertyName}`, order);
+  }
+
+  qb.skip((page - 1) * limit).take(limit);
 
   const [items, total] = await qb.getManyAndCount();
   return { items, total, page, limit };

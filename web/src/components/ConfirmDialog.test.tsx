@@ -29,12 +29,16 @@ describe('ConfirmDialog', () => {
   it('подтверждение удаления окрашено в цвет опасного действия', () => {
     renderDialog();
     const confirm = screen.getByRole('button', { name: 'Удалить' });
-    expect(getComputedStyle(confirm).backgroundColor).toBe(toRgb(TOKENS.danger));
+    expect(getComputedStyle(confirm).backgroundColor).toBe(
+      toRgb(TOKENS.danger),
+    );
   });
 
   it('отмена не выглядит как основное действие', () => {
     renderDialog();
     const cancel = screen.getByRole('button', { name: 'Отмена' });
-    expect(getComputedStyle(cancel).backgroundColor).not.toBe(toRgb(TOKENS.danger));
+    expect(getComputedStyle(cancel).backgroundColor).not.toBe(
+      toRgb(TOKENS.danger),
+    );
   });
 });

@@ -6,7 +6,10 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-crm}
       POSTGRES_USER: ${POSTGRES_USER:-crm}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crm_password}
+      # Без подстановки по умолчанию, как и секреты токенов: пароль
+      # «crm_password» из compose-файла — это пароль, известный всем,
+      # кто видел репозиторий
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?ne zadan, sgenerirujte openssl rand -hex 16}"
       # Единый деловой часовой пояс для сервера приложений и СУБД:
       # без него границы периодов в отчётах и группировка по месяцам
       # считались в UTC и расходились с тем, что видит пользователь
@@ -40,7 +43,7 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-crm}
       POSTGRES_USER: ${POSTGRES_USER:-crm}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crm_password}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?ne zadan, sgenerirujte openssl rand -hex 16}"
       API_PORT: 3000
       # Без подстановки по умолчанию: compose откажется стартовать,
       # если секреты не заданы, вместо тихого запуска с общеизвестным ключом
@@ -48,6 +51,10 @@ services:
       JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?ne zadan, sgenerirujte openssl rand -hex 32}"
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
       JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7d}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      BODY_LIMIT: ${BODY_LIMIT:-256kb}
+      OPENAPI_ENABLED: ${OPENAPI_ENABLED:-true}
+      SCHEMA_CHECK: ${SCHEMA_CHECK:-true}
     ports:
       - "3000:3000"
     volumes:

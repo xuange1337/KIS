@@ -55,7 +55,11 @@ export function DealFormDialog({
   const { data: dictionaries } = useDictionaries();
   const { data: users } = useUsers(canSeeAll);
   // Для выбора клиента достаточно первых 200 доступных записей
-  const { data: clients } = useClients({ limit: 200, sort: 'name', order: 'ASC' });
+  const { data: clients } = useClients({
+    limit: 200,
+    sort: 'name',
+    order: 'ASC',
+  });
   const saveDeal = useSaveDeal();
 
   const [form, setForm] = useState(EMPTY);
@@ -115,7 +119,12 @@ export function DealFormDialog({
     form.title.trim() && form.amount !== '' && (deal || form.clientId);
 
   return (
-    <Dialog open={open} onClose={closeUnlessBackdrop(onClose)} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={closeUnlessBackdrop(onClose)}
+      maxWidth="sm"
+      fullWidth
+    >
       <form onSubmit={handleSubmit}>
         <DialogTitle>
           {deal ? 'Редактирование сделки' : 'Новая сделка'}

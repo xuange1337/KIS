@@ -33,7 +33,10 @@ export class ContactsController {
   }
 
   @Get('contacts/:id')
-  findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.contactsService.findOne(id, user);
   }
 

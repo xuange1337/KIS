@@ -21,6 +21,8 @@ import {
   canAccess,
   canSeeAll,
 } from '../common/helpers/owner-scope';
+import { applyTenantScope } from '../common/helpers/tenant-scope';
+import { UsersService } from '../users/users.service';
 import { paginate } from '../common/helpers/paginate';
 
 const SORTABLE = ['plannedAt', 'status', 'type', 'subject'];
@@ -35,6 +37,7 @@ export class ActivitiesService {
     private readonly repo: Repository<Activity>,
     private readonly clientsService: ClientsService,
     private readonly dealsService: DealsService,
+    private readonly usersService: UsersService,
   ) {}
 
   async findAll(
@@ -75,6 +78,7 @@ export class ActivitiesService {
       })
       .andWhere('activity.plannedAt < NOW()');
 
+    applyTenantScope(qb, user, 'activity');
     applyOwnerScope(qb, user, 'activity');
 
     return qb.orderBy('activity.plannedAt', 'ASC').take(limit).getMany();
@@ -82,14 +86,16 @@ export class ActivitiesService {
 
   async findOne(activityId: number, user: AuthUser): Promise<Activity> {
     const activity = await this.repo.findOne({
-      where: { activityId },
+      where: { activityId, organizationId: user.organizationId },
       relations: { client: true, deal: true, owner: true },
     });
     if (!activity) {
       throw new NotFoundException('Активность не найдена');
     }
     if (!canAccess(user, activity.ownerUserId)) {
-      throw new ForbiddenException('Активность закреплена за другим менеджером');
+      throw new ForbiddenException(
+        'Активность закреплена за другим менеджером',
+      );
     }
     return activity;
   }
@@ -97,8 +103,13 @@ export class ActivitiesService {
   async create(dto: CreateActivityDto, user: AuthUser): Promise<Activity> {
     await this.clientsService.findOne(dto.clientId, user);
     await this.assertDealAllowed(dto.dealId, dto.clientId, user);
+    // Проверяется только то значение, которое будет применено
+    if (canSeeAll(user)) {
+      await this.assertOwnerInTenant(dto.ownerUserId, user);
+    }
     const activity = this.repo.create({
       ...dto,
+      organizationId: user.organizationId,
       plannedAt: new Date(dto.plannedAt),
       status: dto.status ?? ActivityStatus.PLANNED,
       ownerUserId: canSeeAll(user)
@@ -135,6 +146,7 @@ export class ActivitiesService {
       patch.dealId = dealId;
     }
     if (ownerUserId !== undefined && canSeeAll(user)) {
+      await this.assertOwnerInTenant(ownerUserId, user);
       patch.ownerUserId = ownerUserId;
     }
 
@@ -195,6 +207,23 @@ export class ActivitiesService {
     }
   }
 
+  /** Ответственный должен работать в той же организации. */
+  private async assertOwnerInTenant(
+    ownerUserId: number | null | undefined,
+    user: AuthUser,
+  ): Promise<void> {
+    if (ownerUserId === null || ownerUserId === undefined) return;
+    const exists = await this.usersService.existsInOrganization(
+      ownerUserId,
+      user.organizationId,
+    );
+    if (!exists) {
+      throw new BadRequestException(
+        'Ответственный не найден в вашей организации',
+      );
+    }
+  }
+
   /** Общая часть выборок списка и календаря: связи, права и фильтры. */
   private buildScopedQuery(
     query: QueryActivitiesDto,
@@ -206,6 +235,7 @@ export class ActivitiesService {
       .leftJoinAndSelect('activity.deal', 'deal')
       .leftJoinAndSelect('activity.owner', 'owner');
 
+    applyTenantScope(qb, user, 'activity');
     applyOwnerScope(qb, user, 'activity');
 
     if (query.q) {

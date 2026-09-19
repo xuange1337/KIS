@@ -130,7 +130,9 @@ export function DashboardPage() {
           label="Просрочено"
           value={formatNumber(data.overdueCount)}
           context={
-            data.overdueCount > 0 ? 'требуют внимания' : 'просроченных задач нет'
+            data.overdueCount > 0
+              ? 'требуют внимания'
+              : 'просроченных задач нет'
           }
           icon={<WarningAmberOutlinedIcon />}
           tone={data.overdueCount > 0 ? 'danger' : 'neutral'}
@@ -229,7 +231,11 @@ function Panel({
           {title}
         </Typography>
         {action && (
-          <Button size="small" onClick={action.onClick} sx={{ py: 0.25, minHeight: 0 }}>
+          <Button
+            size="small"
+            onClick={action.onClick}
+            sx={{ py: 0.25, minHeight: 0 }}
+          >
             {action.label}
           </Button>
         )}

@@ -8,7 +8,11 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { OfferDto } from '@crm/shared';
-import { GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
+import {
+  GridColDef,
+  GridPaginationModel,
+  GridSortModel,
+} from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
@@ -96,7 +100,8 @@ export function OffersPage() {
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Не удалось загрузить список коммерческих предложений. Проверьте соединение с сервером
+          Не удалось загрузить список коммерческих предложений. Проверьте
+          соединение с сервером
         </Alert>
       )}
 
@@ -147,28 +152,30 @@ export function OffersPage() {
           overflow: 'hidden',
         }}
       >
-      <DataTable<OfferDto>
-        rows={data?.items ?? []}
-        columns={columns}
-        rowCount={data?.total ?? 0}
-        loading={isFetching}
-        getRowId={(row) => row.offerId}
-        paginationModel={pagination}
-        onPaginationModelChange={setPagination}
-        sortModel={sortModel}
-        onSortModelChange={setSortModel}
-        emptyTitle={hasFilters ? 'Ничего не найдено' : 'Предложений пока нет'}
-        emptyHint={
-          hasFilters
-            ? 'Измените условия поиска или сбросьте фильтры'
-            : 'Коммерческие предложения оформляются в карточке сделки'
-        }
-        onRowClick={(params) => {
-          const offer = data?.items.find((item) => item.offerId === params.id);
-          // КП редактируются в карточке своей сделки
-          if (offer) navigate(`/deals/${offer.dealId}`);
-        }}
-      />
+        <DataTable<OfferDto>
+          rows={data?.items ?? []}
+          columns={columns}
+          rowCount={data?.total ?? 0}
+          loading={isFetching}
+          getRowId={(row) => row.offerId}
+          paginationModel={pagination}
+          onPaginationModelChange={setPagination}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
+          emptyTitle={hasFilters ? 'Ничего не найдено' : 'Предложений пока нет'}
+          emptyHint={
+            hasFilters
+              ? 'Измените условия поиска или сбросьте фильтры'
+              : 'Коммерческие предложения оформляются в карточке сделки'
+          }
+          onRowClick={(params) => {
+            const offer = data?.items.find(
+              (item) => item.offerId === params.id,
+            );
+            // КП редактируются в карточке своей сделки
+            if (offer) navigate(`/deals/${offer.dealId}`);
+          }}
+        />
       </Box>
     </>
   );

@@ -148,9 +148,11 @@ describe('Безопасность и разграничение доступа'
         .set('Authorization', bearer(managerToken))
         .expect(200);
 
-      response.body.items.forEach((offer: { deal: { ownerUserId: number } }) => {
-        expect(offer.deal.ownerUserId).toBe(managerId);
-      });
+      response.body.items.forEach(
+        (offer: { deal: { ownerUserId: number } }) => {
+          expect(offer.deal.ownerUserId).toBe(managerId);
+        },
+      );
     });
   });
 

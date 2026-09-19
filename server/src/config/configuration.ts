@@ -35,6 +35,15 @@ type TokenTtl = JwtSignOptions['expiresIn'];
 /** Минимальная длина секрета подписи токенов, символов. */
 const MIN_SECRET_LENGTH = 32;
 
+/** Читает обязательную переменную окружения без требований к длине. */
+const requireEnv = (name: string): string => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Переменная окружения ${name} не задана.`);
+  }
+  return value;
+};
+
 /**
  * Читает обязательную переменную окружения.
  * Значения по умолчанию для секретов недопустимы: с ними приложение
@@ -88,7 +97,9 @@ export const configuration = (): AppConfig => ({
     port: Number(process.env.POSTGRES_PORT ?? 5432),
     name: process.env.POSTGRES_DB ?? 'crm',
     user: process.env.POSTGRES_USER ?? 'crm',
-    password: process.env.POSTGRES_PASSWORD ?? 'crm_password',
+    // Пароль базы обязателен так же, как секреты токенов: значение по
+    // умолчанию в исходниках означает, что оно известно всем
+    password: requireEnv('POSTGRES_PASSWORD'),
   },
   jwt: {
     accessSecret: requireSecret('JWT_ACCESS_SECRET'),

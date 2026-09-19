@@ -1,9 +1,8 @@
-import { ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import cookieParser from 'cookie-parser';
 import request, { Response } from 'supertest';
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/common/app-setup';
 
 /**
  * Общая подготовка приложения для e2e-тестов.
@@ -17,9 +16,9 @@ export async function createTestApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleRef.createNestApplication();
-  app.setGlobalPrefix('api');
-  app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  // Настройка та же, что в main.ts: иначе тесты проверяют приложение,
+  // собранное иначе, чем то, которое уходит в production
+  configureApp(app);
   await app.init();
   return app;
 }

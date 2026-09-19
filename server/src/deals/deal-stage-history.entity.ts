@@ -8,6 +8,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Organization } from '../organizations/organization.entity';
 import { Deal } from './deal.entity';
 import { User } from '../users/user.entity';
 
@@ -19,6 +20,15 @@ import { User } from '../users/user.entity';
 export class DealStageHistory {
   @PrimaryGeneratedColumn()
   id: number;
+
+  /** Организация-владелец записи: граница изоляции данных. */
+  @Index('idx_deal_stage_history_organization')
+  @Column({ name: 'organization_id', type: 'int' })
+  organizationId: number;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @Index('idx_stage_history_deal')
   @Column({ name: 'deal_id', type: 'int' })

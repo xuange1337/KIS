@@ -14,7 +14,11 @@ import SearchIcon from '@mui/icons-material/Search';
 import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import { DealDto, DealStage } from '@crm/shared';
-import { GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
+import {
+  GridColDef,
+  GridPaginationModel,
+  GridSortModel,
+} from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
@@ -245,32 +249,32 @@ export function DealsPage() {
 
       {view === 'list' ? (
         <Box
-        sx={{
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2.5,
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
-        }}
-      >
-        <DataTable<DealDto>
-          rows={data?.items ?? []}
-          columns={columns}
-          rowCount={data?.total ?? 0}
-          loading={isFetching}
-          getRowId={(row) => row.dealId}
-          paginationModel={pagination}
-          onPaginationModelChange={setPagination}
-          sortModel={sortModel}
-          onSortModelChange={setSortModel}
-          onRowClick={(params) => navigate(`/deals/${params.id}`)}
-          emptyTitle={hasFilters ? 'Ничего не найдено' : 'Сделок пока нет'}
-          emptyHint={
-            hasFilters
-              ? 'Измените условия поиска или сбросьте фильтры'
-              : 'Создайте сделку по одному из клиентов'
-          }
-        />
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2.5,
+            bgcolor: 'background.paper',
+            overflow: 'hidden',
+          }}
+        >
+          <DataTable<DealDto>
+            rows={data?.items ?? []}
+            columns={columns}
+            rowCount={data?.total ?? 0}
+            loading={isFetching}
+            getRowId={(row) => row.dealId}
+            paginationModel={pagination}
+            onPaginationModelChange={setPagination}
+            sortModel={sortModel}
+            onSortModelChange={setSortModel}
+            onRowClick={(params) => navigate(`/deals/${params.id}`)}
+            emptyTitle={hasFilters ? 'Ничего не найдено' : 'Сделок пока нет'}
+            emptyHint={
+              hasFilters
+                ? 'Измените условия поиска или сбросьте фильтры'
+                : 'Создайте сделку по одному из клиентов'
+            }
+          />
         </Box>
       ) : (
         <>

@@ -14,6 +14,9 @@ const allowedLicenses = new Set([
   'MIT AND ISC',
   'MIT/X11',
   'OFL-1.1',
+  // Разрешительная лицензия OSI без copyleft; пришла с argparse
+  // (транзитивно через js-yaml в @nestjs/swagger)
+  'Python-2.0',
   'Unlicense',
 ]);
 
@@ -26,7 +29,9 @@ const verifiedMissingMetadata = new Set([
   'streamsearch',
 ]);
 
-const lock = JSON.parse(await readFile(new URL('../package-lock.json', import.meta.url), 'utf8'));
+const lock = JSON.parse(
+  await readFile(new URL('../package-lock.json', import.meta.url), 'utf8'),
+);
 const violations = [];
 let checked = 0;
 
@@ -37,13 +42,19 @@ for (const [path, metadata] of Object.entries(lock.packages)) {
   checked += 1;
   if (!metadata.license && verifiedMissingMetadata.has(name)) continue;
   if (!metadata.license || !allowedLicenses.has(metadata.license)) {
-    violations.push(`${name}@${metadata.version ?? 'unknown'}: ${metadata.license ?? 'UNKNOWN'}`);
+    violations.push(
+      `${name}@${metadata.version ?? 'unknown'}: ${metadata.license ?? 'UNKNOWN'}`,
+    );
   }
 }
 
 if (violations.length > 0) {
-  process.stderr.write(`Обнаружены непроверенные лицензии:\n${violations.join('\n')}\n`);
+  process.stderr.write(
+    `Обнаружены непроверенные лицензии:\n${violations.join('\n')}\n`,
+  );
   process.exit(1);
 }
 
-process.stdout.write(`Проверено production-пакетов: ${checked}. Запрещённых лицензий нет.\n`);
+process.stdout.write(
+  `Проверено production-пакетов: ${checked}. Запрещённых лицензий нет.\n`,
+);

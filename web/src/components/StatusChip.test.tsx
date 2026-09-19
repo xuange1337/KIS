@@ -1,4 +1,9 @@
-import { ActivityStatus, ClientStatus, DealStage, OfferStatus } from '@crm/shared';
+import {
+  ActivityStatus,
+  ClientStatus,
+  DealStage,
+  OfferStatus,
+} from '@crm/shared';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {

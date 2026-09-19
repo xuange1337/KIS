@@ -9,6 +9,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Organization } from '../organizations/organization.entity';
 import { User } from '../users/user.entity';
 import { Contact } from '../contacts/contact.entity';
 import { Deal } from '../deals/deal.entity';
@@ -19,6 +20,15 @@ import { Activity } from '../activities/activity.entity';
 export class Client {
   @PrimaryGeneratedColumn({ name: 'client_id' })
   clientId: number;
+
+  /** Организация-владелец записи: граница изоляции данных. */
+  @Index('idx_clients_organization')
+  @Column({ name: 'organization_id', type: 'int' })
+  organizationId: number;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @Index('idx_clients_name')
   @Column({ type: 'varchar', length: 255 })

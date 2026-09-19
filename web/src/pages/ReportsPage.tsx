@@ -323,9 +323,18 @@ function FunnelReport({
             <ResponsiveContainer width="100%" height={340}>
               <BarChart data={chartData} margin={{ left: 20 }}>
                 <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
-                <XAxis dataKey="label" fontSize={11} stroke={NEUTRAL[400]} interval={0} angle={-15} textAnchor="end" height={70} />
+                <XAxis
+                  dataKey="label"
+                  fontSize={11}
+                  stroke={NEUTRAL[400]}
+                  interval={0}
+                  angle={-15}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis
-                  fontSize={11} stroke={NEUTRAL[400]}
+                  fontSize={11}
+                  stroke={NEUTRAL[400]}
                   tickFormatter={(value: number) =>
                     `${Math.round(value / 1000)} тыс.`
                   }
@@ -399,12 +408,15 @@ function SalesDynamicsReport({
                   <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
                   <XAxis dataKey="label" fontSize={11} stroke={NEUTRAL[400]} />
                   <YAxis
-                    fontSize={11} stroke={NEUTRAL[400]}
+                    fontSize={11}
+                    stroke={NEUTRAL[400]}
                     tickFormatter={(value: number) =>
                       `${Math.round(value / 1000)} тыс.`
                     }
                   />
-                  <ChartTooltip formatter={(value: number) => formatMoney(value, currency)} />
+                  <ChartTooltip
+                    formatter={(value: number) => formatMoney(value, currency)}
+                  />
                   <Legend />
                   <Line
                     type="monotone"
@@ -458,8 +470,16 @@ function ManagerActivitiesReport({ rows }: { rows: ManagerActivityRow[] }) {
               <ResponsiveContainer width="100%" height={340}>
                 <BarChart data={rows} margin={{ left: 20 }}>
                   <CartesianGrid stroke={NEUTRAL[100]} vertical={false} />
-                  <XAxis dataKey="fullName" fontSize={11} stroke={NEUTRAL[400]} />
-                  <YAxis fontSize={11} stroke={NEUTRAL[400]} allowDecimals={false} />
+                  <XAxis
+                    dataKey="fullName"
+                    fontSize={11}
+                    stroke={NEUTRAL[400]}
+                  />
+                  <YAxis
+                    fontSize={11}
+                    stroke={NEUTRAL[400]}
+                    allowDecimals={false}
+                  />
                   <ChartTooltip />
                   <Legend />
                   <Bar
@@ -511,7 +531,9 @@ function OverdueReport({ rows }: { rows: OverdueActivityRow[] }) {
     return (
       <Card variant="outlined">
         <CardContent sx={{ py: 6, textAlign: 'center' }}>
-          <Typography color="success.main">Просроченных активностей нет</Typography>
+          <Typography color="success.main">
+            Просроченных активностей нет
+          </Typography>
         </CardContent>
       </Card>
     );
@@ -550,11 +572,7 @@ function TopReport({
 }) {
   return (
     <ReportTable
-      headers={[
-        entity === 'clients' ? 'Клиент' : 'Сделка',
-        'Сделок',
-        'Сумма',
-      ]}
+      headers={[entity === 'clients' ? 'Клиент' : 'Сделка', 'Сделок', 'Сумма']}
       rows={rows.map((row) => [
         row.name,
         formatNumber(row.dealsCount),
@@ -564,9 +582,9 @@ function TopReport({
         'Итого',
         formatNumber(rows.reduce((sum, row) => sum + row.dealsCount, 0)),
         formatMoney(
-              rows.reduce((sum, row) => sum + row.amount, 0),
-              currency,
-            ),
+          rows.reduce((sum, row) => sum + row.amount, 0),
+          currency,
+        ),
       ]}
     />
   );

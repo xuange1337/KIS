@@ -33,11 +33,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { DealStageChip, OfferStatusChip } from '../components/StatusChip';
 import {
-  DealStageChip,
-  OfferStatusChip,
-} from '../components/StatusChip';
-import { formatDate, formatDateTime, formatMoney } from '../components/formatters';
+  formatDate,
+  formatDateTime,
+  formatMoney,
+} from '../components/formatters';
 import { DealFormDialog } from '../features/deals/DealFormDialog';
 import { OfferFormDialog } from '../features/offers/OfferFormDialog';
 import { ActivityFormDialog } from '../features/activities/ActivityFormDialog';
@@ -132,10 +133,7 @@ export function DealCardPage() {
     <>
       <PageHeader
         title={deal.title}
-        breadcrumbs={[
-          { label: 'Сделки', to: '/deals' },
-          { label: deal.title },
-        ]}
+        breadcrumbs={[{ label: 'Сделки', to: '/deals' }, { label: deal.title }]}
         actions={
           <>
             <Button startIcon={<EditIcon />} onClick={() => setEditOpen(true)}>
@@ -164,7 +162,11 @@ export function DealCardPage() {
             <CardContent>
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={5}>
-                  <Typography variant="caption" color="text.secondary" display="block">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
                     Текущая стадия
                   </Typography>
                   <TextField
@@ -185,7 +187,9 @@ export function DealCardPage() {
                     ))}
                   </TextField>
                 </Grid>
-                <Field label="Сумма">{formatMoney(deal.amount, deal.currency)}</Field>
+                <Field label="Сумма">
+                  {formatMoney(deal.amount, deal.currency)}
+                </Field>
                 <Field label="Вероятность">{deal.probability}%</Field>
                 <Field label="Плановое закрытие">
                   {formatDate(deal.plannedClose)}
@@ -199,7 +203,9 @@ export function DealCardPage() {
                     '—'
                   )}
                 </Field>
-                <Field label="Ответственный">{deal.owner?.fullName ?? '—'}</Field>
+                <Field label="Ответственный">
+                  {deal.owner?.fullName ?? '—'}
+                </Field>
                 <Field label="Создана">{formatDate(deal.createdAt)}</Field>
                 <Field label="Закрыта">{formatDate(deal.closedAt)}</Field>
               </Grid>
@@ -325,10 +331,16 @@ export function DealCardPage() {
                       >
                         {record.fromStage && (
                           <>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               {DEAL_STAGE_LABELS[record.fromStage]}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               →
                             </Typography>
                           </>
@@ -398,7 +410,13 @@ export function DealCardPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <Grid item xs={6} sm={3}>
       <Typography variant="caption" color="text.secondary" display="block">
@@ -413,7 +431,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function EmptyText({ text }: { text: string }) {
   return (
-    <Typography variant="body2" color="text.secondary" sx={{ py: 3 }} align="center">
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{ py: 3 }}
+      align="center"
+    >
       {text}
     </Typography>
   );

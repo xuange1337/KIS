@@ -169,7 +169,11 @@ export function CalendarPage() {
             </IconButton>
             <Typography
               variant="subtitle1"
-              sx={{ minWidth: 200, textAlign: 'center', textTransform: 'capitalize' }}
+              sx={{
+                minWidth: 200,
+                textAlign: 'center',
+                textTransform: 'capitalize',
+              }}
             >
               {periodLabel}
             </Typography>
@@ -203,7 +207,9 @@ export function CalendarPage() {
               size="small"
               exclusive
               value={view}
-              onChange={(_event, value: ViewMode | null) => value && setView(value)}
+              onChange={(_event, value: ViewMode | null) =>
+                value && setView(value)
+              }
             >
               <ToggleButton value="month">Месяц</ToggleButton>
               <ToggleButton value="week">Неделя</ToggleButton>
@@ -282,46 +288,48 @@ export function CalendarPage() {
                     {format(day, 'd')}
                   </Typography>
                   <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-                    {dayActivities.slice(0, view === 'week' ? 8 : 3).map((activity) => (
-                      <Tooltip
-                        key={activity.activityId}
-                        title={`${ACTIVITY_TYPE_LABELS[activity.type]} · ${formatDateTime(activity.plannedAt)}${activity.client ? ` · ${activity.client.name}` : ''}`}
-                      >
-                        <Chip
-                          size="small"
-                          label={`${format(new Date(activity.plannedAt), 'HH:mm')} ${activity.subject}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (activity.status === ActivityStatus.PLANNED) {
-                              setCompleting(activity);
-                            }
-                          }}
-                          sx={{
-                            justifyContent: 'flex-start',
-                            fontSize: 11,
-                            height: 22,
-                            bgcolor:
-                              activity.status === ActivityStatus.DONE
-                                ? 'grey.200'
-                                : `${TYPE_COLORS[activity.type]}18`,
-                            color:
-                              activity.status === ActivityStatus.DONE
-                                ? 'text.disabled'
-                                : TYPE_COLORS[activity.type],
-                            textDecoration:
-                              activity.status === ActivityStatus.DONE
-                                ? 'line-through'
-                                : 'none',
-                            maxWidth: '100%',
-                            '& .MuiChip-label': {
-                              px: 0.75,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            },
-                          }}
-                        />
-                      </Tooltip>
-                    ))}
+                    {dayActivities
+                      .slice(0, view === 'week' ? 8 : 3)
+                      .map((activity) => (
+                        <Tooltip
+                          key={activity.activityId}
+                          title={`${ACTIVITY_TYPE_LABELS[activity.type]} · ${formatDateTime(activity.plannedAt)}${activity.client ? ` · ${activity.client.name}` : ''}`}
+                        >
+                          <Chip
+                            size="small"
+                            label={`${format(new Date(activity.plannedAt), 'HH:mm')} ${activity.subject}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (activity.status === ActivityStatus.PLANNED) {
+                                setCompleting(activity);
+                              }
+                            }}
+                            sx={{
+                              justifyContent: 'flex-start',
+                              fontSize: 11,
+                              height: 22,
+                              bgcolor:
+                                activity.status === ActivityStatus.DONE
+                                  ? 'grey.200'
+                                  : `${TYPE_COLORS[activity.type]}18`,
+                              color:
+                                activity.status === ActivityStatus.DONE
+                                  ? 'text.disabled'
+                                  : TYPE_COLORS[activity.type],
+                              textDecoration:
+                                activity.status === ActivityStatus.DONE
+                                  ? 'line-through'
+                                  : 'none',
+                              maxWidth: '100%',
+                              '& .MuiChip-label': {
+                                px: 0.75,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              },
+                            }}
+                          />
+                        </Tooltip>
+                      ))}
                     {dayActivities.length > (view === 'week' ? 8 : 3) && (
                       <Typography variant="caption" color="text.secondary">
                         ещё {dayActivities.length - (view === 'week' ? 8 : 3)}

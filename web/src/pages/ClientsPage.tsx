@@ -1,16 +1,13 @@
-import {
-  Box,
-  Alert,
-  Button,
-  Grid,
-  MenuItem,
-  TextField,
-} from '@mui/material';
+import { Box, Alert, Button, Grid, MenuItem, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import { InputAdornment } from '@mui/material';
 import { ClientDto } from '@crm/shared';
-import { GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
+import {
+  GridColDef,
+  GridPaginationModel,
+  GridSortModel,
+} from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
@@ -58,7 +55,15 @@ export function ClientsPage() {
       ...(industry ? { industry } : {}),
       ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
     }),
-    [pagination, sortModel, debouncedSearch, status, source, industry, ownerUserId],
+    [
+      pagination,
+      sortModel,
+      debouncedSearch,
+      status,
+      source,
+      industry,
+      ownerUserId,
+    ],
   );
 
   const { data, isFetching, isError } = useClients(query);
@@ -227,26 +232,24 @@ export function ClientsPage() {
           overflow: 'hidden',
         }}
       >
-      <DataTable<ClientDto>
-        rows={data?.items ?? []}
-        columns={columns}
-        rowCount={data?.total ?? 0}
-        loading={isFetching}
-        getRowId={(row) => row.clientId}
-        paginationModel={pagination}
-        onPaginationModelChange={setPagination}
-        sortModel={sortModel}
-        onSortModelChange={setSortModel}
-        onRowClick={(params) => navigate(`/clients/${params.id}`)}
-        emptyTitle={
-          hasFilters ? 'Ничего не найдено' : 'Клиентов пока нет'
-        }
-        emptyHint={
-          hasFilters
-            ? 'Измените условия поиска или сбросьте фильтры'
-            : 'Добавьте первого клиента, чтобы начать вести базу'
-        }
-      />
+        <DataTable<ClientDto>
+          rows={data?.items ?? []}
+          columns={columns}
+          rowCount={data?.total ?? 0}
+          loading={isFetching}
+          getRowId={(row) => row.clientId}
+          paginationModel={pagination}
+          onPaginationModelChange={setPagination}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
+          onRowClick={(params) => navigate(`/clients/${params.id}`)}
+          emptyTitle={hasFilters ? 'Ничего не найдено' : 'Клиентов пока нет'}
+          emptyHint={
+            hasFilters
+              ? 'Измените условия поиска или сбросьте фильтры'
+              : 'Добавьте первого клиента, чтобы начать вести базу'
+          }
+        />
       </Box>
 
       <ClientFormDialog

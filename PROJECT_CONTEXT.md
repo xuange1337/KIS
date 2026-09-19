@@ -18,6 +18,7 @@
 KIS/
 ├── packages/shared/src/       общие DTO-типы, enum и константы
 ├── server/src/
+│   ├── organizations/         организации: граница изоляции данных
 │   ├── auth/                  вход, refresh-cookie, текущий пользователь
 │   ├── users/                 пользователи и роли
 │   ├── clients/               клиенты
@@ -76,7 +77,9 @@ rg -n '@(Controller|Get|Post|Patch|Delete)\(' server/src --glob '*.controller.ts
 
 ## Важные правила предметной области
 
-- Роли: `manager`, `head`, `admin`.
+- Каждая бизнес-запись принадлежит организации (`organization_id`). Любая выборка проходит через `server/src/common/helpers/tenant-scope.ts`; чужая запись отдаётся как 404. Организация берётся из записи пользователя, а не из токена.
+- Логин уникален во всей системе, а не внутри организации: страница входа одна.
+- Роли: `manager`, `head`, `admin`. Роль действует внутри организации пользователя.
 - Менеджер видит только свои записи; руководитель и администратор — весь отдел. Общая фильтрация: `server/src/common/helpers/owner-scope.ts`.
 - Access token хранится в памяти, refresh token — в httpOnly cookie.
 - Стадия сделки меняется через `PATCH /api/deals/:id/stage`; операция транзакционно пишет историю.
@@ -85,6 +88,8 @@ rg -n '@(Controller|Get|Post|Patch|Delete)\(' server/src --glob '*.controller.ts
 - Суммы разных валют не складываются; отчёты считают выбранную валюту, по умолчанию RUB.
 - Границы отчётных периодов зависят от `TZ`, по умолчанию `Europe/Moscow`.
 - Все маршруты закрыты JWT, кроме помеченных `@Public()`; изменяющие операции журналируются.
+- Формат ответа об ошибке единый: `statusCode`, `code`, `message`, `path`, `requestId`, `timestamp` плюс поля самого исключения.
+- Контракт API описан в `docs/openapi.json`; после изменения маршрутов или DTO обновлять командой `npm run openapi`.
 
 ## Команды
 
@@ -113,6 +118,11 @@ rg 'искомый_символ' server/src web/src packages/shared/src
 
 ## Проверка изменений
 
+Полная проверка одной командой: `POSTGRES_HOST=localhost npm run ci`.
+Проверка собранной системы: `npm run smoke`.
+
+
+- Контракт API: `POSTGRES_HOST=localhost npm run openapi` (файл `docs/openapi.json` в репозитории)
 - Shared: `npm run build:shared`
 - Frontend: `npm run test:web && npm run build -w @crm/web`
 - Backend: `npm run build -w @crm/server`

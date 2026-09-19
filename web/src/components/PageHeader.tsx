@@ -48,12 +48,19 @@ export function PageHeader({
                 component={RouterLink}
                 to={crumb.to}
                 underline="none"
-                sx={{ fontSize: 12, color: TOKENS.textSecondary, '&:hover': { color: NEUTRAL[900] } }}
+                sx={{
+                  fontSize: 12,
+                  color: TOKENS.textSecondary,
+                  '&:hover': { color: NEUTRAL[900] },
+                }}
               >
                 {crumb.label}
               </Link>
             ) : (
-              <Typography key={crumb.label} sx={{ fontSize: 12, color: TOKENS.textMuted }}>
+              <Typography
+                key={crumb.label}
+                sx={{ fontSize: 12, color: TOKENS.textMuted }}
+              >
                 {crumb.label}
               </Typography>
             ),

@@ -11,5 +11,6 @@ export const toUserDto = (user: User): UserDto => ({
   createdAt: user.createdAt?.toISOString(),
 });
 
-export const toUserDtoOrNull = (user: User | null | undefined): UserDto | null =>
-  user ? toUserDto(user) : null;
+export const toUserDtoOrNull = (
+  user: User | null | undefined,
+): UserDto | null => (user ? toUserDto(user) : null);

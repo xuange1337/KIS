@@ -17,7 +17,9 @@ describe('Ограничение частоты попыток входа', () =
 
   beforeAll(async () => {
     delete process.env.RATE_LIMIT_DISABLED;
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // Модуль подключается после снятия переменной окружения: на импорте
+    // он читает её и решает, включать ли ограничение частоты
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { AppModule } = require('../src/app.module');
 
     const moduleRef = await Test.createTestingModule({
@@ -27,7 +29,9 @@ describe('Ограничение частоты попыток входа', () =
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api');
     app.use(cookieParser());
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
   });
 

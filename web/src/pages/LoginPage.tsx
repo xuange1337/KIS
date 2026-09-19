@@ -84,7 +84,9 @@ export function LoginPage() {
           p: 6,
         }}
       >
-        <Typography sx={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.03em' }}>
+        <Typography
+          sx={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.03em' }}
+        >
           АРМ · CRM
         </Typography>
 
@@ -105,8 +107,8 @@ export function LoginPage() {
             по работе с клиентами
           </Typography>
           <Typography sx={{ fontSize: 14, color: NEUTRAL[400], maxWidth: 420 }}>
-            Клиентская база, история взаимодействий, контроль сделок
-            и отчётность отдела продаж.
+            Клиентская база, история взаимодействий, контроль сделок и
+            отчётность отдела продаж.
           </Typography>
         </Box>
 
@@ -117,8 +119,12 @@ export function LoginPage() {
             ['Отчёты', 'и выгрузки'],
           ].map(([title, note]) => (
             <Box key={title}>
-              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>{title}</Typography>
-              <Typography sx={{ fontSize: 12, color: NEUTRAL[500] }}>{note}</Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                {title}
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: NEUTRAL[500] }}>
+                {note}
+              </Typography>
             </Box>
           ))}
         </Stack>
@@ -198,7 +204,10 @@ export function LoginPage() {
                 }}
               >
                 <Typography sx={{ fontSize: 12.5 }}>{account.role}</Typography>
-                <Typography className="tabular" sx={{ fontSize: 12, color: NEUTRAL[500] }}>
+                <Typography
+                  className="tabular"
+                  sx={{ fontSize: 12, color: NEUTRAL[500] }}
+                >
                   {account.login} / {account.password}
                 </Typography>
               </Stack>

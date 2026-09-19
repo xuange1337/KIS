@@ -10,8 +10,10 @@ import { Activity } from '../activities/activity.entity';
 import { Offer } from '../offers/offer.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
+import { Organization } from '../organizations/organization.entity';
 
 export const ENTITIES = [
+  Organization,
   User,
   Client,
   Contact,
