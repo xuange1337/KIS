@@ -16,6 +16,8 @@ cd "$(dirname "$0")/.."
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 MODE="${1:-}"
+POSTGRES_USER="${POSTGRES_USER:-crm}"
+POSTGRES_DB="${POSTGRES_DB:-crm}"
 
 log() { printf '[smoke] %s\n' "$*"; }
 fail() { printf '[smoke] ОШИБКА: %s\n' "$*" >&2; exit 1; }
@@ -40,9 +42,17 @@ READY="$(curl -fsS "${BASE_URL}/api/health/ready")" || fail 'Готовност�
 echo "$READY" | grep -q '"schema":"current"' || fail "Схема не актуальна: ${READY}"
 log "Готовность: ${READY}"
 
-if [ "$MODE" = "--clean" ]; then
-  log 'Наполнение демонстрационными данными'
+# Наполнение зависит от того, пуста ли база, а не от флага запуска:
+# на чистом окружении (в том числе в CI) миграции создают схему, но
+# пользователей в ней нет, и проверка входа падала бы с 401
+USERS_COUNT="$(docker compose exec -T db psql --username "$POSTGRES_USER" \
+  --dbname "$POSTGRES_DB" --tuples-only --no-align \
+  --command 'SELECT count(*) FROM users' 2>/dev/null | tr -d '[:space:]')"
+if [ "${USERS_COUNT:-0}" = "0" ]; then
+  log 'База пуста: наполнение демонстрационными данными'
   docker compose exec -T api node dist/database/seeds/seed.js >/dev/null
+else
+  log "В базе ${USERS_COUNT} учётных записей, наполнение не требуется"
 fi
 
 log 'Вход'

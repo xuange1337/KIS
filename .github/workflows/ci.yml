@@ -22,7 +22,10 @@ jobs:
         env:
           POSTGRES_DB: crm
           POSTGRES_USER: crm
-          POSTGRES_PASSWORD: ci_password
+          # Служебная база живёт внутри задания и наружу не доступна,
+          # поэтому пароль не проверяется; в файле его нет вовсе —
+          # записанный сюда, он был бы настоящим паролем в открытом виде
+          POSTGRES_HOST_AUTH_METHOD: trust
           TZ: Europe/Moscow
           PGTZ: Europe/Moscow
         ports:
@@ -36,12 +39,6 @@ jobs:
     env:
       POSTGRES_HOST: localhost
       POSTGRES_USER: crm
-      POSTGRES_PASSWORD: ci_password
-      # Секреты сборочного окружения одноразовые и к стендам отношения
-      # не имеют: приложение без них не стартует, а тесты подписывают ими
-      # токены внутри прогона
-      JWT_ACCESS_SECRET: ci-access-secret-0123456789abcdef0123456789
-      JWT_REFRESH_SECRET: ci-refresh-secret-0123456789abcdef0123456789
       TZ: Europe/Moscow
 
     steps:
@@ -51,6 +48,18 @@ jobs:
         with:
           node-version: 20
           cache: npm
+
+      - name: Секреты прогона
+        # Секреты генерируются на каждый прогон, а не лежат в файле:
+        # приложение без них не стартует, а записанные в репозиторий они
+        # были бы настоящими секретами в открытом виде — что и заметила
+        # проверка check:secrets на первом же запуске этого workflow
+        run: |
+          {
+            echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)"
+            echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)"
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+          } >> "$GITHUB_ENV"
 
       - name: Установка зависимостей
         run: npm ci
