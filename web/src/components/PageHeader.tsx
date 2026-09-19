@@ -68,11 +68,16 @@ export function PageHeader({
         </Breadcrumbs>
       )}
 
+      {/*
+        На узком экране заголовок и действия становятся в столбец.
+        В строке подпись зажималась в колонку шириной в два слова и
+        читалась хуже, чем если бы её не было вовсе.
+      */}
       <Stack
-        direction="row"
-        alignItems="flex-end"
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems={{ xs: 'stretch', sm: 'flex-end' }}
         justifyContent="space-between"
-        spacing={3}
+        spacing={{ xs: 1.5, sm: 3 }}
       >
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="h4" sx={{ mb: subtitle ? 0.5 : 0 }}>
@@ -84,7 +89,16 @@ export function PageHeader({
             </Typography>
           )}
         </Box>
-        <Stack direction="row" spacing={1} flexShrink={0} alignItems="center">
+        <Stack
+          direction="row"
+          spacing={1}
+          flexShrink={0}
+          alignItems="center"
+          // Кнопок бывает несколько: на узком экране они переносятся,
+          // а не сжимаются до нечитаемых
+          flexWrap="wrap"
+          useFlexGap
+        >
           {actions}
         </Stack>
       </Stack>

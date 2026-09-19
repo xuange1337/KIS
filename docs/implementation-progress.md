@@ -87,9 +87,9 @@
 
 - [x] Lazy-loading маршрутов
 - [x] Bundle budget в CI
-- [ ] Адаптивность от 360 px
+- [x] Адаптивность от 360 px
 - [ ] Полная клавиатурная навигация
-- [ ] Accessibility smoke tests
+- [x] Accessibility smoke tests
 - [ ] Светлая и тёмная тема
 - [x] Защита несохранённых изменений
 - [ ] Offline/error/empty/loading состояния

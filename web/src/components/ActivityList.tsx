@@ -155,8 +155,14 @@ export function ActivityList({
               '&:hover .quick-actions': { opacity: 1, pointerEvents: 'auto' },
             }}
           >
+            {/*
+              role="img" обязателен: подпись подсказки MUI вешает на
+              обёртку атрибутом aria-label, а у простого div его читать
+              нечему — экранный диктор такой атрибут игнорирует, и тип
+              активности, обозначенный только значком, пропадал.
+            */}
             <Tooltip title={ACTIVITY_TYPE_LABELS[activity.type]}>
-              <Box sx={{ color: TOKENS.textMuted, display: 'flex' }}>
+              <Box role="img" sx={{ color: TOKENS.textMuted, display: 'flex' }}>
                 {TYPE_ICONS[activity.type]}
               </Box>
             </Tooltip>
