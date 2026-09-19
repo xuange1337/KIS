@@ -1,10 +1,20 @@
 import { ActivityStatus, ActivityType, ActivityDto } from '@crm/shared';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ActivityList } from './ActivityList';
 
 const DAY = 24 * 3600 * 1000;
+
+/**
+ * Время в тестах фиксировано.
+ *
+ * Подписи считаются от текущего момента, и проверка «через три часа —
+ * сегодня» переставала выполняться после девяти вечера: три часа
+ * переносили срок на следующие сутки. Тест падал не из-за кода, а
+ * из-за времени запуска — так он и упал в CI.
+ */
+const NOW = new Date('2026-09-19T09:00:00+03:00');
 
 /** Активность с нужным сроком и статусом. */
 const activity = (
@@ -38,6 +48,15 @@ const renderList = (activities: ActivityDto[], props = {}) =>
   );
 
 describe('Лента активностей', () => {
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(NOW);
+  });
+
+  afterAll(() => {
+    vi.useRealTimers();
+  });
+
   it('подписывает срок словами вместо голой даты', () => {
     renderList([
       activity({

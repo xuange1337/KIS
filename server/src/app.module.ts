@@ -9,6 +9,8 @@ import { AuditLog } from './common/audit-log.entity';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { IdempotencyInterceptor } from './common/idempotency/idempotency.interceptor';
+import { IdempotencyKey } from './common/idempotency/idempotency-key.entity';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -29,7 +31,7 @@ import { HealthModule } from './health/health.module';
     // отдельным декоратором (см. AuthController)
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     DatabaseModule,
-    TypeOrmModule.forFeature([AuditLog]),
+    TypeOrmModule.forFeature([AuditLog, IdempotencyKey]),
     AuthModule,
     UsersModule,
     ClientsModule,
@@ -53,6 +55,10 @@ import { HealthModule } from './health/health.module';
     // Авторизация обязательна для всех маршрутов, кроме помеченных @Public()
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    // Повтор потерянного запроса не должен создавать дубликат.
+    // Идёт раньше журнала: возвращённый по ключу ответ — не новая
+    // операция, и записывать её в журнал второй раз незачем
+    { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
     // Журналирование изменяющих запросов (ТЗ п. 1.1)
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
     // Единый формат ответа об ошибке: и для исключений приложения,

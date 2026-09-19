@@ -121,9 +121,23 @@ describe('Обновление схемы с предыдущей версии',
     await runner.release();
   }, 120_000);
 
-  it('откатывает последнюю миграцию без потери прочих данных', async () => {
+  it('откатывает последнюю миграцию и восстанавливается обратно', async () => {
     const runner = dataSource.createQueryRunner();
     await runner.connect();
+
+    /**
+     * Снимок схемы вместо проверки конкретной колонки: тест не должен
+     * переписываться при каждой новой миграции — иначе он проверяет
+     * не обратимость, а память автора о том, какая миграция последняя.
+     */
+    const snapshot = async (): Promise<string> => {
+      const rows = await runner.query(
+        `SELECT table_name, column_name FROM information_schema.columns
+          WHERE table_schema = 'public'
+          ORDER BY table_name, column_name`,
+      );
+      return JSON.stringify(rows);
+    };
 
     const ordered = [...dataSource.migrations].sort(
       (left, right) =>
@@ -131,20 +145,21 @@ describe('Обновление схемы с предыдущей версии',
         Number(/\d+/.exec(right.name ?? '')?.[0] ?? 0),
     );
     const last = ordered[ordered.length - 1];
+
+    const before = await snapshot();
     await last.down(runner);
+    const afterDown = await snapshot();
+    expect(afterDown).not.toBe(before);
 
-    const columns = await runner.query(
-      `SELECT column_name FROM information_schema.columns
-        WHERE table_name = 'clients' AND column_name = 'version'`,
-    );
-    expect(columns).toHaveLength(0);
-
+    // Данные, к которым миграция отношения не имеет, не задеты
     const [{ count }] = await runner.query(
       `SELECT count(*)::int AS count FROM clients`,
     );
     expect(count).toBe(1);
 
     await last.up(runner);
+    expect(await snapshot()).toBe(before);
+
     await runner.release();
   }, 120_000);
 });

@@ -159,6 +159,112 @@ describe('Контракт API и наблюдаемость', () => {
     });
   });
 
+  describe('Идемпотентность создания', () => {
+    const key = () =>
+      `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    it('повтор с тем же ключом не создаёт вторую запись', async () => {
+      const idempotencyKey = key();
+      const payload = { name: 'ООО «Повтор запроса»' };
+
+      const first = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(managerToken))
+        .set('Idempotency-Key', idempotencyKey)
+        .send(payload)
+        .expect(201);
+
+      // Клиент не получил ответ из-за обрыва связи и повторил запрос:
+      // раньше это создавало вторую карточку
+      const second = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(managerToken))
+        .set('Idempotency-Key', idempotencyKey)
+        .send(payload)
+        .expect(201);
+
+      expect(second.body.clientId).toBe(first.body.clientId);
+
+      const found = await request(app.getHttpServer())
+        .get('/api/clients?q=Повтор запроса&limit=50')
+        .set('Authorization', bearer(managerToken))
+        .expect(200);
+      expect(found.body.items).toHaveLength(1);
+
+      await request(app.getHttpServer())
+        .delete(`/api/clients/${first.body.clientId}`)
+        .set('Authorization', bearer(managerToken))
+        .expect(200);
+    });
+
+    it('отклоняет тот же ключ с другими данными', async () => {
+      const idempotencyKey = key();
+      const created = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(managerToken))
+        .set('Idempotency-Key', idempotencyKey)
+        .send({ name: 'ООО «Первый запрос»' })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(managerToken))
+        .set('Idempotency-Key', idempotencyKey)
+        .send({ name: 'ООО «Другие данные»' })
+        .expect(409);
+
+      await request(app.getHttpServer())
+        .delete(`/api/clients/${created.body.clientId}`)
+        .set('Authorization', bearer(managerToken))
+        .expect(200);
+    });
+
+    it('не путает ключи разных пользователей', async () => {
+      const idempotencyKey = key();
+      const payload = { name: 'ООО «Общий ключ»' };
+
+      const mine = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(managerToken))
+        .set('Idempotency-Key', idempotencyKey)
+        .send(payload)
+        .expect(201);
+
+      // Тот же ключ у другого пользователя — другая операция
+      const theirs = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(adminToken))
+        .set('Idempotency-Key', idempotencyKey)
+        .send(payload)
+        .expect(201);
+
+      expect(theirs.body.clientId).not.toBe(mine.body.clientId);
+
+      for (const [id, token] of [
+        [mine.body.clientId, managerToken],
+        [theirs.body.clientId, adminToken],
+      ] as const) {
+        await request(app.getHttpServer())
+          .delete(`/api/clients/${id}`)
+          .set('Authorization', bearer(token))
+          .expect(200);
+      }
+    });
+
+    it('создаёт как обычно без заголовка', async () => {
+      const created = await request(app.getHttpServer())
+        .post('/api/clients')
+        .set('Authorization', bearer(managerToken))
+        .send({ name: 'ООО «Без ключа»' })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .delete(`/api/clients/${created.body.clientId}`)
+        .set('Authorization', bearer(managerToken))
+        .expect(200);
+    });
+  });
+
   describe('Готовность экземпляра', () => {
     it('подтверждает, что схема базы соответствует коду', async () => {
       // С непримененными миграциями экземпляр не должен принимать трафик:

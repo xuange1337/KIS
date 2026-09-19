@@ -10,6 +10,7 @@ import { Activity } from '../activities/activity.entity';
 import { Offer } from '../offers/offer.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
+import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
 import { Organization } from '../organizations/organization.entity';
 
 export const ENTITIES = [
@@ -23,6 +24,7 @@ export const ENTITIES = [
   Offer,
   AuditLog,
   RefreshSession,
+  IdempotencyKey,
 ];
 
 /**
