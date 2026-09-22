@@ -38,7 +38,10 @@ test.describe('Отчёты и выгрузки', () => {
     await openSection(page, 'Отчёты');
 
     await page.getByRole('tab', { name: 'Активности менеджеров' }).click();
-    await expect(page.getByText('Орлов Григорий Николаевич')).toBeVisible();
+    // Имя есть и в подписи графика, и в таблице: проверяется таблица
+    await expect(
+      page.getByRole('cell', { name: 'Орлов Григорий Николаевич' }),
+    ).toBeVisible();
 
     await page.getByRole('tab', { name: 'Просроченные активности' }).click();
     await expect(page.getByRole('heading', { name: 'Отчёты' })).toBeVisible();

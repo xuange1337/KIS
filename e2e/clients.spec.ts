@@ -69,8 +69,14 @@ test.describe('Работа с клиентом', () => {
     await signIn(page, 'manager');
     await openSection(page, 'Клиенты');
 
+    // Ожидание заполненного списка: сразу после перехода строк ещё нет,
+    // и сравнение «до и после» сравнивало бы поиск с пустой таблицей
+    const rows = page.locator('.MuiDataGrid-row');
+    await expect.poll(() => rows.count()).toBeGreaterThan(1);
+
     await page.getByLabel('Поиск по наименованию или ИНН').fill('ЦифраСофт');
+    // Поиск идёт на сервере с задержкой ввода
+    await expect.poll(() => rows.count()).toBe(1);
     await expect(page.getByText('ООО «ЦифраСофт»')).toBeVisible();
-    await expect(page.getByText('ПАО «Финанс-Инвест Групп»')).toBeHidden();
   });
 });

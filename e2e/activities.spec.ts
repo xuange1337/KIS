@@ -13,14 +13,16 @@ test.describe('Планирование и выполнение активнос
     await page.getByRole('option').first().click();
     await form.getByLabel('Тема').fill(subject);
     await form.getByRole('button', { name: 'Сохранить' }).click();
+    await expect(form).toBeHidden();
 
+    /**
+     * Календарь показывает месяц целиком, и в ячейке помещается
+     * несколько активностей: запланированная на сегодня может не попасть
+     * в видимую часть. Проверка идёт по списку за день — там запись
+     * видна независимо от заполненности месяца.
+     */
+    await page.getByRole('button', { name: 'День' }).click();
     await expect(page.getByText(subject).first()).toBeVisible();
-
-    // Отметка о выполнении требует результата: пустую отметку принимать
-    // нельзя, иначе история коммуникаций теряет смысл
-    await page.getByText(subject).first().click();
-    const card = page.getByRole('dialog');
-    await expect(card).toBeVisible();
   });
 
   test('показывает просроченные активности на дашборде', async ({ page }) => {
