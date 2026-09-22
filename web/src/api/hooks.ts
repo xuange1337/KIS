@@ -8,6 +8,7 @@ import {
   DealStageHistoryDto,
   ExportFormat,
   ExportJobDto,
+  GlobalSearchResult,
   FunnelRow,
   ManagerActivityRow,
   OfferDto,
@@ -395,6 +396,25 @@ export function useReport<T extends ReportRow>(
  * на большую выборку держит рабочий поток сервера и обрывается по
  * таймауту прокси, а пользователь, не дождавшись, жмёт кнопку ещё раз.
  */
+/**
+ * Поиск по всем разделам.
+ *
+ * Запрос короче двух символов не отправляется: сервер его отклонит, а
+ * выдача по одной букве всё равно бессмысленна.
+ */
+export function useGlobalSearch(query: string, enabled: boolean) {
+  const trimmed = query.trim();
+  return useQuery({
+    queryKey: ['search', trimmed],
+    queryFn: async () =>
+      (await api.get<GlobalSearchResult>('/search', { params: { q: trimmed } }))
+        .data,
+    enabled: enabled && trimmed.length >= 2,
+    // Выдача устаревает быстро: пользователь ищет то, что только что завёл
+    staleTime: 5_000,
+  });
+}
+
 export async function downloadReportInBackground(
   report: ReportName,
   format: ExportFormat,

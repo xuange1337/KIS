@@ -212,6 +212,24 @@ export type ReportName =
 
 export type ExportFormat = 'csv' | 'xlsx' | 'pdf';
 
+/** Одно совпадение глобального поиска. */
+export interface SearchHit {
+  id: number;
+  title: string;
+  /** Уточнение: клиент сделки, ИНН, название сделки предложения. */
+  subtitle: string;
+  /** Куда ведёт совпадение. */
+  url: string;
+}
+
+/** Результат поиска по всем разделам сразу. */
+export interface GlobalSearchResult {
+  clients: SearchHit[];
+  deals: SearchHit[];
+  activities: SearchHit[];
+  offers: SearchHit[];
+}
+
 /** Состояние задания на фоновую выгрузку. */
 export type ExportJobStatus = 'pending' | 'running' | 'done' | 'failed';
 

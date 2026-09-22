@@ -22,13 +22,14 @@ import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrow
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import SettingsBrightnessOutlinedIcon from '@mui/icons-material/SettingsBrightnessOutlined';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
 import { USER_ROLE_LABELS, UserRole } from '@crm/shared';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, Suspense, lazy, useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { DURATION, TOKENS } from '../theme/tokens';
@@ -47,6 +48,18 @@ const THEME_LABELS: Record<string, string> = {
 
 const nextPreference = (current: string): 'system' | 'light' | 'dark' =>
   current === 'system' ? 'light' : current === 'light' ? 'dark' : 'system';
+
+/**
+ * Окно поиска грузится отдельным чанком.
+ *
+ * Оно нужно по требованию, а в основном чанке добавляло свыше двадцати
+ * килобайт к первой загрузке — на это и указал бюджет размера сборки.
+ */
+const GlobalSearch = lazy(() =>
+  import('../features/search/GlobalSearch').then((module) => ({
+    default: module.GlobalSearch,
+  })),
+);
 
 const RAIL_WIDTH = 228;
 const RAIL_WIDTH_COLLAPSED = 60;
@@ -104,6 +117,24 @@ export function AppLayout({ children }: { children: ReactNode }) {
    */
   const isPhone = useMediaQuery(muiTheme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  /**
+   * Поиск открывается по Ctrl+K (Cmd+K на Mac).
+   *
+   * Сочетание привычно по другим рабочим системам, а во время разговора
+   * с клиентом тянуться к мыши неудобно.
+   */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   // Переход по разделу закрывает панель: иначе она перекрывает открытый экран
   const location_pathname_for_drawer = location.pathname;
@@ -227,6 +258,37 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </Tooltip>
         )}
       </Stack>
+
+      <Box sx={{ px: compact ? 1 : 1.5, pb: 1 }}>
+        <Tooltip title="Поиск по всем разделам (Ctrl+K)">
+          <Box
+            component="button"
+            type="button"
+            aria-label="Поиск по всем разделам"
+            onClick={() => setSearchOpen(true)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              width: '100%',
+              height: 32,
+              px: compact ? 0 : 1.25,
+              justifyContent: compact ? 'center' : 'flex-start',
+              border: `1px solid ${TOKENS.border}`,
+              borderRadius: 1,
+              bgcolor: TOKENS.surface,
+              color: TOKENS.textMuted,
+              cursor: 'pointer',
+              font: 'inherit',
+              fontSize: 13,
+              '&:hover': { borderColor: TOKENS.borderControl },
+            }}
+          >
+            <SearchIcon sx={{ fontSize: 17 }} />
+            {!compact && <span>Поиск</span>}
+          </Box>
+        </Tooltip>
+      </Box>
 
       <Stack
         component="ul"
@@ -459,6 +521,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </>
       ) : (
         navigation
+      )}
+
+      {searchOpen && (
+        <Suspense fallback={null}>
+          <GlobalSearch open onClose={() => setSearchOpen(false)} />
+        </Suspense>
       )}
 
       <Box
