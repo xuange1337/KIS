@@ -318,6 +318,45 @@ COMMENT ON COLUMN audit_log.entity  IS 'Имя сущности: clients, deals,
 COMMENT ON COLUMN audit_log.payload IS 'Параметры запроса; пароли исключаются при записи';
 
 
+-- -----------------------------------------------------------------------------
+-- ExportJobs — задания на фоновое формирование выгрузок
+--
+-- Синхронная выгрузка занимает рабочий поток процесса на всё время
+-- формирования файла; на больших выборках это минуты, за которые браузер
+-- успевает разорвать соединение по таймауту
+-- -----------------------------------------------------------------------------
+CREATE TABLE export_jobs (
+    export_job_id   SERIAL       PRIMARY KEY,
+    organization_id INTEGER      NOT NULL REFERENCES organizations (organization_id)
+                                 ON DELETE RESTRICT,
+    user_id         INTEGER      NOT NULL REFERENCES users (user_id)
+                                 ON DELETE CASCADE,
+    report          VARCHAR(64)  NOT NULL,
+    format          VARCHAR(8)   NOT NULL,
+    params          JSONB        NOT NULL,
+    status          VARCHAR(16)  NOT NULL DEFAULT 'pending',
+    file_name       VARCHAR(255),
+    content_type    VARCHAR(128),
+    size_bytes      INTEGER,
+    row_count       INTEGER,
+    error           TEXT,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    finished_at     TIMESTAMPTZ,
+    expires_at      TIMESTAMPTZ,
+
+    CONSTRAINT ck_export_jobs_status CHECK
+        (status IN ('pending', 'running', 'done', 'failed'))
+);
+
+CREATE INDEX idx_export_jobs_organization ON export_jobs (organization_id);
+CREATE INDEX idx_export_jobs_status       ON export_jobs (status);
+CREATE INDEX idx_export_jobs_expires      ON export_jobs (expires_at);
+
+COMMENT ON TABLE  export_jobs         IS 'Очередь фоновых выгрузок отчётов';
+COMMENT ON COLUMN export_jobs.params  IS 'Параметры отчёта и роль заказавшего: права применяются те же, что при заказе';
+COMMENT ON COLUMN export_jobs.expires_at IS 'До какого момента файл доступен; затем файл и запись удаляются';
+
+
 -- =============================================================================
 -- Запросы, лежащие в основе отчётов (п. 2.4)
 -- =============================================================================

@@ -11,6 +11,7 @@ import { Offer } from '../offers/offer.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
+import { ExportJob } from '../reports/jobs/export-job.entity';
 import { Organization } from '../organizations/organization.entity';
 
 export const ENTITIES = [
@@ -25,6 +26,7 @@ export const ENTITIES = [
   AuditLog,
   RefreshSession,
   IdempotencyKey,
+  ExportJob,
 ];
 
 /**

@@ -55,6 +55,10 @@ services:
       BODY_LIMIT: ${BODY_LIMIT:-256kb}
       OPENAPI_ENABLED: ${OPENAPI_ENABLED:-true}
       SCHEMA_CHECK: ${SCHEMA_CHECK:-true}
+      # Путь абсолютный и совпадает с точкой монтирования тома: рабочий
+      # каталог процесса — /app/server, и относительный путь указывал бы
+      # внутрь образа, куда пользователь без прав root писать не может
+      UPLOADS_DIR: /app/uploads
     ports:
       - "3000:3000"
     volumes:

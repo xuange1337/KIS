@@ -17,9 +17,11 @@ import {
   Tab,
   Tabs,
   TextField,
+  Tooltip as MuiTooltip,
   Typography,
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
+import ScheduleIcon from '@mui/icons-material/ScheduleOutlined';
 import {
   ACTIVITY_TYPE_LABELS,
   ActivityType,
@@ -59,7 +61,12 @@ import {
   parseDateValue,
   toIsoDate,
 } from '../components/formatters';
-import { downloadReport, useReport, useUsers } from '../api/hooks';
+import {
+  downloadReportInBackground,
+  downloadReport,
+  useReport,
+  useUsers,
+} from '../api/hooks';
 import { useAuth } from '../features/auth/AuthContext';
 import { extractErrorMessage } from '../api/client';
 
@@ -88,6 +95,7 @@ export function ReportsPage() {
   // Суммы разных валют не складываются: отчёт всегда считается по одной
   const [currency, setCurrency] = useState<Currency>(BASE_CURRENCY);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const report = REPORT_TABS[tab].name;
@@ -109,12 +117,44 @@ export function ReportsPage() {
   const handleExport = async (format: ExportFormat) => {
     setError(null);
     setExporting(format);
+    setProgress(null);
     try {
       await downloadReport(report, format, params);
     } catch (caught) {
       setError(extractErrorMessage(caught, 'Не удалось сформировать выгрузку'));
     } finally {
       setExporting(null);
+    }
+  };
+
+  /**
+   * Выгрузка в фоне.
+   *
+   * Отдельная кнопка, а не замена обычной: на выборке в десяток строк
+   * ожидание задания и опрос состояния дольше самой выгрузки, и платить
+   * этим за каждый экспорт незачем.
+   */
+  const handleBackgroundExport = async (format: ExportFormat) => {
+    setError(null);
+    setExporting(format);
+    setProgress('Выгрузка поставлена в очередь');
+    try {
+      await downloadReportInBackground(report, format, params, (job) => {
+        setProgress(
+          job.status === 'pending'
+            ? 'Выгрузка поставлена в очередь'
+            : job.status === 'running'
+              ? 'Формируется файл…'
+              : job.status === 'done'
+                ? `Готово: ${job.rowCount ?? 0} строк`
+                : 'Не удалось сформировать',
+        );
+      });
+    } catch (caught) {
+      setError(extractErrorMessage(caught, 'Не удалось сформировать выгрузку'));
+    } finally {
+      setExporting(null);
+      setProgress(null);
     }
   };
 
@@ -243,7 +283,19 @@ export function ReportsPage() {
               </Grid>
             )}
             <Grid item xs={12} md sx={{ textAlign: { md: 'right' } }}>
-              <Stack direction="row" spacing={1} justifyContent="flex-end">
+              <Stack
+                direction="row"
+                spacing={1}
+                justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
+                flexWrap="wrap"
+                useFlexGap
+                alignItems="center"
+              >
+                {progress && (
+                  <Typography variant="caption" color="text.secondary">
+                    {progress}
+                  </Typography>
+                )}
                 {(['csv', 'xlsx', 'pdf'] as ExportFormat[]).map((format) => (
                   <Button
                     key={format}
@@ -256,6 +308,19 @@ export function ReportsPage() {
                     {format.toUpperCase()}
                   </Button>
                 ))}
+                <MuiTooltip title="Файл формируется на сервере: подходит для больших выборок, которые не успевают выгрузиться сразу">
+                  <span>
+                    <Button
+                      size="small"
+                      variant="text"
+                      startIcon={<ScheduleIcon />}
+                      disabled={exporting !== null}
+                      onClick={() => handleBackgroundExport('xlsx')}
+                    >
+                      В фоне
+                    </Button>
+                  </span>
+                </MuiTooltip>
               </Stack>
             </Grid>
           </Grid>

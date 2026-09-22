@@ -7,6 +7,7 @@ import {
   DealStage,
   DealStageHistoryDto,
   ExportFormat,
+  ExportJobDto,
   FunnelRow,
   ManagerActivityRow,
   OfferDto,
@@ -386,6 +387,65 @@ export function useReport<T extends ReportRow>(
  * Файл приходит как blob, поэтому сохраняется через временную ссылку —
  * обычный переход по URL не передал бы заголовок авторизации.
  */
+/**
+ * Фоновая выгрузка: задание ставится в очередь, состояние опрашивается,
+ * готовый файл скачивается.
+ *
+ * Нужна там, где синхронная выгрузка упирается во время ответа: запрос
+ * на большую выборку держит рабочий поток сервера и обрывается по
+ * таймауту прокси, а пользователь, не дождавшись, жмёт кнопку ещё раз.
+ */
+export async function downloadReportInBackground(
+  report: ReportName,
+  format: ExportFormat,
+  params: Record<string, unknown>,
+  onProgress?: (status: ExportJobDto) => void,
+): Promise<void> {
+  const queued = await api.post<ExportJobDto>(
+    `/reports/${report}/export/jobs`,
+    null,
+    { params: { ...params, format } },
+  );
+  let job = queued.data;
+  onProgress?.(job);
+
+  // Интервал опроса растёт: короткая выгрузка готова почти сразу,
+  // длинную незачем спрашивать десять раз в секунду
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    if (job.status === 'done' || job.status === 'failed') break;
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.min(2000, 300 + attempt * 200)),
+    );
+    job = (
+      await api.get<ExportJobDto>(`/reports/export/jobs/${job.exportJobId}`)
+    ).data;
+    onProgress?.(job);
+  }
+
+  if (job.status !== 'done') {
+    throw new Error(
+      job.error ?? 'Выгрузка не сформирована за отведённое время',
+    );
+  }
+
+  const file = await api.get(`/reports/export/jobs/${job.exportJobId}/file`, {
+    responseType: 'blob',
+  });
+  saveBlob(file.data as Blob, job.fileName ?? `${report}.${format}`);
+}
+
+/** Сохраняет полученный файл на диск пользователя. */
+function saveBlob(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadReport(
   report: ReportName,
   format: ExportFormat,
@@ -406,15 +466,7 @@ export async function downloadReport(
 
   const disposition = String(response.headers['content-disposition'] ?? '');
   const suggestedName = disposition.match(/filename="?([^"]+)"?/)?.[1];
-  const url = URL.createObjectURL(response.data as Blob);
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = suggestedName ?? `${report}.${format}`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  saveBlob(response.data as Blob, suggestedName ?? `${report}.${format}`);
 }
 
 /* -------------------------- Пользователи -------------------------- */

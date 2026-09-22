@@ -93,11 +93,16 @@ describe('Целостность данных', () => {
         `SELECT conname FROM pg_constraint WHERE conname LIKE 'ck_%' ORDER BY conname`,
       );
       const names = constraints.map((row: { conname: string }) => row.conname);
-      expect(names).toEqual([
-        'ck_deals_amount',
-        'ck_deals_probability',
-        'ck_offers_amount',
-      ]);
+      // Проверяется наличие, а не точный состав: точный список ломался от
+      // любого нового ограничения в других таблицах, хотя проверяемые
+      // никуда не девались
+      expect(names).toEqual(
+        expect.arrayContaining([
+          'ck_deals_amount',
+          'ck_deals_probability',
+          'ck_offers_amount',
+        ]),
+      );
 
       await expect(
         dataSource.query(

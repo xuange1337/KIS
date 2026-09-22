@@ -211,3 +211,27 @@ export type ReportName =
   | 'top';
 
 export type ExportFormat = 'csv' | 'xlsx' | 'pdf';
+
+/** Состояние задания на фоновую выгрузку. */
+export type ExportJobStatus = 'pending' | 'running' | 'done' | 'failed';
+
+/**
+ * Задание на выгрузку отчёта.
+ *
+ * Большая выгрузка формируется не в запросе, а отдельно: клиент ставит
+ * задание, опрашивает его состояние и забирает готовый файл.
+ */
+export interface ExportJobDto {
+  exportJobId: number;
+  report: ReportName;
+  format: ExportFormat;
+  status: ExportJobStatus;
+  fileName: string | null;
+  sizeBytes: number | null;
+  rowCount: number | null;
+  error: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  /** До какого момента файл доступен для скачивания. */
+  expiresAt: string | null;
+}

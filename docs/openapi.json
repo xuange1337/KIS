@@ -1897,6 +1897,126 @@
         ]
       }
     },
+    "/api/v1/reports/export/jobs": {
+      "get": {
+        "operationId": "ReportsController_listExportJobs[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/reports/export/jobs": {
+      "get": {
+        "operationId": "ReportsController_listExportJobs[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/export/jobs/{id}": {
+      "get": {
+        "operationId": "ReportsController_exportJobStatus[0]_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/reports/export/jobs/{id}": {
+      "get": {
+        "operationId": "ReportsController_exportJobStatus[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/export/jobs/{id}/file": {
+      "get": {
+        "operationId": "ReportsController_downloadExportJob[0]_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/reports/export/jobs/{id}/file": {
+      "get": {
+        "operationId": "ReportsController_downloadExportJob[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
     "/api/v1/reports/funnel": {
       "get": {
         "operationId": "ReportsController_funnel[0]_v1",
@@ -2091,6 +2211,68 @@
         ],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/{report}/export/jobs": {
+      "post": {
+        "operationId": "ReportsController_enqueueExport[0]_v1",
+        "parameters": [
+          {
+            "name": "report",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/reports/{report}/export/jobs": {
+      "post": {
+        "operationId": "ReportsController_enqueueExport[1]",
+        "parameters": [
+          {
+            "name": "report",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
             "description": ""
           }
         },
