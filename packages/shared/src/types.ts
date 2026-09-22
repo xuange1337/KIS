@@ -107,6 +107,41 @@ export interface DealDto {
   createdAt: string;
 }
 
+/** Поля карточки клиента, которые понимает импорт. */
+export type ImportColumn =
+  'name' | 'inn' | 'industry' | 'status' | 'source' | 'address';
+
+/** Строка файла импорта с результатом проверки. */
+export interface ImportRow {
+  /** Номер строки в файле, считая заголовок первой. */
+  line: number;
+  name: string;
+  inn: string | null;
+  industry: string | null;
+  status: ClientStatus | null;
+  source: ClientSource | null;
+  address: string | null;
+  /** Все ошибки строки сразу: исправлять по одной — это N загрузок файла. */
+  errors: string[];
+}
+
+/** Предпросмотр загруженного файла. */
+export interface ImportPreview {
+  /** Какие колонки файла распознаны и под какими заголовками. */
+  columns: Partial<Record<ImportColumn, string>>;
+  rows: ImportRow[];
+  validCount: number;
+  errorCount: number;
+}
+
+/** Итог загрузки. */
+export interface ImportResult {
+  created: number;
+  skipped: number;
+  /** Строки, которые не удалось загрузить, с причинами. */
+  errors: { line: number; name: string; errors: string[] }[];
+}
+
 /** Строка отчёта «Причины проигрыша». */
 export interface LossReasonRow {
   reason: DealLossReason;

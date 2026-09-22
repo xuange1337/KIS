@@ -453,6 +453,82 @@
         ]
       }
     },
+    "/api/v1/clients/import/preview": {
+      "post": {
+        "operationId": "ClientsController_importPreview[0]_v1",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/clients/import/preview": {
+      "post": {
+        "operationId": "ClientsController_importPreview[1]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/v1/clients/import": {
+      "post": {
+        "operationId": "ClientsController_importClients[0]_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportClientsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/clients/import": {
+      "post": {
+        "operationId": "ClientsController_importClients[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportClientsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
     "/api/v1/clients": {
       "get": {
         "operationId": "ClientsController_findAll[0]_v1",
@@ -2590,6 +2666,10 @@
         "properties": {}
       },
       "UpdateUserDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ImportClientsDto": {
         "type": "object",
         "properties": {}
       },

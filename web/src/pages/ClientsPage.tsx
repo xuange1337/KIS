@@ -1,5 +1,6 @@
 import { Box, Alert, Button, Grid, MenuItem, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import SearchIcon from '@mui/icons-material/Search';
 import { InputAdornment } from '@mui/material';
 import { ClientDto } from '@crm/shared';
@@ -22,6 +23,7 @@ import {
   useUsers,
 } from '../api/hooks';
 import { BulkActionsBar } from '../features/clients/BulkActionsBar';
+import { ImportDialog } from '../features/clients/ImportDialog';
 import { extractErrorMessage } from '../api/client';
 import { useAuth } from '../features/auth/AuthContext';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
@@ -33,6 +35,7 @@ export function ClientsPage() {
   const { data: dictionaries } = useDictionaries();
   const { data: users } = useUsers(canSeeAll);
 
+  const [importOpen, setImportOpen] = useState(false);
   const [selection, setSelection] = useState<number[]>([]);
   const [bulkError, setBulkError] = useState<string | null>(null);
   const bulkUpdate = useBulkUpdateClients();
@@ -144,13 +147,26 @@ export function ClientsPage() {
             : 'Клиенты, закреплённые за вами'
         }
         actions={
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setFormOpen(true)}
-          >
-            Добавить клиента
-          </Button>
+          <>
+            {/* Загрузка базы меняет состав данных отдела: действие
+                руководителя, а не рядовая правка */}
+            {canSeeAll && (
+              <Button
+                variant="outlined"
+                startIcon={<UploadFileIcon />}
+                onClick={() => setImportOpen(true)}
+              >
+                Загрузить из файла
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setFormOpen(true)}
+            >
+              Добавить клиента
+            </Button>
+          </>
         }
       />
 
@@ -303,6 +319,12 @@ export function ClientsPage() {
           }
         />
       </Box>
+
+      <ImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => setSelection([])}
+      />
 
       <ClientFormDialog
         open={formOpen}
