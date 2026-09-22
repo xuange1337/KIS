@@ -172,6 +172,13 @@ export function DealCardPage() {
                   <TextField
                     select
                     size="small"
+                    // Подпись стоит отдельным заголовком над полем и
+                    // программе чтения с экрана недоступна: без явного
+                    // имени список стадий объявляется просто «список»
+                    slotProps={{
+                      htmlInput: { 'aria-label': 'Текущая стадия' },
+                    }}
+                    SelectProps={{ 'aria-label': 'Текущая стадия' }}
                     value={deal.stage}
                     onChange={(event) =>
                       handleStageChange(event.target.value as DealStage)

@@ -18,6 +18,8 @@ export default tseslint.config(
       '**/coverage/**',
       'docs/**',
       'packages/*/dist/**',
+      'test-results/**',
+      'playwright-report/**',
     ],
   },
   js.configs.recommended,

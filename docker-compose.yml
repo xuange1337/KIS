@@ -59,6 +59,7 @@ services:
       # каталог процесса — /app/server, и относительный путь указывал бы
       # внутрь образа, куда пользователь без прав root писать не может
       UPLOADS_DIR: /app/uploads
+      LOGIN_RATE_LIMIT: ${LOGIN_RATE_LIMIT:-5}
     ports:
       - "3000:3000"
     volumes:

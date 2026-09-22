@@ -112,6 +112,20 @@ jobs:
       - name: Сборка образов, запуск и проверка
         run: scripts/smoke.sh
 
+      - name: Браузер для сценариев
+        run: npm ci && npx playwright install --with-deps chromium
+
+      - name: Браузерные сценарии
+        run: npm run test:browser
+
+      - name: Отчёт о неудачных сценариях
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: test-results/
+          retention-days: 7
+
       - name: Нагрузочный smoke
         run: node scripts/load-test.mjs
 

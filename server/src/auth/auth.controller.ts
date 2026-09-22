@@ -30,6 +30,17 @@ const CSRF_COOKIE = 'crm_csrf';
 const CSRF_HEADER = 'x-csrf-token';
 const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
+/**
+ * Попыток входа в минуту с одного адреса.
+ *
+ * Предел настраиваемый, потому что «адрес» — это не человек: за одним
+ * NAT сидит весь офис заказчика, и пять попыток в минуту на всех
+ * означают, что коллеги мешают друг другу входить. Значение по умолчанию
+ * рассчитано на обычное развёртывание; для стенда с браузерными тестами
+ * и для большого офиса его поднимают.
+ */
+const LOGIN_RATE_LIMIT = Number(process.env.LOGIN_RATE_LIMIT ?? 5);
+
 /** Авторизация пользователя (экранная форма «Вход», ТЗ п. 2.5). */
 @Controller('auth')
 export class AuthController {
@@ -39,9 +50,9 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  // Пять попыток в минуту с адреса: словарный подбор паролей из README
-  // занимал секунды, а каждая попытка ещё и считает bcrypt в event loop
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // Ограничение частоты: словарный подбор паролей из README занимал
+  // секунды, а каждая попытка ещё и считает bcrypt в event loop
+  @Throttle({ default: { limit: LOGIN_RATE_LIMIT, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: LoginDto,

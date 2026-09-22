@@ -102,7 +102,7 @@
 - [x] Проверка секретов
 - [x] Проверка лицензий
 - [x] `THIRD_PARTY_LICENSES.md`
-- [ ] Browser e2e критических потоков
+- [x] Browser e2e критических потоков
 - [x] Нагрузочный smoke test
 - [x] Миграционный тест с предыдущей схемы
 - [x] Docker build и smoke test в CI

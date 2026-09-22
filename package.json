@@ -29,7 +29,8 @@
     "ci": "npm run format:check && npm run lint && npm run build && npm run check:bundle && npm run test:web && npm run test:api && npm run licenses:check && npm run check:secrets && npm run check:docker",
     "check:bundle": "node scripts/check-bundle-size.mjs",
     "smoke": "scripts/smoke.sh",
-    "test:load": "node scripts/load-test.mjs"
+    "test:load": "node scripts/load-test.mjs",
+    "test:browser": "scripts/browser-e2e.sh"
   },
   "overrides": {
     "multer": "2.4.0"
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
     "axe-core": "^4.13.0",
     "eslint": "^9.39.5",
     "eslint-plugin-react-refresh": "^0.5.7",

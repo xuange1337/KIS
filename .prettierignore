@@ -6,6 +6,8 @@ docs/openapi.json
 docs/diagrams
 docs/screenshots
 backups
+test-results
+playwright-report
 
 # Документация вычитана и перенесена по строкам вручную:
 # переформатирование Markdown ломает эту разметку без пользы
