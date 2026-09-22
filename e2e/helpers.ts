@@ -29,7 +29,12 @@ export async function openSection(page: Page, name: string): Promise<void> {
   if (await burger.isVisible()) {
     await burger.click();
   }
-  await page.getByRole('link', { name, exact: true }).click();
+  // Ссылка берётся из меню разделов: такое же название встречается
+  // в пути по разделам на карточке записи
+  await page
+    .getByRole('navigation', { name: 'Разделы системы' })
+    .getByRole('link', { name, exact: true })
+    .click();
   await expect(page.getByRole('heading', { level: 4 })).toBeVisible();
 }
 

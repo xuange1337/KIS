@@ -13,6 +13,7 @@ import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientsDto } from './dto/query-clients.dto';
+import { BulkClientsDto } from './dto/bulk-clients.dto';
 import {
   AuthUser,
   CurrentUser,
@@ -41,6 +42,18 @@ export class ClientsController {
   @Post()
   create(@Body() dto: CreateClientDto, @CurrentUser() user: AuthUser) {
     return this.clientsService.create(dto, user);
+  }
+
+  /**
+   * Массовая правка выбранных карточек.
+   *
+   * Отдельный маршрут, а не повторение PATCH по одной: у операции свои
+   * правила — доступ проверяется ко всем записям сразу, и при отказе
+   * не меняется ни одна.
+   */
+  @Patch('bulk')
+  bulkUpdate(@Body() dto: BulkClientsDto, @CurrentUser() user: AuthUser) {
+    return this.clientsService.bulkUpdate(dto, user);
   }
 
   @Patch(':id')

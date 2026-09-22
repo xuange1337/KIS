@@ -691,6 +691,54 @@
         ]
       }
     },
+    "/api/v1/clients/bulk": {
+      "patch": {
+        "operationId": "ClientsController_bulkUpdate[0]_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkClientsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
+    "/api/clients/bulk": {
+      "patch": {
+        "operationId": "ClientsController_bulkUpdate[1]",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkClientsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Clients"
+        ]
+      }
+    },
     "/api/v1/clients/{clientId}/contacts": {
       "get": {
         "operationId": "ContactsController_findByClient[0]_v1",
@@ -2546,6 +2594,10 @@
         "properties": {}
       },
       "CreateClientDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "BulkClientsDto": {
         "type": "object",
         "properties": {}
       },

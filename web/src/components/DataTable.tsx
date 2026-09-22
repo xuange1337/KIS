@@ -5,6 +5,7 @@ import {
   GridColDef,
   GridPaginationModel,
   GridRowParams,
+  GridRowSelectionModel,
   GridSortModel,
 } from '@mui/x-data-grid';
 import { KeyboardEvent } from 'react';
@@ -27,6 +28,10 @@ interface DataTableProps<T> {
   /** Сообщение, когда выборка пуста. */
   emptyTitle?: string;
   emptyHint?: string;
+  /** Включает отметку строк для массовых операций. */
+  checkboxSelection?: boolean;
+  selectionModel?: GridRowSelectionModel;
+  onSelectionModelChange?: (model: GridRowSelectionModel) => void;
 }
 
 /**
@@ -50,6 +55,9 @@ export function DataTable<T extends object>({
   height = 600,
   emptyTitle = 'Записей не найдено',
   emptyHint,
+  checkboxSelection,
+  selectionModel,
+  onSelectionModelChange,
 }: DataTableProps<T>) {
   const handleCellKeyDown = (
     params: GridCellParams,
@@ -70,6 +78,13 @@ export function DataTable<T extends object>({
         loading={loading}
         paginationMode="server"
         sortingMode="server"
+        checkboxSelection={checkboxSelection}
+        // Отметки сохраняются только на текущей странице: список
+        // серверный, и «выбрать всё» означало бы операцию над записями,
+        // которых пользователь не видел
+        keepNonExistentRowsSelected={false}
+        rowSelectionModel={selectionModel}
+        onRowSelectionModelChange={onSelectionModelChange}
         paginationModel={paginationModel}
         onPaginationModelChange={onPaginationModelChange}
         sortModel={sortModel}

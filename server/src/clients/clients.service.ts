@@ -7,9 +7,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paginated } from '@crm/shared';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Client } from './client.entity';
 import { CreateClientDto } from './dto/create-client.dto';
+import { BulkClientAction, BulkClientsDto } from './dto/bulk-clients.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientsDto } from './dto/query-clients.dto';
 import { AuthUser } from '../common/decorators/current-user.decorator';
@@ -180,6 +181,59 @@ export class ClientsService {
       throw error;
     }
     return { success: true };
+  }
+
+  /**
+   * Массовая правка выбранных карточек.
+   *
+   * Передача десятка клиентов новому сотруднику по одной карточке —
+   * десять открытий формы и десять сохранений; при передаче дел
+   * уходящего менеджера счёт идёт на сотни.
+   *
+   * Операция сначала проверяет доступ ко всем выбранным записям и
+   * только потом меняет их: частичный результат здесь хуже отказа —
+   * пользователь видит «изменено 7 из 12» и не знает, какие пять и
+   * почему остались прежними.
+   */
+  async bulkUpdate(
+    dto: BulkClientsDto,
+    user: AuthUser,
+  ): Promise<{ updated: number }> {
+    const ids = [...new Set(dto.clientIds)];
+
+    const qb = this.repo
+      .createQueryBuilder('client')
+      .where('client.clientId IN (:...ids)', { ids });
+    applyTenantScope(qb, user, 'client');
+    applyOwnerScope(qb, user, 'client');
+    const accessible = await qb.getMany();
+
+    if (accessible.length !== ids.length) {
+      const visible = new Set(accessible.map((client) => client.clientId));
+      const missing = ids.filter((id) => !visible.has(id));
+      throw new ForbiddenException({
+        message:
+          'Часть выбранных карточек недоступна: операция не выполнена ни над одной',
+        clientIds: missing,
+      });
+    }
+
+    if (dto.action === BulkClientAction.ASSIGN_OWNER) {
+      if (!canSeeAll(user)) {
+        throw new ForbiddenException(
+          'Назначать ответственного может руководитель или администратор',
+        );
+      }
+      await this.assertOwnerInTenant(dto.ownerUserId, user);
+      await this.repo.update(
+        { clientId: In(ids) },
+        { ownerUserId: dto.ownerUserId },
+      );
+      return { updated: ids.length };
+    }
+
+    await this.repo.update({ clientId: In(ids) }, { status: dto.status });
+    return { updated: ids.length };
   }
 
   /**

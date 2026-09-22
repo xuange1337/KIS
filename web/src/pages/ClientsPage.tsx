@@ -15,7 +15,14 @@ import { DataTable } from '../components/DataTable';
 import { ClientStatusChip } from '../components/StatusChip';
 import { formatDate } from '../components/formatters';
 import { ClientFormDialog } from '../features/clients/ClientFormDialog';
-import { useClients, useDictionaries, useUsers } from '../api/hooks';
+import {
+  useBulkUpdateClients,
+  useClients,
+  useDictionaries,
+  useUsers,
+} from '../api/hooks';
+import { BulkActionsBar } from '../features/clients/BulkActionsBar';
+import { extractErrorMessage } from '../api/client';
 import { useAuth } from '../features/auth/AuthContext';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
@@ -25,6 +32,27 @@ export function ClientsPage() {
   const { canSeeAll } = useAuth();
   const { data: dictionaries } = useDictionaries();
   const { data: users } = useUsers(canSeeAll);
+
+  const [selection, setSelection] = useState<number[]>([]);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const bulkUpdate = useBulkUpdateClients();
+
+  const runBulk = async (
+    payload: Parameters<typeof bulkUpdate.mutateAsync>[0],
+  ) => {
+    setBulkError(null);
+    try {
+      await bulkUpdate.mutateAsync(payload);
+      // Отметки снимаются только после успеха: при отказе пользователь
+      // видит тот же выбор и может исправить действие, а не собирать
+      // десяток карточек заново
+      setSelection([]);
+    } catch (caught) {
+      setBulkError(
+        extractErrorMessage(caught, 'Не удалось изменить выбранные карточки'),
+      );
+    }
+  };
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -223,6 +251,25 @@ export function ClientsPage() {
         </Grid>
       </Box>
 
+      <BulkActionsBar
+        count={selection.length}
+        canAssignOwner={canSeeAll}
+        users={users ?? []}
+        busy={bulkUpdate.isPending}
+        error={bulkError}
+        onAssignOwner={(ownerUserId) =>
+          void runBulk({
+            clientIds: selection,
+            action: 'assign-owner',
+            ownerUserId,
+          })
+        }
+        onSetStatus={(status) =>
+          void runBulk({ clientIds: selection, action: 'set-status', status })
+        }
+        onClear={() => setSelection([])}
+      />
+
       <Box
         sx={{
           border: '1px solid',
@@ -233,6 +280,11 @@ export function ClientsPage() {
         }}
       >
         <DataTable<ClientDto>
+          checkboxSelection
+          selectionModel={selection}
+          onSelectionModelChange={(model) =>
+            setSelection(model as unknown as number[])
+          }
           rows={data?.items ?? []}
           columns={columns}
           rowCount={data?.total ?? 0}

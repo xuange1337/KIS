@@ -1,6 +1,7 @@
 import {
   ActivityDto,
   ClientDto,
+  ClientStatus,
   ContactDto,
   DashboardSummary,
   DealDto,
@@ -90,6 +91,27 @@ export function useSaveClient() {
     onSuccess: (client) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client', client.clientId] });
+    },
+  });
+}
+
+/**
+ * Массовая правка карточек.
+ *
+ * Список после неё перечитывается целиком: изменились и записи, и,
+ * возможно, их попадание в текущий фильтр.
+ */
+export function useBulkUpdateClients() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      clientIds: number[];
+      action: 'assign-owner' | 'set-status';
+      ownerUserId?: number;
+      status?: ClientStatus;
+    }) => (await api.patch<{ updated: number }>('/clients/bulk', payload)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
   });
 }
