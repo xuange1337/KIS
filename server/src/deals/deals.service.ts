@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DEAL_STAGE_PROBABILITY,
+  DealLossReason,
   DealStage,
   Paginated,
   isClosedStage,
@@ -17,6 +18,7 @@ import { Deal } from './deal.entity';
 import { DealStageHistory } from './deal-stage-history.entity';
 import { CreateDealDto } from './dto/create-deal.dto';
 import { UpdateDealDto } from './dto/update-deal.dto';
+import { ChangeStageDto } from './dto/change-stage.dto';
 import { QueryDealsDto } from './dto/query-deals.dto';
 import { ClientsService } from '../clients/clients.service';
 import { AuthUser } from '../common/decorators/current-user.decorator';
@@ -180,9 +182,11 @@ export class DealsService {
    */
   async changeStage(
     dealId: number,
-    stage: DealStage,
+    dto: ChangeStageDto,
     user: AuthUser,
   ): Promise<Deal> {
+    const { stage } = dto;
+    const loss = this.resolveLossReason(dto);
     // Права проверяются до транзакции: чужую сделку блокировать незачем
     await this.findOne(dealId, user);
 
@@ -209,6 +213,11 @@ export class DealsService {
       // Переход на терминальную стадию фиксирует дату закрытия,
       // возврат в работу — снимает её
       deal.closedAt = isClosedStage(stage) ? new Date() : null;
+      // Причина относится только к проигрышу: при любом другом переходе
+      // она снимается, иначе отчёт считал бы причины у сделок,
+      // закрытых выигрышем или вернувшихся в работу
+      deal.lossReason = loss.reason;
+      deal.lossComment = loss.comment;
       await manager.getRepository(Deal).save(deal);
 
       await manager.getRepository(DealStageHistory).save({
@@ -255,6 +264,36 @@ export class DealsService {
 
     await this.repo.remove(deal);
     return { success: true };
+  }
+
+  /**
+   * Причина проигрыша по данным перехода.
+   *
+   * Проигрыш без причины — это потерянная информация: разбирать
+   * проигрыши потом не по чему, а отчёт показывает «не указано» у
+   * половины сделок. Поэтому причина обязательна, а для «другого»
+   * обязательно и пояснение — иначе «другое» становится свалкой.
+   */
+  private resolveLossReason(dto: ChangeStageDto): {
+    reason: DealLossReason | null;
+    comment: string | null;
+  } {
+    if (dto.stage !== DealStage.LOST) {
+      return { reason: null, comment: null };
+    }
+    if (!dto.lossReason) {
+      throw new BadRequestException(
+        'Укажите причину проигрыша: без неё разбирать проигранные сделки не по чему',
+      );
+    }
+    const comment = dto.lossComment?.trim() ?? '';
+    if (dto.lossReason === DealLossReason.OTHER && comment.length === 0) {
+      throw new BadRequestException('Для причины «другое» укажите пояснение');
+    }
+    return {
+      reason: dto.lossReason,
+      comment: comment.length > 0 ? comment : null,
+    };
   }
 
   /** Ответственный должен работать в той же организации. */

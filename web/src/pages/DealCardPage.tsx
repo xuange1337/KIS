@@ -24,7 +24,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import {
   ACTIVITY_TYPE_LABELS,
   ActivityDto,
+  DEAL_LOSS_REASON_LABELS,
   DEAL_STAGE_LABELS,
+  DealLossReason,
   DealStage,
   OfferDto,
 } from '@crm/shared';
@@ -40,6 +42,7 @@ import {
   formatMoney,
 } from '../components/formatters';
 import { DealFormDialog } from '../features/deals/DealFormDialog';
+import { LossReasonDialog } from '../features/deals/LossReasonDialog';
 import { OfferFormDialog } from '../features/offers/OfferFormDialog';
 import { ActivityFormDialog } from '../features/activities/ActivityFormDialog';
 import { CompleteActivityDialog } from '../features/activities/CompleteActivityDialog';
@@ -77,6 +80,7 @@ export function DealCardPage() {
   const deleteOffer = useDeleteOffer();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [lossOpen, setLossOpen] = useState(false);
   const [offerForm, setOfferForm] = useState<{
     open: boolean;
     offer: OfferDto | null;
@@ -104,13 +108,32 @@ export function DealCardPage() {
     );
   }
 
-  const handleStageChange = async (stage: DealStage) => {
+  const handleStageChange = async (
+    stage: DealStage,
+    lossReason?: DealLossReason,
+    lossComment?: string,
+  ) => {
     setError(null);
     try {
-      await changeStage.mutateAsync({ dealId, stage });
+      await changeStage.mutateAsync({ dealId, stage, lossReason, lossComment });
+      setLossOpen(false);
     } catch (caught) {
       setError(extractErrorMessage(caught, 'Не удалось сменить стадию'));
     }
+  };
+
+  /**
+   * Проигрыш спрашивает причину.
+   *
+   * Заполнить её «потом» не заполняет никто, а отчёт по проигрышам без
+   * причин отвечает только на вопрос «сколько».
+   */
+  const requestStageChange = (stage: DealStage) => {
+    if (stage === DealStage.LOST) {
+      setLossOpen(true);
+      return;
+    }
+    void handleStageChange(stage);
   };
 
   const handleDelete = async () => {
@@ -181,7 +204,7 @@ export function DealCardPage() {
                     SelectProps={{ 'aria-label': 'Текущая стадия' }}
                     value={deal.stage}
                     onChange={(event) =>
-                      handleStageChange(event.target.value as DealStage)
+                      requestStageChange(event.target.value as DealStage)
                     }
                     disabled={changeStage.isPending}
                     fullWidth
@@ -215,6 +238,12 @@ export function DealCardPage() {
                 </Field>
                 <Field label="Создана">{formatDate(deal.createdAt)}</Field>
                 <Field label="Закрыта">{formatDate(deal.closedAt)}</Field>
+                {deal.lossReason && (
+                  <Field label="Причина проигрыша">
+                    {DEAL_LOSS_REASON_LABELS[deal.lossReason]}
+                    {deal.lossComment ? ` — ${deal.lossComment}` : ''}
+                  </Field>
+                )}
               </Grid>
             </CardContent>
           </Card>
@@ -373,6 +402,15 @@ export function DealCardPage() {
           </Card>
         </Grid>
       </Grid>
+
+      <LossReasonDialog
+        open={lossOpen}
+        loading={changeStage.isPending}
+        onCancel={() => setLossOpen(false)}
+        onConfirm={(reason, comment) =>
+          void handleStageChange(DealStage.LOST, reason, comment)
+        }
+      />
 
       <DealFormDialog
         open={editOpen}

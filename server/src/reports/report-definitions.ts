@@ -1,7 +1,9 @@
 import {
   ACTIVITY_TYPE_LABELS,
   ActivityType,
+  DEAL_LOSS_REASON_LABELS,
   DEAL_STAGE_LABELS,
+  DealLossReason,
   DealStage,
   ReportName,
 } from '@crm/shared';
@@ -86,6 +88,19 @@ export const REPORT_DEFINITIONS: Record<ReportName, ReportDefinition> = {
       },
       { header: 'Просрочка, дней', width: 18, value: (row) => row.daysOverdue },
       { header: 'Ответственный', width: 28, value: (row) => row.ownerName },
+    ],
+  },
+  'loss-reasons': {
+    title: 'Причины проигрыша',
+    columns: [
+      {
+        header: 'Причина',
+        width: 32,
+        value: (row) =>
+          DEAL_LOSS_REASON_LABELS[row.reason as DealLossReason] ?? row.reason,
+      },
+      { header: 'Сделок', width: 14, value: (row) => row.count },
+      { header: 'Сумма', width: 20, value: (row) => row.amount },
     ],
   },
   top: {

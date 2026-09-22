@@ -4,8 +4,11 @@ import {
   ActivityStatus,
   ActivityType,
   BASE_CURRENCY,
+  DEAL_LOSS_REASON_LABELS,
   DEAL_STAGE_LABELS,
+  DealLossReason,
   DealStage,
+  LossReasonRow,
   FunnelRow,
   ManagerActivityRow,
   OverdueActivityRow,
@@ -161,6 +164,49 @@ export class ReportsService {
     this.applyReportScope(qb, query, user, 'activity', 'activity.plannedAt');
 
     return qb.getRawMany<OverdueActivityRow>();
+  }
+
+  /**
+   * Отчёт «Причины проигрыша».
+   *
+   * Воронка отвечает, сколько сделок проиграно; этот отчёт отвечает
+   * почему — ради этого проигрыши и разбирают. Период считается по дате
+   * закрытия: проигрыш относится к тому месяцу, когда он случился,
+   * а не когда сделку завели.
+   */
+  async lossReasons(
+    query: ReportQueryDto,
+    user: AuthUser,
+  ): Promise<LossReasonRow[]> {
+    const qb = this.dealsRepo
+      .createQueryBuilder('deal')
+      .select('deal.lossReason', 'reason')
+      .addSelect('COUNT(*)::int', 'count')
+      .addSelect('COALESCE(SUM(deal.amount), 0)', 'amount')
+      .where('deal.stage = :lost', { lost: DealStage.LOST })
+      .andWhere('deal.lossReason IS NOT NULL')
+      .groupBy('deal.lossReason');
+
+    this.applyReportScope(qb, query, user, 'deal', 'deal.closedAt');
+    this.applyCurrency(qb, query);
+
+    const rows = await qb.getRawMany<{
+      reason: DealLossReason;
+      count: number;
+      amount: string;
+    }>();
+    const byReason = new Map(rows.map((row) => [row.reason, row]));
+
+    // Причины без сделок тоже показываются: пустая строка отвечает
+    // на вопрос «а по этой причине мы не проигрываем» так же, как
+    // заполненная отвечает на «проигрываем и вот сколько»
+    return (Object.keys(DEAL_LOSS_REASON_LABELS) as DealLossReason[])
+      .map((reason) => ({
+        reason,
+        count: byReason.get(reason)?.count ?? 0,
+        amount: Number(byReason.get(reason)?.amount ?? 0),
+      }))
+      .sort((left, right) => right.amount - left.amount);
   }
 
   /** 5. ТОП клиентов или сделок по сумме. */

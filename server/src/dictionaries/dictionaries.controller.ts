@@ -5,6 +5,7 @@ import {
   CLIENT_SOURCE_LABELS,
   CLIENT_STATUS_LABELS,
   Currency,
+  DEAL_LOSS_REASON_LABELS,
   DEAL_STAGE_LABELS,
   DEAL_STAGE_PROBABILITY,
   INDUSTRIES,
@@ -35,6 +36,7 @@ export class DictionariesController {
       clientSources: toItems(CLIENT_SOURCE_LABELS),
       industries: INDUSTRIES.map((value) => ({ value, label: value })),
       dealStages: toItems(DEAL_STAGE_LABELS),
+      dealLossReasons: toItems(DEAL_LOSS_REASON_LABELS),
       dealStageProbability: DEAL_STAGE_PROBABILITY,
       currencies: Object.values(Currency).map((value) => ({
         value,

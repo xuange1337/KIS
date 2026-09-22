@@ -69,7 +69,7 @@ export class DealsController {
     @Body() dto: ChangeStageDto,
     @CurrentUser() user: AuthUser,
   ) {
-    return this.dealsService.changeStage(id, dto.stage, user);
+    return this.dealsService.changeStage(id, dto, user);
   }
 
   /** force=true подтверждает удаление вместе со связанными записями. */

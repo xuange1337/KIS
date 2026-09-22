@@ -87,6 +87,33 @@ export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
   [DealStage.LOST]: 'Сделка проиграна',
 };
 
+/**
+ * Причины проигрыша сделки.
+ *
+ * Список закрытый: свободный текст в отчёте не суммируется, а
+ * «дорого», «Дорого» и «цена» превращаются в три разные причины.
+ * Для частных случаев есть «другое» с обязательным пояснением.
+ */
+export enum DealLossReason {
+  PRICE = 'price',
+  COMPETITOR = 'competitor',
+  NO_BUDGET = 'no_budget',
+  NO_NEED = 'no_need',
+  NO_RESPONSE = 'no_response',
+  TIMING = 'timing',
+  OTHER = 'other',
+}
+
+export const DEAL_LOSS_REASON_LABELS: Record<DealLossReason, string> = {
+  [DealLossReason.PRICE]: 'Не устроила цена',
+  [DealLossReason.COMPETITOR]: 'Выбрали конкурента',
+  [DealLossReason.NO_BUDGET]: 'Нет бюджета',
+  [DealLossReason.NO_NEED]: 'Потребность отпала',
+  [DealLossReason.NO_RESPONSE]: 'Клиент перестал отвечать',
+  [DealLossReason.TIMING]: 'Перенесено на будущее',
+  [DealLossReason.OTHER]: 'Другое',
+};
+
 /** Стадии воронки в порядке прохождения (без терминальных). */
 export const DEAL_FUNNEL_STAGES: DealStage[] = [
   DealStage.NEW,

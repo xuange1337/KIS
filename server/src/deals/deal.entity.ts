@@ -1,4 +1,4 @@
-import { Currency, DealStage } from '@crm/shared';
+import { Currency, DealLossReason, DealStage } from '@crm/shared';
 import {
   Column,
   CreateDateColumn,
@@ -82,6 +82,24 @@ export class Deal {
    */
   @VersionColumn({ type: 'int', default: 1 })
   version: number;
+
+  /**
+   * Причина проигрыша.
+   *
+   * Заполняется только у проигранных сделок и снимается при возврате
+   * сделки в работу: иначе в отчёте копились бы причины у сделок,
+   * которые давно закрыты выигрышем.
+   */
+  @Column({
+    name: 'loss_reason',
+    type: 'enum',
+    enum: DealLossReason,
+    nullable: true,
+  })
+  lossReason: DealLossReason | null;
+
+  @Column({ name: 'loss_comment', type: 'text', nullable: true })
+  lossComment: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

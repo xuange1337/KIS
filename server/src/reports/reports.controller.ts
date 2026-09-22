@@ -132,6 +132,11 @@ export class ReportsController {
     return this.reportsService.overdueActivities(query, user);
   }
 
+  @Get('loss-reasons')
+  lossReasons(@Query() query: ReportQueryDto, @CurrentUser() user: AuthUser) {
+    return this.reportsService.lossReasons(query, user);
+  }
+
   @Get('top')
   top(@Query() query: TopQueryDto, @CurrentUser() user: AuthUser) {
     return this.reportsService.top(query, user);
@@ -234,6 +239,8 @@ export class ReportsController {
         return this.reportsService.managerActivities(query, user);
       case 'overdue-activities':
         return this.reportsService.overdueActivities(query, user);
+      case 'loss-reasons':
+        return this.reportsService.lossReasons(query, user);
       case 'top':
         return this.reportsService.top(query, user);
     }

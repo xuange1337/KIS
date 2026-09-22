@@ -2129,6 +2129,34 @@
         ]
       }
     },
+    "/api/v1/reports/loss-reasons": {
+      "get": {
+        "operationId": "ReportsController_lossReasons[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/reports/loss-reasons": {
+      "get": {
+        "operationId": "ReportsController_lossReasons[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
     "/api/v1/reports/top": {
       "get": {
         "operationId": "ReportsController_top[0]_v1",

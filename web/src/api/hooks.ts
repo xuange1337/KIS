@@ -8,7 +8,9 @@ import {
   DealStageHistoryDto,
   ExportFormat,
   ExportJobDto,
+  DealLossReason,
   GlobalSearchResult,
+  LossReasonRow,
   FunnelRow,
   ManagerActivityRow,
   OfferDto,
@@ -198,10 +200,22 @@ export function useChangeDealStage() {
     mutationFn: async ({
       dealId,
       stage,
+      lossReason,
+      lossComment,
     }: {
       dealId: number;
       stage: DealStage;
-    }) => (await api.patch<DealDto>(`/deals/${dealId}/stage`, { stage })).data,
+      /** Обязательна при переходе на «проиграна». */
+      lossReason?: DealLossReason;
+      lossComment?: string;
+    }) =>
+      (
+        await api.patch<DealDto>(`/deals/${dealId}/stage`, {
+          stage,
+          lossReason,
+          lossComment,
+        })
+      ).data,
     onSuccess: (deal) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       queryClient.invalidateQueries({ queryKey: ['deal', deal.dealId] });
@@ -370,6 +384,7 @@ export type ReportRow =
   | SalesDynamicsRow
   | ManagerActivityRow
   | OverdueActivityRow
+  | LossReasonRow
   | TopRow;
 
 export function useReport<T extends ReportRow>(

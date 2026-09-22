@@ -4,6 +4,7 @@ import {
   ClientSource,
   ClientStatus,
   Currency,
+  DealLossReason,
   DealStage,
   OfferStatus,
   PreferredChannel,
@@ -99,7 +100,18 @@ export interface DealDto {
   /** Версия записи; см. ClientDto.version. */
   version: number;
   closedAt: string | null;
+  /** Причина проигрыша; заполнена только у проигранных сделок. */
+  lossReason: DealLossReason | null;
+  /** Пояснение к причине; обязательно для причины «другое». */
+  lossComment: string | null;
   createdAt: string;
+}
+
+/** Строка отчёта «Причины проигрыша». */
+export interface LossReasonRow {
+  reason: DealLossReason;
+  count: number;
+  amount: number;
 }
 
 export interface DealStageHistoryDto {
@@ -208,6 +220,7 @@ export type ReportName =
   | 'sales-dynamics'
   | 'manager-activities'
   | 'overdue-activities'
+  | 'loss-reasons'
   | 'top';
 
 export type ExportFormat = 'csv' | 'xlsx' | 'pdf';

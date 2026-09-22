@@ -29,7 +29,9 @@ import {
   Currency,
   DEAL_STAGE_LABELS,
   ExportFormat,
+  DEAL_LOSS_REASON_LABELS,
   FunnelRow,
+  LossReasonRow,
   ManagerActivityRow,
   OverdueActivityRow,
   ReportName,
@@ -75,6 +77,7 @@ const REPORT_TABS: { name: ReportName; label: string }[] = [
   { name: 'sales-dynamics', label: 'Динамика продаж' },
   { name: 'manager-activities', label: 'Активности менеджеров' },
   { name: 'overdue-activities', label: 'Просроченные активности' },
+  { name: 'loss-reasons', label: 'Причины проигрыша' },
   { name: 'top', label: 'ТОП клиентов и сделок' },
 ];
 
@@ -352,6 +355,12 @@ export function ReportsPage() {
           {report === 'overdue-activities' && (
             <OverdueReport rows={data as OverdueActivityRow[]} />
           )}
+          {report === 'loss-reasons' && (
+            <LossReasonsReport
+              rows={data as LossReasonRow[]}
+              currency={currency}
+            />
+          )}
           {report === 'top' && (
             <TopReport
               rows={data as TopRow[]}
@@ -362,6 +371,102 @@ export function ReportsPage() {
         </>
       )}
     </>
+  );
+}
+
+/**
+ * Причины проигрыша.
+ *
+ * Показывается и число сделок, и сумма: три мелких проигрыша по цене и
+ * один крупный по конкуренту — разные поводы для выводов, а по одному
+ * счётчику они выглядят одинаково.
+ */
+function LossReasonsReport({
+  rows,
+  currency,
+}: {
+  rows: LossReasonRow[];
+  currency: Currency;
+}) {
+  const total = rows.reduce((sum, row) => sum + row.count, 0);
+  if (total === 0) {
+    return <EmptyReport />;
+  }
+  const chartData = rows
+    .filter((row) => row.count > 0)
+    .map((row) => ({
+      ...row,
+      label: DEAL_LOSS_REASON_LABELS[row.reason],
+    }));
+
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={12} md={7}>
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Сумма проигранных сделок по причинам
+            </Typography>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ left: 60 }}
+              >
+                <CartesianGrid stroke={TOKENS.border} horizontal={false} />
+                <XAxis
+                  type="number"
+                  fontSize={11}
+                  stroke={TOKENS.textMuted}
+                  tickFormatter={(value: number) =>
+                    `${Math.round(value / 1000)} тыс.`
+                  }
+                />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  width={150}
+                  fontSize={11}
+                  stroke={TOKENS.textMuted}
+                />
+                <ChartTooltip
+                  formatter={(value: number) => formatMoney(value, currency)}
+                />
+                <Bar dataKey="amount" name="Сумма" fill={DATA.red} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </Grid>
+      <Grid item xs={12} md={5}>
+        <Card variant="outlined">
+          <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Причина</TableCell>
+                  <TableCell align="right">Сделок</TableCell>
+                  <TableCell align="right">Сумма</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.reason}>
+                    <TableCell>{DEAL_LOSS_REASON_LABELS[row.reason]}</TableCell>
+                    <TableCell align="right" className="tabular">
+                      {row.count}
+                    </TableCell>
+                    <TableCell align="right" className="tabular">
+                      {formatMoney(row.amount, currency)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </Grid>
+    </Grid>
   );
 }
 

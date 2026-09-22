@@ -47,6 +47,13 @@ CREATE TYPE activity_type AS ENUM ('call', 'meeting', 'email');
 
 CREATE TYPE activity_status AS ENUM ('planned', 'done', 'canceled');
 
+-- Причина проигрыша сделки. Список закрытый: свободный текст
+-- в отчёте не суммируется, а «дорого» и «цена» стали бы разными причинами
+CREATE TYPE deal_loss_reason AS ENUM (
+    'price', 'competitor', 'no_budget', 'no_need',
+    'no_response', 'timing', 'other'
+);
+
 -- Статус коммерческого предложения
 CREATE TYPE offer_status AS ENUM ('draft', 'sent', 'accepted', 'rejected');
 
@@ -171,6 +178,8 @@ CREATE TABLE deals (
     planned_close DATE,
     owner_user_id INTEGER,
     closed_at     TIMESTAMPTZ,
+    loss_reason   deal_loss_reason,
+    loss_comment  TEXT,
     created_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_deals_client FOREIGN KEY (client_id)
@@ -178,10 +187,15 @@ CREATE TABLE deals (
     CONSTRAINT fk_deals_owner FOREIGN KEY (owner_user_id)
         REFERENCES users (user_id) ON DELETE SET NULL,
     CONSTRAINT ck_deals_probability CHECK (probability BETWEEN 0 AND 100),
-    CONSTRAINT ck_deals_amount CHECK (amount >= 0)
+    CONSTRAINT ck_deals_amount CHECK (amount >= 0),
+    -- Причина есть только у проигранных сделок: отчёт по причинам
+    -- строится прямым запросом, и мусор в колонке исказил бы его молча
+    CONSTRAINT ck_deals_loss_reason CHECK
+        ((stage = 'lost') OR (loss_reason IS NULL))
 );
 
 CREATE INDEX idx_deals_organization ON deals (organization_id);
+CREATE INDEX idx_deals_loss_reason  ON deals (organization_id, loss_reason);
 
 CREATE INDEX idx_deals_stage_owner ON deals (stage, owner_user_id);
 CREATE INDEX idx_deals_closed_at   ON deals (closed_at);
@@ -190,6 +204,7 @@ CREATE INDEX idx_deals_closed_at   ON deals (closed_at);
 CREATE INDEX idx_deals_owner       ON deals (owner_user_id);
 
 COMMENT ON TABLE  deals             IS 'Сделки отдела продаж';
+COMMENT ON COLUMN deals.loss_reason IS 'Причина проигрыша; только у проигранных сделок, снимается при возврате в работу';
 COMMENT ON COLUMN deals.probability IS 'Вероятность закрытия, %; подставляется по стадии сделки';
 COMMENT ON COLUMN deals.closed_at   IS 'Дата закрытия; заполняется при переходе на стадию won или lost';
 
