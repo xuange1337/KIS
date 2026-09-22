@@ -41,6 +41,16 @@ export class ExportJobsService implements OnModuleInit, OnModuleDestroy {
   private running = 0;
   private cleanupTimer?: NodeJS.Timeout;
   private stopped = false;
+  /**
+   * Незавершённая фоновая работа.
+   *
+   * Обработка задания и очистка идут вне запроса и переживают остановку
+   * приложения: запрос к уже закрытому соединению падает с «Connection
+   * terminated» после того, как тесты завершились, а в эксплуатации —
+   * оставляет задание в состоянии «выполняется». Остановка дожидается
+   * начатого.
+   */
+  private readonly inFlight = new Set<Promise<unknown>>();
 
   /** Формирование файла задаётся снаружи: сервис не знает про отчёты. */
   private runner?: (job: ExportJob) => Promise<{
@@ -65,14 +75,24 @@ export class ExportJobsService implements OnModuleInit, OnModuleDestroy {
     // возвращаются в очередь: иначе они висят «выполняется» вечно
     await this.repo.update({ status: 'running' }, { status: 'pending' });
     await this.cleanup();
-    this.cleanupTimer = setInterval(() => void this.cleanup(), 60 * 60 * 1000);
+    this.cleanupTimer = setInterval(
+      () => this.track(this.cleanup()),
+      60 * 60 * 1000,
+    );
     this.cleanupTimer.unref();
-    void this.drain();
+    this.track(this.drain());
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
     this.stopped = true;
     if (this.cleanupTimer) clearInterval(this.cleanupTimer);
+    await Promise.allSettled([...this.inFlight]);
+  }
+
+  /** Берёт фоновую работу под учёт, чтобы остановка её дождалась. */
+  private track(work: Promise<unknown>): void {
+    this.inFlight.add(work);
+    void work.finally(() => this.inFlight.delete(work));
   }
 
   /** Ставит выгрузку в очередь. */
@@ -104,7 +124,7 @@ export class ExportJobsService implements OnModuleInit, OnModuleDestroy {
         status: 'pending',
       }),
     );
-    void this.drain();
+    this.track(this.drain());
     return toExportJobDto(job);
   }
 
@@ -180,7 +200,7 @@ export class ExportJobsService implements OnModuleInit, OnModuleDestroy {
       await this.process(job);
     } finally {
       this.running -= 1;
-      void this.drain();
+      this.track(this.drain());
     }
   }
 
@@ -250,6 +270,7 @@ export class ExportJobsService implements OnModuleInit, OnModuleDestroy {
 
   /** Удаляет просроченные файлы и записи о них. */
   private async cleanup(): Promise<void> {
+    if (this.stopped) return;
     try {
       const expired = await this.repo.find({
         where: { expiresAt: LessThan(new Date()) },
