@@ -3,6 +3,7 @@ import { Page, expect } from '@playwright/test';
 /** Демонстрационные учётные записи стенда. */
 export const ACCOUNTS = {
   manager: { login: 'manager', password: 'manager123' },
+  manager2: { login: 'manager2', password: 'manager123' },
   head: { login: 'head', password: 'head123' },
   admin: { login: 'admin', password: 'admin123' },
 } as const;

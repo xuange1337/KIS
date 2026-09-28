@@ -23,6 +23,7 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import SettingsBrightnessOutlinedIcon from '@mui/icons-material/SettingsBrightnessOutlined';
@@ -55,6 +56,13 @@ const nextPreference = (current: string): 'system' | 'light' | 'dark' =>
  * Оно нужно по требованию, а в основном чанке добавляло свыше двадцати
  * килобайт к первой загрузке — на это и указал бюджет размера сборки.
  */
+/** Смена пароля — редкое действие, грузится отдельным чанком. */
+const ChangePasswordDialog = lazy(() =>
+  import('../features/auth/ChangePasswordDialog').then((module) => ({
+    default: module.ChangePasswordDialog,
+  })),
+);
+
 const GlobalSearch = lazy(() =>
   import('../features/search/GlobalSearch').then((module) => ({
     default: module.GlobalSearch,
@@ -118,6 +126,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const isPhone = useMediaQuery(muiTheme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   /**
    * Поиск открывается по Ctrl+K (Cmd+K на Mac).
@@ -432,6 +441,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
         open={Boolean(menuAnchor)}
         onClose={() => setMenuAnchor(null)}
       >
+        <MenuItem
+          onClick={() => {
+            setMenuAnchor(null);
+            setPasswordOpen(true);
+          }}
+          sx={{ fontSize: 13 }}
+        >
+          <ListItemIcon>
+            <KeyOutlinedIcon sx={{ fontSize: 17 }} />
+          </ListItemIcon>
+          Сменить пароль
+        </MenuItem>
         <MenuItem onClick={handleLogout} sx={{ fontSize: 13 }}>
           <ListItemIcon>
             <LogoutIcon sx={{ fontSize: 17 }} />
@@ -521,6 +542,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </>
       ) : (
         navigation
+      )}
+
+      {passwordOpen && (
+        <Suspense fallback={null}>
+          <ChangePasswordDialog open onClose={() => setPasswordOpen(false)} />
+        </Suspense>
       )}
 
       {searchOpen && (

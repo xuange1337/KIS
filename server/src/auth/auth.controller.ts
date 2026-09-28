@@ -18,6 +18,7 @@ import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto, ResetPasswordDto } from './dto/password.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { configuration } from '../config/configuration';
 import {
@@ -101,6 +102,31 @@ export class AuthController {
     res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
     res.clearCookie(CSRF_COOKIE, { path: '/' });
     return { success: true };
+  }
+
+  /** Смена собственного пароля. */
+  @Post('password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changePassword(
+    @Body() dto: ChangePasswordDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<void> {
+    await this.authService.changePassword(user.userId, dto, user.sessionId);
+  }
+
+  /**
+   * Установка пароля по одноразовой ссылке.
+   *
+   * Маршрут открытый: им пользуются именно тогда, когда войти нельзя.
+   * Частота ограничена, как у входа: иначе перебор токенов ничем не
+   * отличался бы от перебора паролей.
+   */
+  @Public()
+  @Post('password/reset')
+  @Throttle({ default: { limit: LOGIN_RATE_LIMIT, ttl: 60_000 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.authService.resetPassword(dto);
   }
 
   @Get('me')

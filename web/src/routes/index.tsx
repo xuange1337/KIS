@@ -10,6 +10,11 @@ const LoginPage = lazy(() =>
     default: module.LoginPage,
   })),
 );
+const SetPasswordPage = lazy(() =>
+  import('../pages/SetPasswordPage').then((module) => ({
+    default: module.SetPasswordPage,
+  })),
+);
 const DashboardPage = lazy(() =>
   import('../pages/DashboardPage').then((module) => ({
     default: module.DashboardPage,
@@ -101,6 +106,9 @@ export function AppRoutes() {
           path="/login"
           element={user ? <Navigate to="/" replace /> : <LoginPage />}
         />
+
+        {/* Открытая страница: ею пользуются, когда войти нельзя */}
+        <Route path="/set-password" element={<SetPasswordPage />} />
 
         <Route
           path="/"

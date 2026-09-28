@@ -71,6 +71,23 @@ export class UsersService {
       .getOne();
   }
 
+  /** Пользователь вместе с хешем пароля — для проверки текущего пароля. */
+  findByIdWithPassword(userId: number): Promise<User | null> {
+    return this.repo
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.user_id = :userId', { userId })
+      .getOne();
+  }
+
+  /** Устанавливает новый пароль без прочих правок учётной записи. */
+  async setPassword(userId: number, password: string): Promise<void> {
+    await this.repo.update(
+      { userId },
+      { passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS) },
+    );
+  }
+
   async create(dto: CreateUserDto, organizationId: number): Promise<User> {
     await this.assertLoginFree(dto.login);
     const user = this.repo.create({

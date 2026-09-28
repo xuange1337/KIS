@@ -16,17 +16,20 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Stack,
+  Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import BlockIcon from '@mui/icons-material/Block';
 import EditIcon from '@mui/icons-material/Edit';
+import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 import { USER_ROLE_LABELS, UserDto, UserRole } from '@crm/shared';
 import { FormEvent, useEffect, useState } from 'react';
 import { PageHeader } from '../components/PageHeader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { formatDate } from '../components/formatters';
+import { formatDate, formatDateTime } from '../components/formatters';
 import { useDeactivateUser, useSaveUser, useUsers } from '../api/hooks';
-import { extractErrorMessage } from '../api/client';
+import { api, extractErrorMessage } from '../api/client';
 import { useAuth } from '../features/auth/AuthContext';
 
 /** Экранная форма «Пользователи» — доступна только администратору (ТЗ п. 2.5). */
@@ -42,6 +45,34 @@ export function UsersPage() {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [resetLink, setResetLink] = useState<{
+    user: UserDto;
+    url: string;
+    expiresAt: string;
+  } | null>(null);
+
+  /**
+   * Выдача ссылки на смену пароля.
+   *
+   * Администратор передаёт ссылку сотруднику и сам нового пароля не
+   * знает: раньше он придумывал пароль и диктовал его, после чего
+   * пароль знали двое, а в переписке он оставался навсегда.
+   */
+  const issueReset = async (user: UserDto) => {
+    setError(null);
+    try {
+      const response = await api.post<{ token: string; expiresAt: string }>(
+        `/users/${user.userId}/password-reset`,
+      );
+      setResetLink({
+        user,
+        url: `${window.location.origin}/set-password?token=${response.data.token}`,
+        expiresAt: response.data.expiresAt,
+      });
+    } catch (caught) {
+      setError(extractErrorMessage(caught, 'Не удалось выдать ссылку'));
+    }
+  };
 
   const handleDeactivate = async () => {
     if (!deactivateTarget) return;
@@ -106,8 +137,21 @@ export function UsersPage() {
                 </TableCell>
                 <TableCell>{formatDate(user.createdAt)}</TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => setFormUser(user)}>
+                  <IconButton
+                    size="small"
+                    title="Редактировать"
+                    onClick={() => setFormUser(user)}
+                  >
                     <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    title="Выдать ссылку на смену пароля"
+                    aria-label={`Ссылка на смену пароля: ${user.fullName}`}
+                    disabled={!user.isActive}
+                    onClick={() => void issueReset(user)}
+                  >
+                    <KeyOutlinedIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
@@ -139,6 +183,48 @@ export function UsersPage() {
         user={formUser ?? null}
         onClose={() => setFormUser(undefined)}
       />
+      <Dialog
+        open={Boolean(resetLink)}
+        onClose={() => setResetLink(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Ссылка на смену пароля</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              Передайте ссылку сотруднику {resetLink?.user.fullName}. Она
+              действует до{' '}
+              {resetLink ? formatDateTime(resetLink.expiresAt) : ''} и
+              срабатывает один раз. Новый пароль сотрудник задаёт сам — вам он
+              не будет известен.
+            </Typography>
+            <TextField
+              size="small"
+              fullWidth
+              value={resetLink?.url ?? ''}
+              slotProps={{
+                htmlInput: {
+                  readOnly: true,
+                  'aria-label': 'Ссылка на смену пароля',
+                },
+              }}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setResetLink(null)}>Закрыть</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (resetLink) void navigator.clipboard?.writeText(resetLink.url);
+            }}
+          >
+            Скопировать
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <ConfirmDialog
         open={Boolean(deactivateTarget)}
         title="Блокировка учётной записи"

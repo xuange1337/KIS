@@ -334,6 +334,31 @@ COMMENT ON COLUMN audit_log.payload IS 'Параметры запроса; па�
 
 
 -- -----------------------------------------------------------------------------
+-- PasswordResets — одноразовые ссылки для установки пароля
+--
+-- До них забывший пароль сотрудник получал новый пароль от
+-- администратора голосом или в переписке: пароль знали двое
+-- -----------------------------------------------------------------------------
+CREATE TABLE password_resets (
+    password_reset_id SERIAL      PRIMARY KEY,
+    user_id           INTEGER     NOT NULL REFERENCES users (user_id)
+                                  ON DELETE CASCADE,
+    token_hash        CHAR(64)    NOT NULL,
+    expires_at        TIMESTAMPTZ NOT NULL,
+    used_at           TIMESTAMPTZ,
+    issued_by         INTEGER     REFERENCES users (user_id) ON DELETE SET NULL,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_password_resets_token ON password_resets (token_hash);
+CREATE INDEX idx_password_resets_user ON password_resets (user_id);
+
+COMMENT ON TABLE  password_resets            IS 'Одноразовые ссылки на установку пароля';
+COMMENT ON COLUMN password_resets.token_hash IS 'SHA-256 от токена: утечка таблицы не даёт возможности войти';
+COMMENT ON COLUMN password_resets.used_at    IS 'Момент использования; ссылка срабатывает один раз';
+
+
+-- -----------------------------------------------------------------------------
 -- ExportJobs — задания на фоновое формирование выгрузок
 --
 -- Синхронная выгрузка занимает рабочий поток процесса на всё время

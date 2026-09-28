@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   OnModuleDestroy,
   OnModuleInit,
@@ -18,6 +19,8 @@ import { configuration } from '../config/configuration';
 import { JwtPayload } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
 import { RefreshSession } from './refresh-session.entity';
+import { PasswordReset } from './password-reset.entity';
+import { ChangePasswordDto, ResetPasswordDto } from './dto/password.dto';
 
 /**
  * Хеш заведомо недостижимого пароля: используется, когда логина не
@@ -29,6 +32,14 @@ const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
   randomBytes(32).toString('hex'),
   10,
 );
+
+/**
+ * Срок жизни ссылки на установку пароля.
+ *
+ * Сутки: ссылку передают лично или пересылают, и требовать перехода за
+ * час значит гарантировать вторую просьбу к администратору.
+ */
+const RESET_TTL_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService implements OnModuleInit, OnModuleDestroy {
@@ -42,6 +53,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     private readonly auditRepo: Repository<AuditLog>,
     @InjectRepository(RefreshSession)
     private readonly sessionRepo: Repository<RefreshSession>,
+    @InjectRepository(PasswordReset)
+    private readonly resetRepo: Repository<PasswordReset>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -224,9 +237,120 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  /**
+   * Смена собственного пароля.
+   *
+   * Все сессии, кроме текущей, отзываются: пароль меняют в том числе
+   * потому, что подозревают чужой доступ, и оставлять открытыми старые
+   * входы значит не решить ровно ту задачу, ради которой его меняют.
+   */
+  async changePassword(
+    userId: number,
+    dto: ChangePasswordDto,
+    currentSessionId: string | undefined,
+  ): Promise<void> {
+    const user = await this.usersService.findByIdWithPassword(userId);
+    if (!user) {
+      throw new UnauthorizedException('Учётная запись недоступна');
+    }
+    const matches = await bcrypt.compare(
+      dto.currentPassword,
+      user.passwordHash,
+    );
+    if (!matches) {
+      throw new UnauthorizedException('Текущий пароль указан неверно');
+    }
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('Новый пароль совпадает с текущим');
+    }
+
+    await this.usersService.setPassword(userId, dto.newPassword);
+    await this.revokeOtherSessions(userId, currentSessionId);
+  }
+
+  /**
+   * Выдача одноразовой ссылки на установку пароля.
+   *
+   * Возвращается один раз и больше нигде не хранится в открытом виде:
+   * в базе лежит только отпечаток. Прежние невыданные ссылки гасятся —
+   * иначе у одной учётной записи копились бы действующие входы.
+   */
+  async issuePasswordReset(
+    userId: number,
+    issuedBy: number,
+  ): Promise<{ token: string; expiresAt: string }> {
+    await this.resetRepo.update(
+      { userId, usedAt: IsNull() },
+      { usedAt: new Date() },
+    );
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + RESET_TTL_MS);
+    await this.resetRepo.save({
+      userId,
+      tokenHash: this.hashToken(token),
+      expiresAt,
+      usedAt: null,
+      issuedBy,
+    });
+    return { token, expiresAt: expiresAt.toISOString() };
+  }
+
+  /**
+   * Установка пароля по одноразовой ссылке.
+   *
+   * Ссылка гасится в той же транзакции, что и смена пароля: иначе два
+   * одновременных перехода по одной ссылке установили бы разные пароли,
+   * и владелец учётной записи не знал бы ни одного из них.
+   */
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    const invalid = new BadRequestException(
+      'Ссылка недействительна или уже использована. Запросите новую',
+    );
+    const tokenHash = this.hashToken(dto.token);
+
+    const userId = await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(PasswordReset);
+      const reset = await repo.findOne({
+        where: { tokenHash },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!reset || reset.usedAt || reset.expiresAt <= new Date()) {
+        return null;
+      }
+      reset.usedAt = new Date();
+      await repo.save(reset);
+      return reset.userId;
+    });
+
+    if (!userId) throw invalid;
+
+    await this.usersService.setPassword(userId, dto.newPassword);
+    // Все сессии закрываются: ссылкой пользуются, когда доступ потерян
+    // или скомпрометирован
+    await this.revokeAllSessions(userId);
+  }
+
   async profile(userId: number): Promise<UserDto> {
     // Организация здесь не передаётся: пользователь запрашивает сам себя
     return toUserDto(await this.usersService.findOne(userId));
+  }
+
+  /** Закрывает все сессии пользователя, кроме указанной. */
+  private async revokeOtherSessions(
+    userId: number,
+    keepSessionId: string | undefined,
+  ): Promise<void> {
+    const qb = this.sessionRepo
+      .createQueryBuilder()
+      .update(RefreshSession)
+      .set({ revokedAt: new Date() })
+      .where('user_id = :userId', { userId })
+      .andWhere('revoked_at IS NULL');
+    if (keepSessionId) {
+      qb.andWhere('session_id <> :keepSessionId', { keepSessionId });
+    }
+    await qb.execute();
   }
 
   private async createSession(
@@ -285,6 +409,13 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async cleanupSessions(): Promise<void> {
+    await this.resetRepo
+      .createQueryBuilder()
+      .delete()
+      .from(PasswordReset)
+      .where('expires_at < now()')
+      .execute()
+      .catch(() => undefined);
     const revokedCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     await this.sessionRepo
       .createQueryBuilder()

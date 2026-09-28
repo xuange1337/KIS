@@ -12,6 +12,7 @@ import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
 import { ExportJob } from '../reports/jobs/export-job.entity';
+import { PasswordReset } from '../auth/password-reset.entity';
 import { Organization } from '../organizations/organization.entity';
 
 export const ENTITIES = [
@@ -27,6 +28,7 @@ export const ENTITIES = [
   RefreshSession,
   IdempotencyKey,
   ExportJob,
+  PasswordReset,
 ];
 
 /**

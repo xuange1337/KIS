@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { UserDto, UserRole } from '@crm/shared';
 import { UsersService } from './users.service';
+import { AuthService } from '../auth/auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { toUserDto } from './user.mapper';
@@ -25,7 +26,10 @@ import { AuditEntity } from '../common/decorators/audit.decorator';
 @Roles(UserRole.ADMIN)
 @AuditEntity('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Get()
   async findAll(@CurrentUser() actor: AuthUser): Promise<UserDto[]> {
@@ -64,6 +68,23 @@ export class UsersController {
         actor.userId,
       ),
     );
+  }
+
+  /**
+   * Выдача одноразовой ссылки на установку пароля.
+   *
+   * Администратор передаёт ссылку сотруднику и сам нового пароля не
+   * знает: раньше он придумывал пароль и диктовал его, после чего
+   * пароль знали двое, а иногда он оставался в переписке.
+   */
+  @Post(':id/password-reset')
+  async issuePasswordReset(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() actor: AuthUser,
+  ): Promise<{ token: string; expiresAt: string }> {
+    // Проверка организации: ссылку нельзя выдать чужому сотруднику
+    const user = await this.usersService.findOne(id, actor.organizationId);
+    return this.authService.issuePasswordReset(user.userId, actor.userId);
   }
 
   /** Деактивация вместо удаления — на пользователя ссылаются сделки и журнал. */
