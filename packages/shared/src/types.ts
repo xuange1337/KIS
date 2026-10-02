@@ -35,6 +35,34 @@ export interface OrganizationSummary {
   role: UserRole;
 }
 
+/** Организация целиком — для экрана настроек. */
+export interface OrganizationDto {
+  organizationId: number;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+  /** Сколько сотрудников в организации. */
+  memberCount: number;
+}
+
+/** Приглашение в организацию. */
+export interface InvitationDto {
+  invitationId: number;
+  role: UserRole;
+  fullName: string | null;
+  createdAt: string;
+  expiresAt: string;
+  usedAt: string | null;
+}
+
+/** Что видит приглашённый до того, как принял приглашение. */
+export interface InvitationPreview {
+  organizationName: string;
+  role: UserRole;
+  fullName: string | null;
+  expiresAt: string;
+}
+
 export interface UserDto {
   userId: number;
   login: string;

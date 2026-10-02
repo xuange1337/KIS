@@ -20,6 +20,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
 import BlockIcon from '@mui/icons-material/Block';
 import EditIcon from '@mui/icons-material/Edit';
 import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
@@ -30,6 +31,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { formatDate, formatDateTime } from '../components/formatters';
 import { useDeactivateUser, useSaveUser, useUsers } from '../api/hooks';
 import { api, extractErrorMessage } from '../api/client';
+import { InviteDialog } from '../features/users/InviteDialog';
 import { useAuth } from '../features/auth/AuthContext';
 
 /** Экранная форма «Пользователи» — доступна только администратору (ТЗ п. 2.5). */
@@ -45,6 +47,7 @@ export function UsersPage() {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [resetLink, setResetLink] = useState<{
     user: UserDto;
     url: string;
@@ -93,13 +96,25 @@ export function UsersPage() {
         title="Пользователи"
         subtitle="Учётные записи и роли сотрудников отдела продаж"
         actions={
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setFormUser(null)}
-          >
-            Добавить пользователя
-          </Button>
+          <>
+            {/* Приглашение — обычный способ завести сотрудника: пароль
+              он придумывает сам. Ручное заведение осталось для случая,
+              когда ссылку передать некому */}
+            <Button
+              variant="outlined"
+              startIcon={<PersonAddAltOutlinedIcon />}
+              onClick={() => setInviteOpen(true)}
+            >
+              Пригласить
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setFormUser(null)}
+            >
+              Добавить пользователя
+            </Button>
+          </>
         }
       />
 
@@ -183,6 +198,8 @@ export function UsersPage() {
         user={formUser ?? null}
         onClose={() => setFormUser(undefined)}
       />
+      <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
+
       <Dialog
         open={Boolean(resetLink)}
         onClose={() => setResetLink(null)}

@@ -15,6 +15,11 @@ const SetPasswordPage = lazy(() =>
     default: module.SetPasswordPage,
   })),
 );
+const AcceptInvitePage = lazy(() =>
+  import('../pages/AcceptInvitePage').then((module) => ({
+    default: module.AcceptInvitePage,
+  })),
+);
 const DashboardPage = lazy(() =>
   import('../pages/DashboardPage').then((module) => ({
     default: module.DashboardPage,
@@ -109,6 +114,9 @@ export function AppRoutes() {
 
         {/* Открытая страница: ею пользуются, когда войти нельзя */}
         <Route path="/set-password" element={<SetPasswordPage />} />
+
+        {/* По приглашению приходит тот, кого в системе ещё нет */}
+        <Route path="/invite" element={<AcceptInvitePage />} />
 
         <Route
           path="/"

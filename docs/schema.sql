@@ -133,6 +133,35 @@ COMMENT ON COLUMN organization_members.role IS 'Роль действует то
 
 
 -- -----------------------------------------------------------------------------
+-- OrganizationInvitations — приглашения в организацию
+--
+-- Единственным способом завести сотрудника было придумать ему пароль и
+-- продиктовать: пароль знали двое. По приглашению человек заводит себя
+-- сам, администратор задаёт только роль
+-- -----------------------------------------------------------------------------
+CREATE TABLE organization_invitations (
+    invitation_id   SERIAL      PRIMARY KEY,
+    organization_id INTEGER     NOT NULL REFERENCES organizations (organization_id)
+                                ON DELETE CASCADE,
+    role            user_role   NOT NULL DEFAULT 'manager',
+    token_hash      CHAR(64)    NOT NULL,
+    full_name       VARCHAR(160),
+    expires_at      TIMESTAMPTZ NOT NULL,
+    used_at         TIMESTAMPTZ,
+    invited_by      INTEGER     REFERENCES users (user_id) ON DELETE SET NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_invitations_token ON organization_invitations (token_hash);
+CREATE INDEX idx_invitations_organization
+    ON organization_invitations (organization_id);
+
+COMMENT ON TABLE  organization_invitations            IS 'Одноразовые приглашения в организацию';
+COMMENT ON COLUMN organization_invitations.token_hash IS 'SHA-256 от токена: утечка таблицы не даёт вступить в организацию';
+COMMENT ON COLUMN organization_invitations.full_name  IS 'Подсказка администратору, кому выдана ссылка; не проверяется';
+
+
+-- -----------------------------------------------------------------------------
 -- Clients — карточки клиентов (модуль 1.2.1)
 -- -----------------------------------------------------------------------------
 CREATE TABLE clients (
