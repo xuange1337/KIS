@@ -73,10 +73,10 @@ export class DiagnosticsService {
          (SELECT count(*)::int FROM deals WHERE organization_id = $1) AS deals,
          (SELECT count(*)::int FROM activities WHERE organization_id = $1) AS activities,
          (SELECT count(*)::int FROM commercial_offers WHERE organization_id = $1) AS offers,
-         (SELECT count(*)::int FROM users WHERE organization_id = $1) AS users,
+         (SELECT count(*)::int FROM organization_members
+           WHERE organization_id = $1) AS users,
          (SELECT count(*)::int FROM refresh_sessions s
-            JOIN users u ON u.user_id = s.user_id
-           WHERE u.organization_id = $1
+           WHERE s.organization_id = $1
              AND s.revoked_at IS NULL AND s.expires_at > now()) AS sessions,
          (SELECT count(*)::int FROM audit_log
            WHERE organization_id = $1

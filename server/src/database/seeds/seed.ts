@@ -22,6 +22,7 @@ import { DealStageHistory } from '../../deals/deal-stage-history.entity';
 import { Activity } from '../../activities/activity.entity';
 import { Offer } from '../../offers/offer.entity';
 import { Organization } from '../../organizations/organization.entity';
+import { OrganizationMember } from '../../organizations/organization-member.entity';
 import {
   ACTIVITY_RESULTS,
   ACTIVITY_SUBJECTS,
@@ -151,24 +152,32 @@ export async function seed(
   const organizationId = organization.organizationId;
 
   log('Создание пользователей...');
-  const users: User[] = [];
+  const memberRepo = dataSource.getRepository(OrganizationMember);
+  const users: { user: User; role: UserRole }[] = [];
   for (const seedUser of SEED_USERS) {
-    users.push(
-      await userRepo.save(
-        userRepo.create({
-          organizationId,
-          login: seedUser.login,
-          fullName: seedUser.fullName,
-          role: seedUser.role,
-          isActive: true,
-          passwordHash: await bcrypt.hash(seedUser.password, 10),
-        }),
-      ),
+    const user = await userRepo.save(
+      userRepo.create({
+        login: seedUser.login,
+        fullName: seedUser.fullName,
+        isActive: true,
+        passwordHash: await bcrypt.hash(seedUser.password, 10),
+      }),
     );
+    // Роль задаётся участием в организации, а не учётной записью
+    await memberRepo.save(
+      memberRepo.create({
+        userId: user.userId,
+        organizationId,
+        role: seedUser.role,
+      }),
+    );
+    users.push({ user, role: seedUser.role });
   }
   // Клиенты и сделки распределяются между двумя менеджерами,
   // чтобы разграничение доступа и отчёт по сотрудникам были наглядными
-  const managers = users.filter((user) => user.role === UserRole.MANAGER);
+  const managers = users
+    .filter((item) => item.role === UserRole.MANAGER)
+    .map((item) => item.user);
 
   log('Создание клиентов и контактных лиц...');
   const clientRepo = dataSource.getRepository(Client);
@@ -376,26 +385,32 @@ async function seedSecondOrganization(
   const organizationId = organization.organizationId;
 
   const userRepo = dataSource.getRepository(User);
+  const memberRepo = dataSource.getRepository(OrganizationMember);
   const passwordHash = await bcrypt.hash('other123', 10);
-  const otherAdmin = await userRepo.save(
-    userRepo.create({
-      organizationId,
-      login: 'other-admin',
-      fullName: 'Администратор Другой Организации',
-      role: UserRole.ADMIN,
-      isActive: true,
-      passwordHash,
-    }),
+
+  const addMember = async (
+    login: string,
+    fullName: string,
+    role: UserRole,
+  ): Promise<User> => {
+    const user = await userRepo.save(
+      userRepo.create({ login, fullName, isActive: true, passwordHash }),
+    );
+    await memberRepo.save(
+      memberRepo.create({ userId: user.userId, organizationId, role }),
+    );
+    return user;
+  };
+
+  const otherAdmin = await addMember(
+    'other-admin',
+    'Администратор Другой Организации',
+    UserRole.ADMIN,
   );
-  const otherManager = await userRepo.save(
-    userRepo.create({
-      organizationId,
-      login: 'other-manager',
-      fullName: 'Менеджер Другой Организации',
-      role: UserRole.MANAGER,
-      isActive: true,
-      passwordHash,
-    }),
+  const otherManager = await addMember(
+    'other-manager',
+    'Менеджер Другой Организации',
+    UserRole.MANAGER,
   );
 
   const client = await dataSource.getRepository(Client).save({

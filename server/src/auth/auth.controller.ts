@@ -8,12 +8,18 @@ import {
   HttpStatus,
   Post,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Req,
   Res,
 } from '@nestjs/common';
 import { randomBytes, timingSafeEqual } from 'crypto';
-import { LoginResponse, SessionDto, UserDto } from '@crm/shared';
+import {
+  LoginResponse,
+  OrganizationSummary,
+  SessionDto,
+  UserDto,
+} from '@crm/shared';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -131,7 +137,28 @@ export class AuthController {
 
   @Get('me')
   me(@CurrentUser() user: AuthUser): Promise<UserDto> {
-    return this.authService.profile(user.userId);
+    return this.authService.profile(user.userId, user.organizationId);
+  }
+
+  /** Организации, доступные пользователю. */
+  @Get('organizations')
+  organizations(@CurrentUser() user: AuthUser): Promise<OrganizationSummary[]> {
+    return this.authService.listOrganizations(user.userId);
+  }
+
+  /** Переключение организации: открывается новый сеанс. */
+  @Post('organizations/:id/activate')
+  @HttpCode(HttpStatus.OK)
+  async switchOrganization(
+    @Param('id', ParseIntPipe) organizationId: number,
+    @CurrentUser() user: AuthUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LoginResponse> {
+    const { refreshToken, ...result } =
+      await this.authService.switchOrganization(user.userId, organizationId);
+    this.setRefreshCookie(res, refreshToken);
+    this.setCsrfCookie(res, randomBytes(32).toString('hex'));
+    return result;
   }
 
   @Get('sessions')

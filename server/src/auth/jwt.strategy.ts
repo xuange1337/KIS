@@ -8,12 +8,16 @@ import { configuration } from '../config/configuration';
 import { UsersService } from '../users/users.service';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { RefreshSession } from './refresh-session.entity';
+import { MembershipsService } from '../organizations/memberships.service';
 import { currentRequestContext } from '../common/logging/request-context';
 
 export interface JwtPayload {
   sub: number;
   login: string;
+  /** Роль в организации сеанса, а не «везде». */
   role: UserRole;
+  /** Организация сеанса. */
+  org?: number;
   sid?: string;
   jti?: string;
 }
@@ -25,6 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly usersService: UsersService,
     @InjectRepository(RefreshSession)
     private readonly sessionRepo: Repository<RefreshSession>,
+    private readonly memberships: MembershipsService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -54,10 +59,25 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         revokedAt: IsNull(),
         expiresAt: MoreThan(new Date()),
       },
-      select: { sessionId: true },
+      select: { sessionId: true, organizationId: true },
     });
     if (!session) {
       throw new UnauthorizedException('Сессия завершена, войдите заново');
+    }
+
+    /**
+     * Организация и роль берутся из участия, а не из токена.
+     *
+     * Токен живёт до пятнадцати минут; за это время сотрудника могут
+     * вывести из организации или понизить в правах, и доверять
+     * записанной в токене роли значит оставить ему прежний доступ.
+     */
+    const membership = await this.memberships.find(
+      payload.sub,
+      session.organizationId,
+    );
+    if (!membership) {
+      throw new UnauthorizedException('Доступ к организации отозван');
     }
 
     const user = await this.usersService.findOne(payload.sub).catch(() => null);
@@ -73,13 +93,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     return {
       userId: user.userId,
-      // Организация берётся из БД, а не из токена: перевод пользователя
-      // в другую организацию должен действовать сразу, а подделанное
-      // значение в токене не должно открывать чужие данные
-      organizationId: user.organizationId,
+      organizationId: membership.organizationId,
       login: user.login,
       fullName: user.fullName,
-      role: user.role,
+      role: membership.role,
       sessionId: payload.sid,
     };
   }

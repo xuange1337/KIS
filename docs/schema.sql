@@ -81,13 +81,10 @@ COMMENT ON TABLE organizations IS
 -- Users — пользователи системы
 -- -----------------------------------------------------------------------------
 CREATE TABLE users (
-    user_id         SERIAL     PRIMARY KEY,
-    organization_id INTEGER    NOT NULL REFERENCES organizations (organization_id)
-                               ON DELETE RESTRICT,
+    user_id       SERIAL       PRIMARY KEY,
     login         VARCHAR(64)  NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name     VARCHAR(160) NOT NULL,
-    role          user_role    NOT NULL DEFAULT 'manager',
     is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
 
@@ -95,14 +92,44 @@ CREATE TABLE users (
 );
 
 CREATE UNIQUE INDEX idx_users_login ON users (login);
-CREATE INDEX idx_users_organization ON users (organization_id);
+
+-- Организация и роль хранятся не здесь, а в organization_members:
+-- один человек может работать в нескольких организациях с разными
+-- правами, и «роль» без указания организации смысла не имеет
 
 -- Логин уникален во всей системе, а не внутри организации: страница входа
 -- одна, и по одному логину не должно находиться двух учётных записей
 
-COMMENT ON TABLE  users               IS 'Пользователи АРМ: менеджеры, руководитель, администратор';
+COMMENT ON TABLE  users               IS 'Учётные записи; организация и роль — в organization_members';
 COMMENT ON COLUMN users.password_hash IS 'Хеш пароля (bcrypt), в открытом виде пароль не хранится';
 COMMENT ON COLUMN users.is_active     IS 'Признак активности; вместо удаления учётная запись блокируется';
+
+
+-- -----------------------------------------------------------------------------
+-- OrganizationMembers — участие пользователя в организации
+--
+-- Роль действует в пределах организации. Пока она лежала в учётной
+-- записи, человек мог состоять ровно в одной организации — а партнёр
+-- ведёт нескольких заказчиков, и заводящий организацию становится в
+-- ней администратором, оставаясь рядовым сотрудником в своей
+-- -----------------------------------------------------------------------------
+CREATE TABLE organization_members (
+    membership_id   SERIAL      PRIMARY KEY,
+    organization_id INTEGER     NOT NULL REFERENCES organizations (organization_id)
+                                ON DELETE CASCADE,
+    user_id         INTEGER     NOT NULL REFERENCES users (user_id)
+                                ON DELETE CASCADE,
+    role            user_role   NOT NULL DEFAULT 'manager',
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_members_organization_user
+    ON organization_members (organization_id, user_id);
+CREATE INDEX idx_members_organization ON organization_members (organization_id);
+CREATE INDEX idx_members_user ON organization_members (user_id);
+
+COMMENT ON TABLE  organization_members      IS 'Участие пользователя в организации и его роль в ней';
+COMMENT ON COLUMN organization_members.role IS 'Роль действует только в этой организации';
 
 
 -- -----------------------------------------------------------------------------

@@ -22,6 +22,16 @@ export class RefreshSession {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  /**
+   * Организация сеанса.
+   *
+   * «Текущая организация» — свойство сеанса, а не учётной записи: в
+   * двух вкладках можно работать с разными заказчиками.
+   */
+  @Index('idx_refresh_sessions_organization')
+  @Column({ name: 'organization_id', type: 'int' })
+  organizationId: number;
+
   @Column({ name: 'token_hash', type: 'char', length: 64 })
   tokenHash: string;
 

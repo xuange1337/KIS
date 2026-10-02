@@ -8,6 +8,7 @@ import {
   Menu,
   MenuItem,
   Stack,
+  TextField,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -110,7 +111,14 @@ const NAV_ITEMS: NavItem[] = [
  * до значков, чтобы таблицы не теряли ширину.
  */
 export function AppLayout({ children }: { children: ReactNode }) {
-  const { user, logout, hasRole } = useAuth();
+  const {
+    user,
+    logout,
+    hasRole,
+    organization,
+    organizations,
+    switchOrganization,
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -363,6 +371,35 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </Stack>
 
       <Box sx={{ flexGrow: 1 }} />
+
+      {/*
+        Организация показывается только тогда, когда их несколько:
+        единственная — это шум, занимающий строку на каждом экране.
+      */}
+      {organizations.length > 1 && (
+        <>
+          <Divider />
+          <TextField
+            select
+            size="small"
+            value={organization?.organizationId ?? ''}
+            onChange={(event) =>
+              void switchOrganization(Number(event.target.value))
+            }
+            slotProps={{ htmlInput: { 'aria-label': 'Организация' } }}
+            sx={{
+              m: compact ? 1 : 1.5,
+              '& .MuiInputBase-input': { fontSize: 12.5 },
+            }}
+          >
+            {organizations.map((item) => (
+              <MenuItem key={item.organizationId} value={item.organizationId}>
+                {compact ? item.name.slice(0, 2) : item.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        </>
+      )}
 
       <Divider />
       <Stack

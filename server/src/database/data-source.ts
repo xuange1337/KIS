@@ -14,9 +14,11 @@ import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
 import { ExportJob } from '../reports/jobs/export-job.entity';
 import { PasswordReset } from '../auth/password-reset.entity';
 import { Organization } from '../organizations/organization.entity';
+import { OrganizationMember } from '../organizations/organization-member.entity';
 
 export const ENTITIES = [
   Organization,
+  OrganizationMember,
   User,
   Client,
   Contact,

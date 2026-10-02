@@ -229,6 +229,80 @@
         ]
       }
     },
+    "/api/v1/auth/organizations": {
+      "get": {
+        "operationId": "AuthController_organizations[0]_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/organizations": {
+      "get": {
+        "operationId": "AuthController_organizations[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/organizations/{id}/activate": {
+      "post": {
+        "operationId": "AuthController_switchOrganization[0]_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/organizations/{id}/activate": {
+      "post": {
+        "operationId": "AuthController_switchOrganization[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/v1/auth/sessions": {
       "get": {
         "operationId": "AuthController_sessions[0]_v1",

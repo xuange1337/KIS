@@ -46,7 +46,8 @@ describe('Изоляция организаций', () => {
              a.activity_id          AS "activityId",
              co.offer_id            AS "offerId"
         FROM organizations o
-        JOIN users u ON u.organization_id = o.organization_id AND u.login = 'other-manager'
+        JOIN organization_members m ON m.organization_id = o.organization_id
+        JOIN users u ON u.user_id = m.user_id AND u.login = 'other-manager'
         JOIN clients c ON c.organization_id = o.organization_id
         JOIN contacts ct ON ct.organization_id = o.organization_id
         JOIN deals d ON d.organization_id = o.organization_id

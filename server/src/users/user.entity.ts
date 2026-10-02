@@ -1,29 +1,23 @@
-import { UserRole } from '@crm/shared';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Organization } from '../organizations/organization.entity';
 
-/** Пользователь системы (Приложение А, таблица Users). */
+/**
+ * Учётная запись (Приложение А, таблица Users).
+ *
+ * Организация и роль хранятся не здесь, а в `organization_members`:
+ * один человек может работать в нескольких организациях с разными
+ * правами. Здесь остаётся то, что относится к самому человеку: как он
+ * входит, как его зовут и не заблокирован ли он целиком.
+ */
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn({ name: 'user_id' })
   userId: number;
-
-  /** Организация-владелец записи: граница изоляции данных. */
-  @Index('idx_users_organization')
-  @Column({ name: 'organization_id', type: 'int' })
-  organizationId: number;
-
-  @ManyToOne(() => Organization, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'organization_id' })
-  organization: Organization;
 
   @Index('idx_users_login', { unique: true })
   @Column({ type: 'varchar', length: 64, unique: true })
@@ -40,9 +34,6 @@ export class User {
 
   @Column({ name: 'full_name', type: 'varchar', length: 160 })
   fullName: string;
-
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.MANAGER })
-  role: UserRole;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;

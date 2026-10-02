@@ -33,8 +33,8 @@ export class UsersController {
 
   @Get()
   async findAll(@CurrentUser() actor: AuthUser): Promise<UserDto[]> {
-    const users = await this.usersService.findAll(actor.organizationId);
-    return users.map(toUserDto);
+    const members = await this.usersService.findAll(actor.organizationId);
+    return members.map(({ user, role }) => toUserDto(user, role));
   }
 
   @Get(':id')
@@ -42,7 +42,11 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() actor: AuthUser,
   ): Promise<UserDto> {
-    return toUserDto(await this.usersService.findOne(id, actor.organizationId));
+    const user = await this.usersService.findOne(id, actor.organizationId);
+    return toUserDto(
+      user,
+      await this.usersService.roleIn(id, actor.organizationId),
+    );
   }
 
   @Post()
@@ -51,7 +55,8 @@ export class UsersController {
     @CurrentUser() actor: AuthUser,
   ): Promise<UserDto> {
     // Администратор заводит пользователей только в своей организации
-    return toUserDto(await this.usersService.create(dto, actor.organizationId));
+    const user = await this.usersService.create(dto, actor.organizationId);
+    return toUserDto(user, dto.role);
   }
 
   @Patch(':id')
@@ -60,13 +65,15 @@ export class UsersController {
     @Body() dto: UpdateUserDto,
     @CurrentUser() actor: AuthUser,
   ): Promise<UserDto> {
+    const user = await this.usersService.update(
+      id,
+      dto,
+      actor.organizationId,
+      actor.userId,
+    );
     return toUserDto(
-      await this.usersService.update(
-        id,
-        dto,
-        actor.organizationId,
-        actor.userId,
-      ),
+      user,
+      await this.usersService.roleIn(id, actor.organizationId),
     );
   }
 
@@ -93,12 +100,14 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() actor: AuthUser,
   ): Promise<UserDto> {
+    const user = await this.usersService.deactivate(
+      id,
+      actor.organizationId,
+      actor.userId,
+    );
     return toUserDto(
-      await this.usersService.deactivate(
-        id,
-        actor.organizationId,
-        actor.userId,
-      ),
+      user,
+      await this.usersService.roleIn(id, actor.organizationId),
     );
   }
 }

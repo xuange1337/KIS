@@ -5,13 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserRole } from '@crm/shared';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RefreshSession } from '../auth/refresh-session.entity';
+import { MembershipsService } from '../organizations/memberships.service';
 
 const BCRYPT_ROUNDS = 10;
 
@@ -22,32 +23,52 @@ export class UsersService {
     private readonly repo: Repository<User>,
     @InjectRepository(RefreshSession)
     private readonly sessionRepo: Repository<RefreshSession>,
+    private readonly memberships: MembershipsService,
   ) {}
 
-  findAll(organizationId: number): Promise<User[]> {
-    return this.repo.find({
-      where: { organizationId },
-      order: { fullName: 'ASC' },
-    });
+  /** Сотрудники организации вместе с их ролью в ней. */
+  async findAll(
+    organizationId: number,
+  ): Promise<{ user: User; role: UserRole }[]> {
+    const members = await this.memberships.listForOrganization(organizationId);
+    return members
+      .map((member) => ({ user: member.user, role: member.role }))
+      .sort((left, right) =>
+        left.user.fullName.localeCompare(right.user.fullName),
+      );
   }
 
   /**
    * Пользователь по идентификатору.
    *
    * `organizationId` не задаётся только там, где организация ещё не
-   * известна: при проверке токена сама запись пользователя и определяет
-   * организацию. Во всех остальных местах он обязателен, иначе
-   * администратор соседней организации правил бы чужие учётные записи.
+   * известна — например, когда человек запрашивает сам себя. Во всех
+   * остальных местах он обязателен, иначе администратор соседней
+   * организации правил бы чужие учётные записи.
    */
   async findOne(userId: number, organizationId?: number): Promise<User> {
-    const user = await this.repo.findOne({
-      where:
-        organizationId === undefined ? { userId } : { userId, organizationId },
-    });
+    const user = await this.repo.findOne({ where: { userId } });
     if (!user) {
       throw new NotFoundException('Пользователь не найден');
     }
+    if (organizationId !== undefined) {
+      // Сотрудник чужой организации не существует для администратора,
+      // а не «запрещён»: иначе перебором виден состав чужого отдела
+      const membership = await this.memberships.find(userId, organizationId);
+      if (!membership) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+    }
     return user;
+  }
+
+  /** Роль пользователя в организации. */
+  async roleIn(userId: number, organizationId: number): Promise<UserRole> {
+    const membership = await this.memberships.find(userId, organizationId);
+    if (!membership) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+    return membership.role;
   }
 
   /** Есть ли такой пользователь в этой организации. */
@@ -55,7 +76,7 @@ export class UsersService {
     userId: number,
     organizationId: number,
   ): Promise<boolean> {
-    return this.repo.exists({ where: { userId, organizationId } });
+    return Boolean(await this.memberships.find(userId, organizationId));
   }
 
   /**
@@ -90,15 +111,16 @@ export class UsersService {
 
   async create(dto: CreateUserDto, organizationId: number): Promise<User> {
     await this.assertLoginFree(dto.login);
-    const user = this.repo.create({
-      organizationId,
-      login: dto.login,
-      fullName: dto.fullName,
-      role: dto.role,
-      isActive: dto.isActive ?? true,
-      passwordHash: await bcrypt.hash(dto.password, BCRYPT_ROUNDS),
-    });
-    return this.repo.save(user);
+    const user = await this.repo.save(
+      this.repo.create({
+        login: dto.login,
+        fullName: dto.fullName,
+        isActive: dto.isActive ?? true,
+        passwordHash: await bcrypt.hash(dto.password, BCRYPT_ROUNDS),
+      }),
+    );
+    await this.memberships.add(user.userId, organizationId, dto.role);
+    return user;
   }
 
   async update(
@@ -108,8 +130,9 @@ export class UsersService {
     actorUserId?: number,
   ): Promise<User> {
     const user = await this.findOne(userId, organizationId);
+    const currentRole = await this.roleIn(userId, organizationId);
     const losesAdmin =
-      user.role === UserRole.ADMIN &&
+      currentRole === UserRole.ADMIN &&
       ((dto.role !== undefined && dto.role !== UserRole.ADMIN) ||
         dto.isActive === false);
     if (losesAdmin) {
@@ -121,8 +144,10 @@ export class UsersService {
       user.login = dto.login;
     }
     if (dto.fullName !== undefined) user.fullName = dto.fullName;
-    if (dto.role !== undefined) user.role = dto.role;
     if (dto.isActive !== undefined) user.isActive = dto.isActive;
+    if (dto.role !== undefined) {
+      await this.memberships.setRole(userId, organizationId, dto.role);
+    }
     if (dto.password) {
       user.passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     }
@@ -153,7 +178,7 @@ export class UsersService {
     actorUserId?: number,
   ): Promise<User> {
     const user = await this.findOne(userId, organizationId);
-    if (user.role === UserRole.ADMIN) {
+    if ((await this.roleIn(userId, organizationId)) === UserRole.ADMIN) {
       this.assertNotSelfLockout(userId, actorUserId);
       await this.assertNotLastAdmin(userId, organizationId);
     }
@@ -195,14 +220,10 @@ export class UsersService {
     userId: number,
     organizationId: number,
   ): Promise<void> {
-    const otherAdmins = await this.repo.count({
-      where: {
-        organizationId,
-        role: UserRole.ADMIN,
-        isActive: true,
-        userId: Not(userId),
-      },
-    });
+    const otherAdmins = await this.memberships.countOtherAdmins(
+      organizationId,
+      userId,
+    );
     if (otherAdmins === 0) {
       throw new ConflictException(
         'Это последний действующий администратор. ' +

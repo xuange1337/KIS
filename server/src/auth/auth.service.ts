@@ -7,19 +7,28 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuditAction, LoginResponse, SessionDto, UserDto } from '@crm/shared';
+import {
+  AuditAction,
+  LoginResponse,
+  OrganizationSummary,
+  SessionDto,
+  UserDto,
+  UserRole,
+} from '@crm/shared';
 import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'crypto';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { toUserDto } from '../users/user.mapper';
 import { User } from '../users/user.entity';
+import { OrganizationMember } from '../organizations/organization-member.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { configuration } from '../config/configuration';
 import { JwtPayload } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
 import { RefreshSession } from './refresh-session.entity';
 import { PasswordReset } from './password-reset.entity';
+import { MembershipsService } from '../organizations/memberships.service';
 import { ChangePasswordDto, ResetPasswordDto } from './dto/password.dto';
 
 /**
@@ -55,6 +64,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     private readonly sessionRepo: Repository<RefreshSession>,
     @InjectRepository(PasswordReset)
     private readonly resetRepo: Repository<PasswordReset>,
+    private readonly memberships: MembershipsService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -97,9 +107,24 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       throw new UnauthorizedException('Учётная запись заблокирована');
     }
 
+    /**
+     * Организация сеанса.
+     *
+     * У человека их может быть несколько; сеанс открывается в первой
+     * по подключению, дальше он переключается сам. Если участий нет —
+     * входить некуда: учётная запись есть, а работать не с чем.
+     */
+    const organizations = await this.memberships.listForUser(user.userId);
+    if (organizations.length === 0) {
+      throw new UnauthorizedException(
+        'Учётная запись не привязана ни к одной организации',
+      );
+    }
+    const organization = organizations[0];
+
     await this.auditRepo
       .save({
-        organizationId: user.organizationId,
+        organizationId: organization.organizationId,
         userId: user.userId,
         entity: 'auth',
         entityId: String(user.userId),
@@ -108,7 +133,44 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       })
       .catch(() => undefined);
 
-    return { ...(await this.createSession(user)), user: toUserDto(user) };
+    return {
+      ...(await this.createSession(user, organization)),
+      user: toUserDto(user, organization.role),
+      organization,
+      organizations,
+    };
+  }
+
+  /**
+   * Переключение на другую организацию.
+   *
+   * Открывается новый сеанс, а не правится текущий: сеанс привязан к
+   * организации, и в соседней вкладке человек может продолжать работу
+   * с прежним заказчиком.
+   */
+  async switchOrganization(
+    userId: number,
+    organizationId: number,
+  ): Promise<LoginResponse & { refreshToken: string }> {
+    const user = await this.usersService.findOne(userId);
+    const organizations = await this.memberships.listForUser(userId);
+    const organization = organizations.find(
+      (item) => item.organizationId === organizationId,
+    );
+    if (!organization) {
+      throw new UnauthorizedException('Нет доступа к этой организации');
+    }
+    return {
+      ...(await this.createSession(user, organization)),
+      user: toUserDto(user, organization.role),
+      organization,
+      organizations,
+    };
+  }
+
+  /** Организации, доступные пользователю. */
+  listOrganizations(userId: number): Promise<OrganizationSummary[]> {
+    return this.memberships.listForUser(userId);
   }
 
   /** Обновляет access-токен по refresh-токену из httpOnly cookie. */
@@ -167,7 +229,26 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         await repo.save(session);
         return null;
       }
-      const tokens = this.issueTokens(user, session.sessionId);
+      const membership = await manager
+        .getRepository(OrganizationMember)
+        .findOne({
+          where: {
+            userId: user.userId,
+            organizationId: session.organizationId,
+          },
+        });
+      if (!membership) {
+        // Участие отозвали, пока сеанс был открыт
+        session.revokedAt = new Date();
+        await repo.save(session);
+        return null;
+      }
+      const tokens = this.issueTokens(
+        user,
+        session.sessionId,
+        session.organizationId,
+        membership.role,
+      );
       const decoded = this.jwtService.decode(tokens.refreshToken) as {
         exp: number;
       };
@@ -175,13 +256,30 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       session.expiresAt = new Date(decoded.exp * 1000);
       session.lastUsedAt = new Date();
       await repo.save(session);
-      return { tokens, user };
+      return {
+        tokens,
+        user,
+        role: membership.role,
+        organizationId: session.organizationId,
+      };
     });
 
     if (!rotated) {
       throw new UnauthorizedException('Учётная запись недоступна');
     }
-    return { ...rotated.tokens, user: toUserDto(rotated.user) };
+    const organizations = await this.memberships.listForUser(
+      rotated.user.userId,
+    );
+    const organization =
+      organizations.find(
+        (item) => item.organizationId === rotated.organizationId,
+      ) ?? organizations[0];
+    return {
+      ...rotated.tokens,
+      user: toUserDto(rotated.user, rotated.role),
+      organization,
+      organizations,
+    };
   }
 
   async logout(refreshToken: string | undefined): Promise<void> {
@@ -331,9 +429,10 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     await this.revokeAllSessions(userId);
   }
 
-  async profile(userId: number): Promise<UserDto> {
-    // Организация здесь не передаётся: пользователь запрашивает сам себя
-    return toUserDto(await this.usersService.findOne(userId));
+  async profile(userId: number, organizationId: number): Promise<UserDto> {
+    const user = await this.usersService.findOne(userId);
+    const membership = await this.memberships.require(userId, organizationId);
+    return toUserDto(user, membership.role);
   }
 
   /** Закрывает все сессии пользователя, кроме указанной. */
@@ -355,15 +454,22 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
   private async createSession(
     user: User,
+    organization: OrganizationSummary,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const sessionId = randomUUID();
-    const tokens = this.issueTokens(user, sessionId);
+    const tokens = this.issueTokens(
+      user,
+      sessionId,
+      organization.organizationId,
+      organization.role,
+    );
     const decoded = this.jwtService.decode(tokens.refreshToken) as {
       exp: number;
     };
     await this.sessionRepo.save({
       sessionId,
       userId: user.userId,
+      organizationId: organization.organizationId,
       tokenHash: this.hashToken(tokens.refreshToken),
       expiresAt: new Date(decoded.exp * 1000),
       revokedAt: null,
@@ -375,11 +481,14 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   private issueTokens(
     user: User,
     sessionId: string,
+    organizationId: number,
+    role: UserRole,
   ): { accessToken: string; refreshToken: string } {
     const payload: JwtPayload = {
       sub: user.userId,
       login: user.login,
-      role: user.role,
+      role,
+      org: organizationId,
       sid: sessionId,
     };
     return {

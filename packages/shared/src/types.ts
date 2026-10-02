@@ -27,6 +27,14 @@ export interface PaginationQuery {
   q?: string;
 }
 
+/** Организация, в которой работает пользователь. */
+export interface OrganizationSummary {
+  organizationId: number;
+  name: string;
+  /** Роль действует в пределах этой организации. */
+  role: UserRole;
+}
+
 export interface UserDto {
   userId: number;
   login: string;
@@ -42,6 +50,9 @@ export interface AuthTokens {
 
 export interface LoginResponse extends AuthTokens {
   user: UserDto;
+  /** Организация сеанса и список доступных для переключения. */
+  organization: OrganizationSummary;
+  organizations: OrganizationSummary[];
 }
 
 export interface SessionDto {
