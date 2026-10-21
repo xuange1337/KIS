@@ -76,6 +76,7 @@ export function OfferFormDialog({
     try {
       await saveOffer.mutateAsync({
         offerId: offer?.offerId,
+        ...(offer ? { version: offer.version } : {}),
         ...(offer ? {} : { dealId }),
         number: form.number.trim(),
         date: form.date,
@@ -129,6 +130,12 @@ export function OfferFormDialog({
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Сумма предложения"
+                disabled={Boolean(offer?.items?.length)}
+                helperText={
+                  offer?.items?.length
+                    ? 'Рассчитывается по составу предложения'
+                    : undefined
+                }
                 type="number"
                 value={form.totalAmount}
                 onChange={(event) =>

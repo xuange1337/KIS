@@ -92,8 +92,24 @@ describe('Обновление схемы с предыдущей версии',
 
     // Оставшиеся миграции применяются уже к непустой базе
     for (const migration of migrations.slice(organizationsIndex)) {
+      if (migration.name?.includes('AddOfferItems')) {
+        await runner.query(`INSERT INTO commercial_offers
+          (organization_id, deal_id, number, date, total_amount)
+          SELECT organization_id, deal_id, 'КП до позиций', '2026-10-08', 100000
+          FROM deals WHERE title = 'Сделка до обновления'`);
+      }
       await migration.up(runner);
     }
+
+    const [legacyOffer] =
+      await runner.query(`SELECT number, total_amount, currency, version
+      FROM commercial_offers WHERE number = 'КП до позиций'`);
+    expect(legacyOffer).toMatchObject({
+      number: 'КП до позиций',
+      total_amount: '100000.00',
+      currency: 'RUB',
+      version: 1,
+    });
 
     const [client] = await runner.query(
       `SELECT c.name, c.organization_id, c.version, o.name AS organization

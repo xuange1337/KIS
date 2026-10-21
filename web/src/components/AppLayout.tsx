@@ -18,6 +18,7 @@ import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
@@ -93,6 +94,7 @@ const NAV_ITEMS: NavItem[] = [
   // Полное название «Коммерческие предложения» ломало вертикальный ритм
   // меню переносом на две строки, поэтому здесь оно сокращено
   { to: '/offers', label: 'Предложения', icon: <DescriptionOutlinedIcon /> },
+  { to: '/products', label: 'Каталог', icon: <Inventory2OutlinedIcon /> },
   { to: '/reports', label: 'Отчёты', icon: <AssessmentOutlinedIcon /> },
   {
     to: '/users',

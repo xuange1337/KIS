@@ -44,6 +44,7 @@ import {
 import { DealFormDialog } from '../features/deals/DealFormDialog';
 import { LossReasonDialog } from '../features/deals/LossReasonDialog';
 import { OfferFormDialog } from '../features/offers/OfferFormDialog';
+import { OfferItemsDialog } from '../features/offers/OfferItemsDialog';
 import { ActivityFormDialog } from '../features/activities/ActivityFormDialog';
 import { CompleteActivityDialog } from '../features/activities/CompleteActivityDialog';
 import {
@@ -86,6 +87,7 @@ export function DealCardPage() {
     offer: OfferDto | null;
   }>({ open: false, offer: null });
   const [activityFormOpen, setActivityFormOpen] = useState(false);
+  const [itemsOffer, setItemsOffer] = useState<OfferDto | null>(null);
   const [completing, setCompleting] = useState<ActivityDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'deal' } | { kind: 'offer'; id: number } | null
@@ -282,12 +284,18 @@ export function DealCardPage() {
                         <TableCell>{offer.number}</TableCell>
                         <TableCell>{formatDate(offer.date)}</TableCell>
                         <TableCell align="right">
-                          {formatMoney(offer.totalAmount, deal.currency)}
+                          {formatMoney(offer.totalAmount, offer.currency)}
                         </TableCell>
                         <TableCell>
                           <OfferStatusChip status={offer.status} />
                         </TableCell>
                         <TableCell align="right">
+                          <Button
+                            size="small"
+                            onClick={() => setItemsOffer(offer)}
+                          >
+                            Состав
+                          </Button>
                           <IconButton
                             size="small"
                             onClick={() => setOfferForm({ open: true, offer })}
@@ -424,6 +432,13 @@ export function DealCardPage() {
         defaultAmount={deal.amount}
         onClose={() => setOfferForm({ open: false, offer: null })}
       />
+      {itemsOffer && (
+        <OfferItemsDialog
+          key={itemsOffer.offerId}
+          offer={itemsOffer}
+          onClose={() => setItemsOffer(null)}
+        />
+      )}
       <ActivityFormDialog
         open={activityFormOpen}
         clientId={deal.clientId}

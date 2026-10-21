@@ -55,6 +55,11 @@ const OffersPage = lazy(() =>
     default: module.OffersPage,
   })),
 );
+const ProductsPage = lazy(() =>
+  import('../pages/ProductsPage').then((module) => ({
+    default: module.ProductsPage,
+  })),
+);
 const ReportsPage = lazy(() =>
   import('../pages/ReportsPage').then((module) => ({
     default: module.ReportsPage,
@@ -131,6 +136,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <ClientsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            <RequireAuth>
+              <ProductsPage />
             </RequireAuth>
           }
         />

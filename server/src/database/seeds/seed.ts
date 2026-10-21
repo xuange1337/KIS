@@ -340,6 +340,7 @@ export async function seed(
         number: `КП-2026/${String(index + 1).padStart(3, '0')}`,
         date: toDateOnly(shiftDays(-rnd.int(5, 90))),
         totalAmount: deal.amount,
+        currency: deal.currency,
         status:
           deal.stage === DealStage.WON
             ? OfferStatus.ACCEPTED
@@ -465,6 +466,7 @@ async function seedSecondOrganization(
     number: 'КП-СОСЕД/001',
     date: toDateOnly(shiftDays(-3)),
     totalAmount: 500000,
+    currency: Currency.RUB,
     status: OfferStatus.SENT,
   } as Offer);
 }

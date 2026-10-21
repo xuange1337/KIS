@@ -19,6 +19,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { DealsModule } from './deals/deals.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { OffersModule } from './offers/offers.module';
+import { ProductsModule } from './products/products.module';
 import { ReportsModule } from './reports/reports.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { DictionariesModule } from './dictionaries/dictionaries.module';
@@ -43,6 +44,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
     DealsModule,
     ActivitiesModule,
     OffersModule,
+    ProductsModule,
     ReportsModule,
     DashboardModule,
     DictionariesModule,

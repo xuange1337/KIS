@@ -15,8 +15,11 @@ import {
   FunnelRow,
   ManagerActivityRow,
   OfferDto,
+  OfferItemInput,
   OverdueActivityRow,
   Paginated,
+  ProductDto,
+  ProductInput,
   ReportName,
   SalesDynamicsRow,
   TopRow,
@@ -29,6 +32,34 @@ import {
   UseQueryResult,
 } from '@tanstack/react-query';
 import { api, extractBlobErrorMessage } from './client';
+
+export function useProducts(params: Record<string, unknown>) {
+  return useQuery({
+    queryKey: ['products', params],
+    queryFn: async () =>
+      (await api.get<Paginated<ProductDto>>('/products', { params })).data,
+  });
+}
+
+export function useSaveProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      productId,
+      version,
+      ...payload
+    }: ProductInput & { productId?: number; version?: number }) =>
+      productId
+        ? (
+            await api.patch<ProductDto>(`/products/${productId}`, {
+              ...payload,
+              version,
+            })
+          ).data
+        : (await api.post<ProductDto>('/products', payload)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+  });
+}
 
 /** Справочники: значения загружаются один раз и живут весь сеанс. */
 export interface Dictionaries {
@@ -387,6 +418,26 @@ export function useDeleteOffer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['offers'] });
       queryClient.invalidateQueries({ queryKey: ['deal-offers'] });
+    },
+  });
+}
+
+export function useSaveOfferItems() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      offerId,
+      ...payload
+    }: {
+      offerId: number;
+      version: number;
+      items: OfferItemInput[];
+    }) => (await api.patch<OfferDto>(`/offers/${offerId}/items`, payload)).data,
+    onSuccess: (offer) => {
+      queryClient.invalidateQueries({ queryKey: ['offers'] });
+      queryClient.invalidateQueries({
+        queryKey: ['deal-offers', offer.dealId],
+      });
     },
   });
 }

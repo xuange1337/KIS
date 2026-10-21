@@ -81,7 +81,7 @@ export function OffersPage() {
       cellClassName: 'tabular',
       // Предложение наследует валюту своей сделки
       renderCell: (params) =>
-        formatMoney(params.row.totalAmount, params.row.deal?.currency),
+        formatMoney(params.row.totalAmount, params.row.currency),
     },
     {
       field: 'status',

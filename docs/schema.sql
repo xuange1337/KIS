@@ -76,6 +76,23 @@ CREATE UNIQUE INDEX idx_organizations_name ON organizations (name);
 COMMENT ON TABLE organizations IS
     'Организация-арендатор: граница изоляции всех бизнес-данных';
 
+-- Каталог общий для сотрудников организации. Удаление заменено архивом.
+-- Миграция: 1790500000000-AddProducts.ts.
+CREATE TABLE products (
+    product_id      SERIAL PRIMARY KEY,
+    organization_id INTEGER NOT NULL REFERENCES organizations(organization_id) ON DELETE RESTRICT,
+    sku             VARCHAR(64) NOT NULL CHECK (length(trim(sku)) > 0),
+    name            VARCHAR(200) NOT NULL CHECK (length(trim(name)) > 0),
+    description     VARCHAR(2000),
+    unit            VARCHAR(32) NOT NULL DEFAULT 'шт.' CHECK (length(trim(unit)) > 0),
+    price           NUMERIC(14,2) NOT NULL CHECK (price >= 0 AND price <= 999999999999.99),
+    currency        VARCHAR(3) NOT NULL DEFAULT 'RUB' CHECK (currency IN ('RUB', 'USD', 'EUR')),
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    version         INTEGER NOT NULL DEFAULT 1 CHECK (version > 0),
+    CONSTRAINT uq_products_id_organization UNIQUE (product_id, organization_id)
+);
+CREATE UNIQUE INDEX uq_products_organization_sku ON products (organization_id, sku);
+
 
 -- -----------------------------------------------------------------------------
 -- Users — пользователи системы
@@ -348,7 +365,10 @@ CREATE TABLE commercial_offers (
     total_amount NUMERIC(14, 2) NOT NULL DEFAULT 0,
     status       offer_status   NOT NULL DEFAULT 'draft',
     file_ref     VARCHAR(255),
+    currency     VARCHAR(3) NOT NULL CHECK (currency IN ('RUB', 'USD', 'EUR')),
+    version      INTEGER NOT NULL DEFAULT 1,
 
+    CONSTRAINT uq_offers_id_organization UNIQUE (offer_id, organization_id),
     CONSTRAINT fk_offers_deal FOREIGN KEY (deal_id)
         REFERENCES deals (deal_id) ON DELETE CASCADE,
     CONSTRAINT ck_offers_amount CHECK (total_amount >= 0)
@@ -360,6 +380,26 @@ CREATE INDEX idx_offers_deal ON commercial_offers (deal_id);
 
 COMMENT ON TABLE  commercial_offers          IS 'Коммерческие предложения и счета по сделкам';
 COMMENT ON COLUMN commercial_offers.file_ref IS 'Ссылка на файл вложения во внутреннем хранилище uploads/';
+
+-- Снимки позиций каталога в коммерческом предложении.
+CREATE TABLE offer_items (
+    item_id         SERIAL PRIMARY KEY,
+    organization_id INTEGER NOT NULL,
+    offer_id        INTEGER NOT NULL,
+    product_id      INTEGER NOT NULL,
+    sku             VARCHAR(64) NOT NULL,
+    name            VARCHAR(200) NOT NULL,
+    unit            VARCHAR(32) NOT NULL,
+    quantity        NUMERIC(10,3) NOT NULL CHECK (quantity > 0 AND quantity <= 1000000),
+    unit_price      NUMERIC(14,2) NOT NULL CHECK (unit_price >= 0 AND unit_price <= 999999999999.99),
+    total_amount    NUMERIC(14,2) NOT NULL CHECK (total_amount >= 0 AND total_amount <= 999999999999.99),
+    CONSTRAINT fk_items_offer FOREIGN KEY (offer_id, organization_id)
+      REFERENCES commercial_offers(offer_id, organization_id) ON DELETE CASCADE,
+    CONSTRAINT fk_items_product FOREIGN KEY (product_id, organization_id)
+      REFERENCES products(product_id, organization_id) ON DELETE RESTRICT
+);
+CREATE INDEX idx_offer_items_offer ON offer_items(offer_id, item_id);
+CREATE INDEX idx_offer_items_product ON offer_items(product_id, organization_id);
 
 
 -- -----------------------------------------------------------------------------

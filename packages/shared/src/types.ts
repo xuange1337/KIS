@@ -27,6 +27,23 @@ export interface PaginationQuery {
   q?: string;
 }
 
+export interface ProductDto {
+  productId: number;
+  sku: string;
+  name: string;
+  description: string | null;
+  unit: string;
+  price: number;
+  currency: Currency;
+  isActive: boolean;
+  version: number;
+}
+
+export type ProductInput = Pick<
+  ProductDto,
+  'sku' | 'name' | 'unit' | 'price' | 'currency' | 'isActive'
+> & { description?: string | null };
+
 /** Организация, в которой работает пользователь. */
 export interface OrganizationSummary {
   organizationId: number;
@@ -224,6 +241,27 @@ export interface OfferDto {
   totalAmount: number;
   status: OfferStatus;
   fileRef: string | null;
+  currency: Currency;
+  version: number;
+  items?: OfferItemDto[];
+}
+
+export interface OfferItemDto {
+  itemId: number;
+  productId: number;
+  sku: string;
+  name: string;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+}
+
+export interface OfferItemInput {
+  itemId?: number;
+  productId: number;
+  quantity: number;
+  unitPrice?: number;
 }
 
 /* ---------- Отчёты (ТЗ п. 2.4) ---------- */

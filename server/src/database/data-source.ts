@@ -8,6 +8,8 @@ import { Deal } from '../deals/deal.entity';
 import { DealStageHistory } from '../deals/deal-stage-history.entity';
 import { Activity } from '../activities/activity.entity';
 import { Offer } from '../offers/offer.entity';
+import { Product } from '../products/product.entity';
+import { OfferItem } from '../offers/offer-item.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
@@ -28,6 +30,8 @@ export const ENTITIES = [
   DealStageHistory,
   Activity,
   Offer,
+  Product,
+  OfferItem,
   AuditLog,
   RefreshSession,
   IdempotencyKey,

@@ -18,6 +18,7 @@ import {
   CurrentUser,
 } from '../common/decorators/current-user.decorator';
 import { AuditEntity } from '../common/decorators/audit.decorator';
+import { ReplaceOfferItemsDto } from './dto/replace-offer-items.dto';
 
 /** Модуль коммерческих предложений (ТЗ п. 1.2.5). */
 @Controller()
@@ -64,5 +65,14 @@ export class OffersController {
   @Delete('offers/:id')
   remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.offersService.remove(id, user);
+  }
+
+  @Patch('offers/:id/items')
+  replaceItems(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ReplaceOfferItemsDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.offersService.replaceItems(id, dto, user);
   }
 }
