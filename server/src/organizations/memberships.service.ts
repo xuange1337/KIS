@@ -1,6 +1,10 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OrganizationSummary, UserRole } from '@crm/shared';
+import {
+  effectiveOrganizationStatus,
+  OrganizationSummary,
+  UserRole,
+} from '@crm/shared';
 import { Repository } from 'typeorm';
 import { OrganizationMember } from './organization-member.entity';
 
@@ -42,6 +46,13 @@ export class MembershipsService {
       .map((membership) => ({
         organizationId: membership.organizationId,
         name: membership.organization.name,
+        status: effectiveOrganizationStatus(
+          membership.organization.status,
+          membership.organization.trialEndsAt,
+        ),
+        trialEndsAt: membership.organization.trialEndsAt
+          ? membership.organization.trialEndsAt.toISOString()
+          : null,
         role: membership.role,
       }));
   }

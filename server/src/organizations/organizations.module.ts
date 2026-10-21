@@ -5,6 +5,7 @@ import { OrganizationMember } from './organization-member.entity';
 import { OrganizationInvitation } from './organization-invitation.entity';
 import { MembershipsService } from './memberships.service';
 import { OrganizationsService } from './organizations.service';
+import { TrialService } from './trial.service';
 import {
   InvitationsController,
   OrganizationsController,
@@ -25,7 +26,12 @@ import {
     ]),
   ],
   controllers: [OrganizationsController, InvitationsController],
-  providers: [MembershipsService, OrganizationsService],
-  exports: [MembershipsService, OrganizationsService, TypeOrmModule],
+  providers: [MembershipsService, OrganizationsService, TrialService],
+  exports: [
+    MembershipsService,
+    OrganizationsService,
+    TrialService,
+    TypeOrmModule,
+  ],
 })
 export class OrganizationsModule {}

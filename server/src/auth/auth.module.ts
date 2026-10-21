@@ -9,16 +9,25 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { RefreshSession } from './refresh-session.entity';
 import { PasswordReset } from './password-reset.entity';
+import { EmailVerification } from './email-verification.entity';
+import { EmailVerificationService } from './email-verification.service';
+import { User } from '../users/user.entity';
 
 @Module({
   imports: [
     forwardRef(() => UsersModule),
     PassportModule,
     JwtModule.register({}),
-    TypeOrmModule.forFeature([AuditLog, RefreshSession, PasswordReset]),
+    TypeOrmModule.forFeature([
+      AuditLog,
+      RefreshSession,
+      PasswordReset,
+      EmailVerification,
+      User,
+    ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  providers: [AuthService, EmailVerificationService, JwtStrategy],
+  exports: [AuthService, EmailVerificationService],
 })
 export class AuthModule {}

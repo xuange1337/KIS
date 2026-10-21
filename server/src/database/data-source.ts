@@ -15,6 +15,7 @@ import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
 import { ExportJob } from '../reports/jobs/export-job.entity';
 import { PasswordReset } from '../auth/password-reset.entity';
+import { EmailVerification } from '../auth/email-verification.entity';
 import { Organization } from '../organizations/organization.entity';
 import { OrganizationMember } from '../organizations/organization-member.entity';
 import { OrganizationInvitation } from '../organizations/organization-invitation.entity';
@@ -37,6 +38,7 @@ export const ENTITIES = [
   IdempotencyKey,
   ExportJob,
   PasswordReset,
+  EmailVerification,
 ];
 
 /**

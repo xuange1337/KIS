@@ -7,6 +7,7 @@ import {
   DealLossReason,
   DealStage,
   OfferStatus,
+  OrganizationStatus,
   PreferredChannel,
   UserRole,
 } from './enums';
@@ -50,6 +51,10 @@ export interface OrganizationSummary {
   name: string;
   /** Роль действует в пределах этой организации. */
   role: UserRole;
+  /** Действующее состояние (с учётом истёкшего пробного периода). */
+  status: OrganizationStatus;
+  /** Конец пробного периода; null, если организация не на пробном. */
+  trialEndsAt: string | null;
 }
 
 /** Организация целиком — для экрана настроек. */
@@ -58,6 +63,8 @@ export interface OrganizationDto {
   name: string;
   isActive: boolean;
   createdAt: string;
+  status: OrganizationStatus;
+  trialEndsAt: string | null;
   /** Сколько сотрудников в организации. */
   memberCount: number;
 }
@@ -87,6 +94,9 @@ export interface UserDto {
   role: UserRole;
   isActive: boolean;
   createdAt: string;
+  email: string | null;
+  /** Адрес подтверждён переходом по ссылке из письма. */
+  emailVerified: boolean;
 }
 
 export interface AuthTokens {

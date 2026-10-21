@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   OnModuleDestroy,
   OnModuleInit,
@@ -11,7 +12,9 @@ import {
   AuditAction,
   LoginResponse,
   OrganizationSummary,
+  OrganizationStatus,
   SessionDto,
+  TRIAL_DAYS,
   UserDto,
   UserRole,
 } from '@crm/shared';
@@ -30,6 +33,16 @@ import { RefreshSession } from './refresh-session.entity';
 import { PasswordReset } from './password-reset.entity';
 import { MembershipsService } from '../organizations/memberships.service';
 import { ChangePasswordDto, ResetPasswordDto } from './dto/password.dto';
+import { RegisterDto } from './dto/email.dto';
+import {
+  EmailVerificationService,
+  normalizeEmail,
+} from './email-verification.service';
+import { Organization } from '../organizations/organization.entity';
+import { ConfigService } from '@nestjs/config';
+import { AppConfig } from '../config/configuration';
+import { MailService } from '../mail/mail.service';
+import { passwordResetMail } from '../mail/mail.templates';
 
 /**
  * Хеш заведомо недостижимого пароля: используется, когда логина не
@@ -66,6 +79,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     private readonly resetRepo: Repository<PasswordReset>,
     private readonly memberships: MembershipsService,
     private readonly dataSource: DataSource,
+    private readonly emailVerification: EmailVerificationService,
+    private readonly mail: MailService,
+    private readonly appConfig: ConfigService<AppConfig, true>,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -375,7 +391,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
    */
   async issuePasswordReset(
     userId: number,
-    issuedBy: number,
+    issuedBy: number | null,
   ): Promise<{ token: string; expiresAt: string }> {
     await this.resetRepo.update(
       { userId, usedAt: IsNull() },
@@ -392,6 +408,108 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       issuedBy,
     });
     return { token, expiresAt: expiresAt.toISOString() };
+  }
+
+  /**
+   * Запрос восстановления пароля по адресу почты.
+   *
+   * Ответ не зависит от того, нашёлся ли адрес: иначе форма перебором
+   * показывала бы, кто зарегистрирован. Письмо уходит только на
+   * подтверждённый адрес активной учётной записи.
+   */
+  async requestPasswordReset(rawEmail: string): Promise<void> {
+    const user = await this.emailVerification.findVerifiedOwner(
+      normalizeEmail(rawEmail),
+    );
+    if (!user || !user.isActive || !user.email) {
+      return;
+    }
+    const { token, expiresAt } = await this.issuePasswordReset(
+      user.userId,
+      null,
+    );
+    await this.mail.send(
+      passwordResetMail({
+        to: user.email,
+        url: `${this.appConfig.get('appUrl', { infer: true })}/set-password?token=${token}`,
+        expiresAt,
+      }),
+    );
+  }
+
+  /**
+   * Самостоятельная регистрация: организация, её администратор и
+   * пробный период создаются одной транзакцией.
+   *
+   * Сразу открывается сеанс: человек не должен после регистрации ещё
+   * раз вводить только что придуманные данные. Адрес при этом не
+   * подтверждён, и пока он не подтверждён, приглашать сотрудников нельзя.
+   */
+  async register(
+    dto: RegisterDto,
+  ): Promise<LoginResponse & { refreshToken: string }> {
+    const login = dto.login.trim();
+    const email = normalizeEmail(dto.email);
+
+    if (await this.usersService.findByLoginWithPassword(login)) {
+      throw new ConflictException('Такой логин уже занят');
+    }
+    if (await this.emailVerification.findVerifiedOwner(email)) {
+      throw new ConflictException(
+        'Этот адрес уже используется. Войдите или восстановите пароль',
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const now = new Date();
+    const user = await this.dataSource.transaction(async (manager) => {
+      const organization = await manager.getRepository(Organization).save({
+        name: dto.organizationName.trim(),
+        isActive: true,
+        status: OrganizationStatus.TRIAL,
+        trialEndsAt: new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000),
+        trialNotifiedDays: null,
+      });
+      const created = await manager.getRepository(User).save(
+        manager.getRepository(User).create({
+          login,
+          fullName: dto.fullName.trim(),
+          isActive: true,
+          passwordHash,
+          email,
+          emailVerifiedAt: null,
+          termsAcceptedAt: now,
+        }),
+      );
+      await manager.getRepository(OrganizationMember).save({
+        organizationId: organization.organizationId,
+        userId: created.userId,
+        role: UserRole.ADMIN,
+      });
+      return created;
+    });
+
+    await this.emailVerification.issue(user.userId, email);
+
+    const organizations = await this.memberships.listForUser(user.userId);
+    const organization = organizations[0];
+    await this.auditRepo
+      .save({
+        organizationId: organization.organizationId,
+        userId: user.userId,
+        entity: 'auth',
+        entityId: String(user.userId),
+        action: AuditAction.CREATE,
+        payload: { login: user.login, registration: true },
+      })
+      .catch(() => undefined);
+
+    return {
+      ...(await this.createSession(user, organization)),
+      user: toUserDto(user, organization.role),
+      organization,
+      organizations,
+    };
   }
 
   /**

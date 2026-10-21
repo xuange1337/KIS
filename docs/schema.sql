@@ -68,13 +68,26 @@ CREATE TABLE organizations (
     organization_id SERIAL       PRIMARY KEY,
     name            VARCHAR(255) NOT NULL,
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    -- Состояние как клиента сервиса. Окончание пробного периода состояние
+    -- не меняет: оно вычисляется приложением (trial + trial_ends_at в прошлом
+    -- равносильно suspended). Миграция: 1790700000000-AddEmailAndTrial.ts.
+    status              VARCHAR(16) NOT NULL DEFAULT 'active',
+    trial_ends_at       TIMESTAMPTZ,
+    trial_notified_days SMALLINT,
+
+    CONSTRAINT ck_organizations_status CHECK (
+        status IN ('trial', 'active', 'past_due', 'suspended', 'closed')
+    )
 );
 
-CREATE UNIQUE INDEX idx_organizations_name ON organizations (name);
+-- Название не уникально: две компании могут называться одинаково
+CREATE INDEX idx_organizations_name ON organizations (name);
 
 COMMENT ON TABLE organizations IS
     'Организация-арендатор: граница изоляции всех бизнес-данных';
+COMMENT ON COLUMN organizations.trial_notified_days IS
+    'За сколько дней до конца пробного периода отправлено последнее напоминание';
 
 -- Каталог общий для сотрудников организации. Удаление заменено архивом.
 -- Миграция: 1790500000000-AddProducts.ts.
@@ -104,11 +117,19 @@ CREATE TABLE users (
     full_name     VARCHAR(160) NOT NULL,
     is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    email             VARCHAR(254),
+    email_verified_at TIMESTAMPTZ,
+    terms_accepted_at TIMESTAMPTZ,
 
     CONSTRAINT uq_users_login UNIQUE (login)
 );
 
 CREATE UNIQUE INDEX idx_users_login ON users (login);
+CREATE INDEX idx_users_email ON users (lower(email));
+-- Уникальны только подтверждённые адреса: иначе чужой адрес можно занять,
+-- не подтверждая его, и владелец не смог бы им воспользоваться
+CREATE UNIQUE INDEX idx_users_email_verified ON users (lower(email))
+    WHERE email_verified_at IS NOT NULL;
 
 -- Организация и роль хранятся не здесь, а в organization_members:
 -- один человек может работать в нескольких организациях с разными
@@ -120,6 +141,23 @@ CREATE UNIQUE INDEX idx_users_login ON users (login);
 COMMENT ON TABLE  users               IS 'Учётные записи; организация и роль — в organization_members';
 COMMENT ON COLUMN users.password_hash IS 'Хеш пароля (bcrypt), в открытом виде пароль не хранится';
 COMMENT ON COLUMN users.is_active     IS 'Признак активности; вместо удаления учётная запись блокируется';
+COMMENT ON COLUMN users.email         IS 'Адрес для писем; вход по нему не выполняется';
+COMMENT ON COLUMN users.email_verified_at IS 'Когда адрес подтверждён переходом по ссылке; NULL — не подтверждён';
+
+-- Ссылки подтверждения адреса. Адрес хранится в записи, чтобы старая ссылка
+-- не подтверждала новый адрес, указанный позже.
+CREATE TABLE email_verifications (
+    verification_id SERIAL       PRIMARY KEY,
+    user_id         INTEGER      NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+    email           VARCHAR(254) NOT NULL,
+    token_hash      CHAR(64)     NOT NULL,
+    expires_at      TIMESTAMPTZ  NOT NULL,
+    used_at         TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX idx_email_verifications_token ON email_verifications (token_hash);
+CREATE INDEX idx_email_verifications_user ON email_verifications (user_id);
+COMMENT ON COLUMN email_verifications.token_hash IS 'SHA-256 от токена: утечка таблицы не подтверждает адреса';
 
 
 -- -----------------------------------------------------------------------------

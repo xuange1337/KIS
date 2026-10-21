@@ -15,6 +15,21 @@ const SetPasswordPage = lazy(() =>
     default: module.SetPasswordPage,
   })),
 );
+const RegisterPage = lazy(() =>
+  import('../pages/RegisterPage').then((module) => ({
+    default: module.RegisterPage,
+  })),
+);
+const VerifyEmailPage = lazy(() =>
+  import('../pages/VerifyEmailPage').then((module) => ({
+    default: module.VerifyEmailPage,
+  })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import('../pages/ForgotPasswordPage').then((module) => ({
+    default: module.ForgotPasswordPage,
+  })),
+);
 const AcceptInvitePage = lazy(() =>
   import('../pages/AcceptInvitePage').then((module) => ({
     default: module.AcceptInvitePage,
@@ -116,6 +131,13 @@ export function AppRoutes() {
           path="/login"
           element={user ? <Navigate to="/" replace /> : <LoginPage />}
         />
+
+        <Route
+          path="/register"
+          element={user ? <Navigate to="/" replace /> : <RegisterPage />}
+        />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         {/* Открытая страница: ею пользуются, когда войти нельзя */}
         <Route path="/set-password" element={<SetPasswordPage />} />

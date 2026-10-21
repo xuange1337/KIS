@@ -3,12 +3,13 @@ import {
   Box,
   Button,
   Divider,
+  Link,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { FormEvent, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { extractErrorMessage } from '../api/client';
 import { useAuth } from '../features/auth/AuthContext';
 import { TOKENS } from '../theme/tokens';
@@ -146,7 +147,7 @@ export function LoginPage() {
             Вход в систему
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-            Укажите учётные данные, выданные администратором
+            Укажите логин и пароль
           </Typography>
 
           <form onSubmit={handleSubmit}>
@@ -182,6 +183,15 @@ export function LoginPage() {
               </Button>
             </Stack>
           </form>
+
+          <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
+            <Link component={RouterLink} to="/forgot-password" variant="body2">
+              Забыли пароль?
+            </Link>
+            <Link component={RouterLink} to="/register" variant="body2">
+              Зарегистрировать организацию
+            </Link>
+          </Stack>
 
           <Divider sx={{ my: 4 }} />
 

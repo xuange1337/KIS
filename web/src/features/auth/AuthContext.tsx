@@ -31,11 +31,24 @@ interface AuthContextValue {
   /** true, пока идёт первичная проверка сохранённой сессии. */
   initializing: boolean;
   login: (login: string, password: string) => Promise<void>;
+  /** Самостоятельная регистрация организации; сразу открывает сеанс. */
+  register: (data: RegisterInput) => Promise<void>;
+  /** Перечитывает профиль, например после подтверждения почты. */
+  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
   /** Проверка роли для показа разделов интерфейса. */
   hasRole: (...roles: UserRole[]) => boolean;
   /** Руководитель и администратор видят данные всего отдела. */
   canSeeAll: boolean;
+}
+
+export interface RegisterInput {
+  organizationName: string;
+  fullName: string;
+  login: string;
+  email: string;
+  password: string;
+  acceptTerms: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -98,6 +111,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
+  const register = useCallback(
+    async (data: RegisterInput) => {
+      const response = await api.post<LoginResponse>('/auth/register', data);
+      applySession(response.data);
+    },
+    [applySession],
+  );
+
+  const refreshUser = useCallback(async () => {
+    const response = await api.get<UserDto>('/auth/me');
+    setUser(response.data);
+  }, []);
+
   /**
    * Переключение организации.
    *
@@ -141,6 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       switchOrganization,
       initializing,
       login,
+      register,
+      refreshUser,
       logout,
       hasRole: (...roles: UserRole[]) =>
         user ? roles.includes(user.role) : false,
@@ -153,6 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       switchOrganization,
       initializing,
       login,
+      register,
+      refreshUser,
       logout,
     ],
   );

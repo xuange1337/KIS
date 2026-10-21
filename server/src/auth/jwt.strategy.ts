@@ -2,13 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { UserRole } from '@crm/shared';
+import { effectiveOrganizationStatus, UserRole } from '@crm/shared';
 import { IsNull, MoreThan, Repository } from 'typeorm';
 import { configuration } from '../config/configuration';
 import { UsersService } from '../users/users.service';
 import { AuthUser } from '../common/decorators/current-user.decorator';
 import { RefreshSession } from './refresh-session.entity';
 import { MembershipsService } from '../organizations/memberships.service';
+import { Organization } from '../organizations/organization.entity';
 import { currentRequestContext } from '../common/logging/request-context';
 
 export interface JwtPayload {
@@ -30,6 +31,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     @InjectRepository(RefreshSession)
     private readonly sessionRepo: Repository<RefreshSession>,
     private readonly memberships: MembershipsService,
+    @InjectRepository(Organization)
+    private readonly organizationRepo: Repository<Organization>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -80,6 +83,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Доступ к организации отозван');
     }
 
+    const organization = await this.organizationRepo.findOne({
+      where: { organizationId: membership.organizationId },
+      select: { organizationId: true, status: true, trialEndsAt: true },
+    });
+    if (!organization) {
+      throw new UnauthorizedException('Организация недоступна');
+    }
+
     const user = await this.usersService.findOne(payload.sub).catch(() => null);
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Учётная запись недоступна');
@@ -98,6 +109,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       fullName: user.fullName,
       role: membership.role,
       sessionId: payload.sid,
+      organizationStatus: effectiveOrganizationStatus(
+        organization.status,
+        organization.trialEndsAt,
+      ),
     };
   }
 }

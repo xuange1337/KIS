@@ -15,6 +15,8 @@ export const toUserDto = (user: User, role: UserRole): UserDto => ({
   role,
   isActive: user.isActive,
   createdAt: user.createdAt?.toISOString(),
+  email: user.email ?? null,
+  emailVerified: Boolean(user.emailVerifiedAt),
 });
 
 export const toUserDtoOrNull = (

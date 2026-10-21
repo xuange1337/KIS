@@ -88,3 +88,52 @@ export const passwordResetMail = (params: {
     'Если вы не запрашивали смену пароля, проигнорируйте письмо: текущий пароль останется прежним.',
   ),
 });
+
+export const emailVerificationMail = (params: {
+  to: string;
+  url: string;
+  expiresAt: string;
+}): MailMessage => ({
+  to: params.to,
+  subject: 'Подтвердите адрес электронной почты',
+  ...layout(
+    'Подтвердите адрес электронной почты',
+    [
+      'Чтобы получать приглашения, уведомления и восстанавливать пароль, подтвердите этот адрес.',
+      `Ссылка действует до ${formatDate(params.expiresAt)} и срабатывает один раз.`,
+    ],
+    { label: 'Подтвердить адрес', url: params.url },
+    'Если вы не регистрировались в системе, проигнорируйте письмо.',
+  ),
+});
+
+export const trialReminderMail = (params: {
+  to: string;
+  organizationName: string;
+  daysLeft: number;
+  trialEndsAt: string;
+  url: string;
+}): MailMessage => {
+  const expired = params.daysLeft <= 0;
+  const title = expired
+    ? `Пробный период «${params.organizationName}» закончился`
+    : `Пробный период «${params.organizationName}» заканчивается`;
+  return {
+    to: params.to,
+    subject: title,
+    ...layout(
+      title,
+      expired
+        ? [
+            'Данные сохранены и доступны для просмотра и выгрузки, но вносить изменения нельзя.',
+            'Чтобы продолжить работу, свяжитесь с нами — мы подключим тариф.',
+          ]
+        : [
+            `Осталось дней: ${params.daysLeft}. Пробный период закончится ${formatDate(params.trialEndsAt)}.`,
+            'После окончания данные останутся доступными для просмотра и выгрузки, но вносить изменения будет нельзя.',
+          ],
+      { label: 'Открыть систему', url: params.url },
+      'Письмо отправлено администраторам организации.',
+    ),
+  };
+};

@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { UserRole } from '@crm/shared';
+import { OrganizationStatus, UserRole } from '@crm/shared';
 
 /** Данные пользователя, извлечённые из access-токена. */
 export interface AuthUser {
@@ -10,6 +10,8 @@ export interface AuthUser {
   fullName: string;
   role: UserRole;
   sessionId?: string;
+  /** Действующее состояние организации сеанса. */
+  organizationStatus?: OrganizationStatus;
 }
 
 /** Достаёт пользователя, помещённый в запрос JwtStrategy. */

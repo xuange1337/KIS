@@ -220,3 +220,50 @@ export enum AuditAction {
   LOGIN = 'login',
   EXPORT = 'export',
 }
+
+/**
+ * Состояние организации как клиента сервиса.
+ *
+ * `trial` и `active` — полный доступ; `past_due` — оплата просрочена,
+ * доступ пока полный; `suspended` — только чтение и выгрузка данных;
+ * `closed` — организация закрыта. Окончание пробного периода само по себе
+ * состояние не меняет: оно вычисляется (см. effectiveOrganizationStatus).
+ */
+export enum OrganizationStatus {
+  TRIAL = 'trial',
+  ACTIVE = 'active',
+  PAST_DUE = 'past_due',
+  SUSPENDED = 'suspended',
+  CLOSED = 'closed',
+}
+
+export const ORGANIZATION_STATUS_LABELS: Record<OrganizationStatus, string> = {
+  [OrganizationStatus.TRIAL]: 'Пробный период',
+  [OrganizationStatus.ACTIVE]: 'Активна',
+  [OrganizationStatus.PAST_DUE]: 'Оплата просрочена',
+  [OrganizationStatus.SUSPENDED]: 'Приостановлена',
+  [OrganizationStatus.CLOSED]: 'Закрыта',
+};
+
+/** Длительность пробного периода при самостоятельной регистрации, дней. */
+export const TRIAL_DAYS = 14;
+
+/**
+ * Состояние, которое действует сейчас: пробный период, истёкший по
+ * времени, равносилен приостановке. Хранить это в базе значило бы
+ * держать фоновое задание, от которого зависит доступ.
+ */
+export const effectiveOrganizationStatus = (
+  status: OrganizationStatus,
+  trialEndsAt: string | Date | null,
+  now: Date = new Date(),
+): OrganizationStatus => {
+  if (
+    status === OrganizationStatus.TRIAL &&
+    trialEndsAt &&
+    new Date(trialEndsAt).getTime() <= now.getTime()
+  ) {
+    return OrganizationStatus.SUSPENDED;
+  }
+  return status;
+};

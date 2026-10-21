@@ -25,6 +25,13 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto, ResetPasswordDto } from './dto/password.dto';
+import {
+  ForgotPasswordDto,
+  RegisterDto,
+  SetEmailDto,
+  VerifyEmailDto,
+} from './dto/email.dto';
+import { EmailVerificationService } from './email-verification.service';
 import { Public } from '../common/decorators/public.decorator';
 import { configuration } from '../config/configuration';
 import {
@@ -48,12 +55,75 @@ const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
  */
 const LOGIN_RATE_LIMIT = Number(process.env.LOGIN_RATE_LIMIT ?? 5);
 
+/** Регистраций в минуту с одного адреса. */
+const REGISTER_RATE_LIMIT = Number(process.env.REGISTER_RATE_LIMIT ?? 3);
+
 /** Авторизация пользователя (экранная форма «Вход», ТЗ п. 2.5). */
 @Controller('auth')
 export class AuthController {
   private readonly cookieSecure = configuration().jwt.cookieSecure;
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly emailVerification: EmailVerificationService,
+  ) {}
+
+  /**
+   * Самостоятельная регистрация организации.
+   *
+   * Предел частоты ниже, чем у входа: каждая успешная попытка создаёт
+   * организацию и отправляет письмо, то есть стоит нам денег.
+   */
+  @Public()
+  @Post('register')
+  @Throttle({ default: { limit: REGISTER_RATE_LIMIT, ttl: 60_000 } })
+  @HttpCode(HttpStatus.CREATED)
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LoginResponse> {
+    const { refreshToken, ...result } = await this.authService.register(dto);
+    this.setRefreshCookie(res, refreshToken);
+    this.setCsrfCookie(res, randomBytes(32).toString('hex'));
+    return result;
+  }
+
+  /** Подтверждение адреса по ссылке из письма. */
+  @Public()
+  @Post('email/verify')
+  @Throttle({ default: { limit: LOGIN_RATE_LIMIT, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  verifyEmail(@Body() dto: VerifyEmailDto): Promise<{ email: string }> {
+    return this.emailVerification.verify(dto.token);
+  }
+
+  /** Указать или сменить свой адрес; уходит письмо с подтверждением. */
+  @Post('email')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  setEmail(
+    @Body() dto: SetEmailDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ email: string; sent: boolean }> {
+    return this.emailVerification.setEmail(user.userId, dto.email);
+  }
+
+  /** Повторная отправка письма с подтверждением. */
+  @Post('email/resend')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  resendEmail(@CurrentUser() user: AuthUser): Promise<{ sent: boolean }> {
+    return this.emailVerification.resend(user.userId);
+  }
+
+  /** Запрос ссылки восстановления пароля. Ответ всегда одинаковый. */
+  @Public()
+  @Post('password/forgot')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<void> {
+    await this.authService.requestPasswordReset(dto.email);
+  }
 
   @Public()
   @Post('login')

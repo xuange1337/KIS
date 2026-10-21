@@ -38,6 +38,18 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  /** Адрес для писем. Вход по нему не выполняется. */
+  @Column({ type: 'varchar', length: 254, nullable: true })
+  email: string | null;
+
+  /** Когда адрес подтверждён; null — не подтверждён. */
+  @Column({ name: 'email_verified_at', type: 'timestamptz', nullable: true })
+  emailVerifiedAt: Date | null;
+
+  /** Когда принято пользовательское соглашение при регистрации. */
+  @Column({ name: 'terms_accepted_at', type: 'timestamptz', nullable: true })
+  termsAcceptedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuditLog } from './common/audit-log.entity';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { OrganizationStateGuard } from './common/guards/organization-state.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { IdempotencyInterceptor } from './common/idempotency/idempotency.interceptor';
 import { IdempotencyKey } from './common/idempotency/idempotency-key.entity';
@@ -65,6 +66,7 @@ import { MailModule } from './mail/mail.module';
     // Авторизация обязательна для всех маршрутов, кроме помеченных @Public()
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: OrganizationStateGuard },
     // Повтор потерянного запроса не должен создавать дубликат.
     // Идёт раньше журнала: возвращённый по ключу ответ — не новая
     // операция, и записывать её в журнал второй раз незачем

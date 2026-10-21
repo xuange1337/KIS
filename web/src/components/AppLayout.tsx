@@ -35,6 +35,7 @@ import { USER_ROLE_LABELS, UserRole } from '@crm/shared';
 import { ReactNode, Suspense, lazy, useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
+import { AccountNotices } from './AccountNotices';
 import { DURATION, TOKENS } from '../theme/tokens';
 import { useThemeMode } from '../theme/ThemeModeContext';
 
@@ -611,6 +612,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           maxWidth: 1680,
         }}
       >
+        <AccountNotices />
         {children}
       </Box>
     </Box>

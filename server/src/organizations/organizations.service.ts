@@ -1,12 +1,14 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import {
+  effectiveOrganizationStatus,
   InvitationDto,
   InvitationPreview,
   OrganizationDto,
@@ -63,6 +65,13 @@ export class OrganizationsService {
       name: organization.name,
       isActive: organization.isActive,
       createdAt: organization.createdAt.toISOString(),
+      status: effectiveOrganizationStatus(
+        organization.status,
+        organization.trialEndsAt,
+      ),
+      trialEndsAt: organization.trialEndsAt
+        ? organization.trialEndsAt.toISOString()
+        : null,
       memberCount,
     };
   }
@@ -113,6 +122,18 @@ export class OrganizationsService {
     email: string | null = null,
     inviterName: string | null = null,
   ): Promise<{ token: string; expiresAt: string; emailed: boolean }> {
+    // Приглашать может только тот, чей адрес подтверждён, если адрес
+    // вообще указан: иначе регистрация с чужой почтой давала бы
+    // возможность рассылать приглашения от имени сервиса
+    const inviter = await this.dataSource
+      .getRepository(User)
+      .findOne({ where: { userId: invitedBy } });
+    if (inviter?.email && !inviter.emailVerifiedAt) {
+      throw new ForbiddenException(
+        'Подтвердите адрес электронной почты, чтобы приглашать сотрудников',
+      );
+    }
+
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
     await this.invitationRepo.save({
