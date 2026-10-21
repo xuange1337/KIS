@@ -137,3 +137,25 @@ export const trialReminderMail = (params: {
     ),
   };
 };
+
+export const organizationClosedMail = (params: {
+  to: string;
+  organizationName: string;
+  purgeAt: string;
+  url: string;
+}): MailMessage => {
+  const title = `Организация «${params.organizationName}» закрыта`;
+  return {
+    to: params.to,
+    subject: title,
+    ...layout(
+      title,
+      [
+        `Данные сохранены до ${formatDate(params.purgeAt)}: до этого срока их можно выгрузить, а организацию — вернуть.`,
+        'После этого срока данные удаляются безвозвратно.',
+      ],
+      { label: 'Открыть систему', url: params.url },
+      'Письмо отправлено администраторам организации.',
+    ),
+  };
+};

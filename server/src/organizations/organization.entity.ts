@@ -47,6 +47,14 @@ export class Organization {
   @Column({ name: 'trial_notified_days', type: 'smallint', nullable: true })
   trialNotifiedDays: number | null;
 
+  /** Владелец: закрывает организацию и передаёт владение. */
+  @Column({ name: 'owner_user_id', type: 'int', nullable: true })
+  ownerUserId: number | null;
+
+  /** Когда закрыта; данные удаляются через CLOSED_RETENTION_DAYS. */
+  @Column({ name: 'closed_at', type: 'timestamptz', nullable: true })
+  closedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

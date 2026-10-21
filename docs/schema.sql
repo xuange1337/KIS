@@ -75,6 +75,11 @@ CREATE TABLE organizations (
     status              VARCHAR(16) NOT NULL DEFAULT 'active',
     trial_ends_at       TIMESTAMPTZ,
     trial_notified_days SMALLINT,
+    -- Владелец закрывает организацию и передаёт владение; всегда администратор.
+    -- Миграция: 1790800000000-AddOrganizationOwner.ts.
+    owner_user_id       INTEGER,
+    -- Момент закрытия; данные удаляются заданием через 30 дней
+    closed_at           TIMESTAMPTZ,
 
     CONSTRAINT ck_organizations_status CHECK (
         status IN ('trial', 'active', 'past_due', 'suspended', 'closed')
@@ -141,6 +146,10 @@ CREATE UNIQUE INDEX idx_users_email_verified ON users (lower(email))
 COMMENT ON TABLE  users               IS 'Учётные записи; организация и роль — в organization_members';
 COMMENT ON COLUMN users.password_hash IS 'Хеш пароля (bcrypt), в открытом виде пароль не хранится';
 COMMENT ON COLUMN users.is_active     IS 'Признак активности; вместо удаления учётная запись блокируется';
+ALTER TABLE organizations
+    ADD CONSTRAINT fk_organizations_owner FOREIGN KEY (owner_user_id)
+    REFERENCES users (user_id) ON DELETE SET NULL;
+
 COMMENT ON COLUMN users.email         IS 'Адрес для писем; вход по нему не выполняется';
 COMMENT ON COLUMN users.email_verified_at IS 'Когда адрес подтверждён переходом по ссылке; NULL — не подтверждён';
 

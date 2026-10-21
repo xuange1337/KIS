@@ -65,8 +65,26 @@ export interface OrganizationDto {
   createdAt: string;
   status: OrganizationStatus;
   trialEndsAt: string | null;
+  /** Владелец организации: ему доступны закрытие и передача владения. */
+  ownerUserId: number | null;
+  /** Когда организация закрыта; null, если работает. */
+  closedAt: string | null;
+  /** Когда данные закрытой организации будут удалены безвозвратно. */
+  purgeAt: string | null;
   /** Сколько сотрудников в организации. */
   memberCount: number;
+}
+
+/** Участник организации в списке управления. */
+export interface MemberDto {
+  userId: number;
+  login: string;
+  fullName: string;
+  email: string | null;
+  role: UserRole;
+  isOwner: boolean;
+  isActive: boolean;
+  joinedAt: string;
 }
 
 /** Приглашение в организацию. */

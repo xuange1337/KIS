@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import {
+  CLOSED_RETENTION_DAYS,
   effectiveOrganizationStatus,
   InvitationDto,
   InvitationPreview,
@@ -72,21 +73,21 @@ export class OrganizationsService {
       trialEndsAt: organization.trialEndsAt
         ? organization.trialEndsAt.toISOString()
         : null,
+      ownerUserId: organization.ownerUserId,
+      closedAt: organization.closedAt
+        ? organization.closedAt.toISOString()
+        : null,
+      purgeAt: organization.closedAt
+        ? new Date(
+            organization.closedAt.getTime() +
+              CLOSED_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+          ).toISOString()
+        : null,
       memberCount,
     };
   }
 
   async rename(organizationId: number, name: string): Promise<OrganizationDto> {
-    const taken = await this.repo
-      .createQueryBuilder('organization')
-      .where('LOWER(organization.name) = LOWER(:name)', { name })
-      .andWhere('organization.organization_id <> :organizationId', {
-        organizationId,
-      })
-      .getExists();
-    if (taken) {
-      throw new ConflictException('Организация с таким названием уже есть');
-    }
     await this.repo.update({ organizationId }, { name });
     return this.findOne(organizationId);
   }

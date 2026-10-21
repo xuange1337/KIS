@@ -267,3 +267,6 @@ export const effectiveOrganizationStatus = (
   }
   return status;
 };
+
+/** Сколько дней данные закрытой организации хранятся до удаления. */
+export const CLOSED_RETENTION_DAYS = 30;

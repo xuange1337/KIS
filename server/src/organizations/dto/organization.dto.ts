@@ -1,6 +1,7 @@
 import { UserRole } from '@crm/shared';
 import {
   IsEmail,
+  IsInt,
   IsEnum,
   IsOptional,
   IsString,
@@ -55,4 +56,30 @@ export class JoinByInvitationDto {
   @IsString()
   @Length(32, 128)
   token: string;
+}
+
+export class SetMemberRoleDto {
+  @IsEnum(UserRole)
+  role: UserRole;
+}
+
+export class TransferOwnershipDto {
+  @IsInt()
+  userId: number;
+
+  /** Пароль владельца: передача необратима без согласия нового владельца. */
+  @IsString()
+  @Length(1, 255)
+  password: string;
+}
+
+export class CloseOrganizationDto {
+  @IsString()
+  @Length(1, 255)
+  password: string;
+
+  /** Название организации, набранное вручную. */
+  @IsString()
+  @Length(1, 255)
+  confirmName: string;
 }

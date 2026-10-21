@@ -33,6 +33,8 @@ interface AuthContextValue {
   login: (login: string, password: string) => Promise<void>;
   /** Самостоятельная регистрация организации; сразу открывает сеанс. */
   register: (data: RegisterInput) => Promise<void>;
+  /** Перечитывает сеанс: состояние организации после закрытия или возврата. */
+  reloadSession: () => Promise<void>;
   /** Перечитывает профиль, например после подтверждения почты. */
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
@@ -119,6 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
+  const reloadSession = useCallback(async () => {
+    const response = await api.post<LoginResponse>('/auth/refresh');
+    applySession(response.data);
+  }, [applySession]);
+
   const refreshUser = useCallback(async () => {
     const response = await api.get<UserDto>('/auth/me');
     setUser(response.data);
@@ -168,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       initializing,
       login,
       register,
+      reloadSession,
       refreshUser,
       logout,
       hasRole: (...roles: UserRole[]) =>
@@ -182,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       initializing,
       login,
       register,
+      reloadSession,
       refreshUser,
       logout,
     ],

@@ -21,6 +21,13 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const ALLOWED_WHEN_SUSPENDED: RegExp[] = [
   /^\/api\/auth(\/|$)/,
   /^\/api\/reports\/[^/]+\/export(\/|$)/,
+  // Выйти из организации и закрыть её можно и без оплаты
+  /^\/api\/organizations\/current\/(leave|close)$/,
+];
+
+const ALLOWED_WHEN_CLOSED: RegExp[] = [
+  /^\/api\/auth(\/|$)/,
+  /^\/api\/organizations\/current\/reopen$/,
 ];
 
 /**
@@ -49,6 +56,13 @@ export class OrganizationStateGuard implements CanActivate {
     if (
       status === OrganizationStatus.SUSPENDED &&
       ALLOWED_WHEN_SUSPENDED.some((pattern) => pattern.test(path))
+    ) {
+      return true;
+    }
+    // Закрытую организацию можно только вернуть; сменить сеанс и выйти — тоже
+    if (
+      status === OrganizationStatus.CLOSED &&
+      ALLOWED_WHEN_CLOSED.some((pattern) => pattern.test(path))
     ) {
       return true;
     }

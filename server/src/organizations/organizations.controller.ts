@@ -10,23 +10,33 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { Response } from 'express';
 import {
+  AuditAction,
   InvitationDto,
   InvitationPreview,
+  MemberDto,
   OrganizationDto,
   UserRole,
 } from '@crm/shared';
 import { OrganizationsService } from './organizations.service';
+import { MembersService } from './members.service';
+import { ClosureService } from './closure.service';
 import {
   AcceptInvitationDto,
+  CloseOrganizationDto,
   CreateInvitationDto,
   JoinByInvitationDto,
   RenameOrganizationDto,
+  SetMemberRoleDto,
+  TransferOwnershipDto,
 } from './dto/organization.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Public } from '../common/decorators/public.decorator';
-import { AuditEntity } from '../common/decorators/audit.decorator';
+import { Audit, AuditEntity } from '../common/decorators/audit.decorator';
 import {
   AuthUser,
   CurrentUser,
@@ -36,7 +46,106 @@ import {
 @Controller('organizations')
 @AuditEntity('organizations')
 export class OrganizationsController {
-  constructor(private readonly organizations: OrganizationsService) {}
+  constructor(
+    private readonly organizations: OrganizationsService,
+    private readonly members: MembersService,
+    private readonly closure: ClosureService,
+  ) {}
+
+  @Get('current/members')
+  @Roles(UserRole.ADMIN)
+  listMembers(@CurrentUser() user: AuthUser): Promise<MemberDto[]> {
+    return this.members.list(user.organizationId);
+  }
+
+  @Patch('current/members/:userId')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setMemberRole(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() dto: SetMemberRoleDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<void> {
+    await this.members.setRole(
+      user.organizationId,
+      userId,
+      dto.role,
+      user.userId,
+    );
+  }
+
+  /** Исключение из организации; учётная запись остаётся. */
+  @Delete('current/members/:userId')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeMember(
+    @Param('userId', ParseIntPipe) userId: number,
+    @CurrentUser() user: AuthUser,
+  ): Promise<void> {
+    await this.members.remove(user.organizationId, userId, user.userId);
+  }
+
+  /** Выход из организации. Доступен любой роли. */
+  @Post('current/leave')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async leave(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.members.leave(user.organizationId, user.userId);
+  }
+
+  @Post('current/transfer-ownership')
+  @Roles(UserRole.ADMIN)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async transferOwnership(
+    @Body() dto: TransferOwnershipDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<void> {
+    await this.members.transferOwnership(
+      user.organizationId,
+      user.userId,
+      dto.userId,
+      dto.password,
+    );
+  }
+
+  /** Все данные организации одним JSON-файлом. */
+  @Get('current/export')
+  @Roles(UserRole.ADMIN)
+  @Audit(AuditAction.EXPORT)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  async exportData(
+    @CurrentUser() user: AuthUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Record<string, unknown>> {
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="organization-${user.organizationId}-export.json"`,
+    );
+    return this.closure.exportData(user.organizationId);
+  }
+
+  @Post('current/close')
+  @Roles(UserRole.ADMIN)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async close(
+    @Body() dto: CloseOrganizationDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<void> {
+    await this.closure.close(
+      user.organizationId,
+      user.userId,
+      dto.password,
+      dto.confirmName,
+    );
+  }
+
+  @Post('current/reopen')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async reopen(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.closure.reopen(user.organizationId, user.userId);
+  }
 
   /** Организация текущего сеанса. */
   @Get('current')

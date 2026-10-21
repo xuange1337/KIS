@@ -23,6 +23,8 @@ import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ExitToAppOutlinedIcon from '@mui/icons-material/ExitToAppOutlined';
+import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
@@ -66,6 +68,12 @@ const ChangePasswordDialog = lazy(() =>
   })),
 );
 
+const LeaveOrganizationDialog = lazy(() =>
+  import('../features/organization/LeaveOrganizationDialog').then((module) => ({
+    default: module.LeaveOrganizationDialog,
+  })),
+);
+
 const GlobalSearch = lazy(() =>
   import('../features/search/GlobalSearch').then((module) => ({
     default: module.GlobalSearch,
@@ -103,6 +111,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: <PeopleOutlinedIcon />,
     roles: [UserRole.ADMIN],
   },
+  {
+    to: '/organization',
+    label: 'Организация',
+    icon: <ApartmentOutlinedIcon />,
+    roles: [UserRole.ADMIN],
+  },
 ];
 
 /**
@@ -138,6 +152,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   /**
    * Поиск открывается по Ctrl+K (Cmd+K на Mac).
@@ -493,6 +508,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </ListItemIcon>
           Сменить пароль
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setMenuAnchor(null);
+            setLeaveOpen(true);
+          }}
+          sx={{ fontSize: 13 }}
+        >
+          <ListItemIcon>
+            <ExitToAppOutlinedIcon sx={{ fontSize: 17 }} />
+          </ListItemIcon>
+          Покинуть организацию
+        </MenuItem>
         <MenuItem onClick={handleLogout} sx={{ fontSize: 13 }}>
           <ListItemIcon>
             <LogoutIcon sx={{ fontSize: 17 }} />
@@ -582,6 +609,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </>
       ) : (
         navigation
+      )}
+
+      {leaveOpen && (
+        <Suspense fallback={null}>
+          <LeaveOrganizationDialog onClose={() => setLeaveOpen(false)} />
+        </Suspense>
       )}
 
       {passwordOpen && (

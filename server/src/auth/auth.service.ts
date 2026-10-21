@@ -486,6 +486,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         userId: created.userId,
         role: UserRole.ADMIN,
       });
+      await manager
+        .getRepository(Organization)
+        .update(
+          { organizationId: organization.organizationId },
+          { ownerUserId: created.userId },
+        );
       return created;
     });
 

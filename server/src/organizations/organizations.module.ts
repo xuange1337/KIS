@@ -6,6 +6,10 @@ import { OrganizationInvitation } from './organization-invitation.entity';
 import { MembershipsService } from './memberships.service';
 import { OrganizationsService } from './organizations.service';
 import { TrialService } from './trial.service';
+import { MembersService } from './members.service';
+import { ClosureService } from './closure.service';
+import { RefreshSession } from '../auth/refresh-session.entity';
+import { User } from '../users/user.entity';
 import {
   InvitationsController,
   OrganizationsController,
@@ -23,10 +27,18 @@ import {
       Organization,
       OrganizationMember,
       OrganizationInvitation,
+      RefreshSession,
+      User,
     ]),
   ],
   controllers: [OrganizationsController, InvitationsController],
-  providers: [MembershipsService, OrganizationsService, TrialService],
+  providers: [
+    MembershipsService,
+    OrganizationsService,
+    TrialService,
+    MembersService,
+    ClosureService,
+  ],
   exports: [
     MembershipsService,
     OrganizationsService,
