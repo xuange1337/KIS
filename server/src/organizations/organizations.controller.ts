@@ -62,20 +62,24 @@ export class OrganizationsController {
   /**
    * Приглашение сотрудника.
    *
-   * Возвращает ссылку: почтовой рассылки в развёртывании может не быть,
-   * и администратор передаёт её сам — как и ссылку на смену пароля.
+   * Возвращает ссылку всегда: почты в развёртывании может не быть или
+   * письмо может не дойти, и тогда администратор передаёт её сам.
+   * Если указан адрес и почта настроена, ссылка дополнительно уходит
+   * письмом (`emailed`).
    */
   @Post('current/invitations')
   @Roles(UserRole.ADMIN)
   invite(
     @Body() dto: CreateInvitationDto,
     @CurrentUser() user: AuthUser,
-  ): Promise<{ token: string; expiresAt: string }> {
+  ): Promise<{ token: string; expiresAt: string; emailed: boolean }> {
     return this.organizations.invite(
       user.organizationId,
       dto.role,
       dto.fullName?.trim() || null,
       user.userId,
+      dto.email?.trim().toLowerCase() || null,
+      user.fullName,
     );
   }
 

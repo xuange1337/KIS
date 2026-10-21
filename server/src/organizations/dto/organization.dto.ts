@@ -1,5 +1,6 @@
 import { UserRole } from '@crm/shared';
 import {
+  IsEmail,
   IsEnum,
   IsOptional,
   IsString,
@@ -22,6 +23,12 @@ export class CreateInvitationDto {
   @IsString()
   @Length(0, 160)
   fullName?: string;
+
+  /** Если указан и почта настроена, ссылка уходит письмом. */
+  @IsOptional()
+  @IsEmail({}, { message: 'Некорректный адрес электронной почты' })
+  @Length(0, 254)
+  email?: string;
 }
 
 export class AcceptInvitationDto {

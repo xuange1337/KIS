@@ -5,10 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import {
   InvitationDto,
   InvitationPreview,
   OrganizationDto,
+  USER_ROLE_LABELS,
   UserRole,
 } from '@crm/shared';
 import * as bcrypt from 'bcryptjs';
@@ -18,6 +20,9 @@ import { Organization } from './organization.entity';
 import { OrganizationMember } from './organization-member.entity';
 import { OrganizationInvitation } from './organization-invitation.entity';
 import { User } from '../users/user.entity';
+import { AppConfig } from '../config/configuration';
+import { MailService } from '../mail/mail.service';
+import { invitationMail } from '../mail/mail.templates';
 
 /** Сколько живёт приглашение. */
 const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -41,6 +46,8 @@ export class OrganizationsService {
     @InjectRepository(OrganizationInvitation)
     private readonly invitationRepo: Repository<OrganizationInvitation>,
     private readonly dataSource: DataSource,
+    private readonly mail: MailService,
+    private readonly config: ConfigService<AppConfig, true>,
   ) {}
 
   async findOne(organizationId: number): Promise<OrganizationDto> {
@@ -103,7 +110,9 @@ export class OrganizationsService {
     role: UserRole,
     fullName: string | null,
     invitedBy: number,
-  ): Promise<{ token: string; expiresAt: string }> {
+    email: string | null = null,
+    inviterName: string | null = null,
+  ): Promise<{ token: string; expiresAt: string; emailed: boolean }> {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
     await this.invitationRepo.save({
@@ -115,7 +124,25 @@ export class OrganizationsService {
       usedAt: null,
       invitedBy,
     });
-    return { token, expiresAt: expiresAt.toISOString() };
+    const expiresIso = expiresAt.toISOString();
+
+    let emailed = false;
+    if (email) {
+      const organization = await this.repo.findOne({
+        where: { organizationId },
+      });
+      emailed = await this.mail.send(
+        invitationMail({
+          to: email,
+          organizationName: organization?.name ?? 'CRM',
+          roleLabel: USER_ROLE_LABELS[role] ?? role,
+          inviterName,
+          url: `${this.config.get('appUrl', { infer: true })}/invite?token=${token}`,
+          expiresAt: expiresIso,
+        }),
+      );
+    }
+    return { token, expiresAt: expiresIso, emailed };
   }
 
   /** Отзыв невостребованного приглашения. */

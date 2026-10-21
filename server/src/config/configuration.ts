@@ -87,6 +87,18 @@ export interface AppConfig {
     cookieSecure: boolean;
   };
   uploadsDir: string;
+  /** Публичный адрес веб-интерфейса: из него собираются ссылки в письмах. */
+  appUrl: string;
+  mail: {
+    /** Пустой хост — почта выключена, ссылки передаются вручную. */
+    host: string;
+    port: number;
+    /** TLS с первого байта (порт 465); для STARTTLS (587) оставьте false. */
+    secure: boolean;
+    user: string;
+    password: string;
+    from: string;
+  };
 }
 
 export const configuration = (): AppConfig => ({
@@ -112,4 +124,13 @@ export const configuration = (): AppConfig => ({
     cookieSecure: process.env.COOKIE_SECURE === 'true',
   },
   uploadsDir: process.env.UPLOADS_DIR ?? 'uploads',
+  appUrl: (process.env.APP_URL ?? 'http://localhost:8080').replace(/\/+$/, ''),
+  mail: {
+    host: process.env.MAIL_HOST ?? '',
+    port: Number(process.env.MAIL_PORT ?? 587),
+    secure: process.env.MAIL_SECURE === 'true',
+    user: process.env.MAIL_USER ?? '',
+    password: process.env.MAIL_PASSWORD ?? '',
+    from: process.env.MAIL_FROM ?? 'CRM <no-reply@localhost>',
+  },
 });

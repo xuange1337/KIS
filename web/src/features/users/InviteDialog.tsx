@@ -31,9 +31,11 @@ interface InviteDialogProps {
 export function InviteDialog({ open, onClose }: InviteDialogProps) {
   const [role, setRole] = useState<UserRole>(UserRole.MANAGER);
   const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
   const [issued, setIssued] = useState<{
     url: string;
     expiresAt: string;
+    emailed: boolean;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,6 +44,7 @@ export function InviteDialog({ open, onClose }: InviteDialogProps) {
     if (open) {
       setRole(UserRole.MANAGER);
       setFullName('');
+      setEmail('');
       setIssued(null);
       setError(null);
     }
@@ -52,13 +55,19 @@ export function InviteDialog({ open, onClose }: InviteDialogProps) {
     setBusy(true);
     setError(null);
     try {
-      const response = await api.post<{ token: string; expiresAt: string }>(
-        '/organizations/current/invitations',
-        { role, fullName: fullName.trim() || undefined },
-      );
+      const response = await api.post<{
+        token: string;
+        expiresAt: string;
+        emailed: boolean;
+      }>('/organizations/current/invitations', {
+        role,
+        fullName: fullName.trim() || undefined,
+        email: email.trim() || undefined,
+      });
       setIssued({
         url: `${window.location.origin}/invite?token=${response.data.token}`,
         expiresAt: response.data.expiresAt,
+        emailed: response.data.emailed,
       });
     } catch (caught) {
       setError(extractErrorMessage(caught, 'Не удалось создать приглашение'));
@@ -74,6 +83,18 @@ export function InviteDialog({ open, onClose }: InviteDialogProps) {
         <DialogContent>
           {issued ? (
             <Stack spacing={1.5}>
+              {issued.emailed ? (
+                <Alert severity="success">
+                  Приглашение отправлено на {email.trim()}.
+                </Alert>
+              ) : (
+                email.trim() && (
+                  <Alert severity="warning">
+                    Письмо не отправлено: почта не настроена или сервер
+                    недоступен. Передайте ссылку сами.
+                  </Alert>
+                )
+              )}
               <Typography variant="body2">
                 Передайте ссылку сотруднику. Она действует до{' '}
                 {formatDateTime(issued.expiresAt)} и срабатывает один раз. Логин
@@ -111,6 +132,14 @@ export function InviteDialog({ open, onClose }: InviteDialogProps) {
                   </MenuItem>
                 ))}
               </TextField>
+              <TextField
+                size="small"
+                type="email"
+                label="Электронная почта (необязательно)"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                helperText="Если почта настроена, ссылка уйдёт письмом"
+              />
               <TextField
                 size="small"
                 label="Кому выдана ссылка (необязательно)"

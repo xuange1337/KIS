@@ -10,10 +10,14 @@ import { configureApp } from '../src/common/app-setup';
  * наполняется в test/global-setup.ts перед каждым прогоном, поэтому
  * могут свободно создавать и удалять записи.
  */
-export async function createTestApp(): Promise<INestApplication> {
-  const moduleRef = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
+export async function createTestApp(
+  overrides: Array<{ provide: unknown; useValue: unknown }> = [],
+): Promise<INestApplication> {
+  let builder = Test.createTestingModule({ imports: [AppModule] });
+  for (const { provide, useValue } of overrides) {
+    builder = builder.overrideProvider(provide).useValue(useValue);
+  }
+  const moduleRef = await builder.compile();
 
   const app = moduleRef.createNestApplication();
   // Настройка та же, что в main.ts: иначе тесты проверяют приложение,

@@ -27,6 +27,7 @@ import { HealthModule } from './health/health.module';
 import { DiagnosticsModule } from './diagnostics/diagnostics.module';
 import { SearchModule } from './search/search.module';
 import { OrganizationsModule } from './organizations/organizations.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { OrganizationsModule } from './organizations/organizations.module';
     // отдельным декоратором (см. AuthController)
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     DatabaseModule,
+    MailModule,
     OrganizationsModule,
     TypeOrmModule.forFeature([AuditLog, IdempotencyKey]),
     AuthModule,
