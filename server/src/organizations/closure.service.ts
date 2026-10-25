@@ -17,6 +17,7 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { AppConfig } from '../config/configuration';
 import { MailService } from '../mail/mail.service';
+import { jobRuns } from '../metrics/metrics.registry';
 import { organizationClosedMail } from '../mail/mail.templates';
 import { MembersService } from './members.service';
 import { Organization } from './organization.entity';
@@ -71,9 +72,12 @@ export class ClosureService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     const run = () =>
-      void this.purgeClosed().catch((error: Error) =>
-        this.logger.error(`Удаление закрытых организаций: ${error.message}`),
-      );
+      void this.purgeClosed()
+        .then(() => jobRuns.inc({ job: 'purge_closed', result: 'ok' }))
+        .catch((error: Error) => {
+          jobRuns.inc({ job: 'purge_closed', result: 'failed' });
+          this.logger.error(`Удаление закрытых организаций: ${error.message}`);
+        });
     this.startTimer = setTimeout(run, 2 * 60_000);
     this.timer = setInterval(run, 6 * 60 * 60 * 1000);
     this.startTimer.unref();

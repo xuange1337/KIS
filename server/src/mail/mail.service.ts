@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { mailSent } from '../metrics/metrics.registry';
 import { MAIL_TRANSPORT, MailMessage, MailTransport } from './mail.transport';
 
 /**
@@ -27,8 +28,10 @@ export class MailService {
     }
     try {
       await this.transport.send(message);
+      mailSent.inc({ result: 'sent' });
       return true;
     } catch (error) {
+      mailSent.inc({ result: 'failed' });
       this.logger.error(
         `Не удалось отправить письмо «${message.subject}»: ${(error as Error).message}`,
       );

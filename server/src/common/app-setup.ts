@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
+import { metricsMiddleware } from '../metrics/metrics.middleware';
 import { requestContextMiddleware } from './middleware/request-context.middleware';
 
 /**
@@ -44,6 +45,7 @@ export const configureApp = (app: INestApplication): void => {
   // Идентификатор присваивается раньше разбора тела: иначе ответ об
   // ошибке разбора остаётся без идентификатора и не ищется в логах
   app.use(requestContextMiddleware);
+  app.use(metricsMiddleware);
   app.use(cookieParser());
   app.use(json({ limit: BODY_LIMIT }));
   app.use(urlencoded({ extended: true, limit: BODY_LIMIT }));

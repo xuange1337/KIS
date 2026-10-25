@@ -10,6 +10,7 @@ import { OrganizationStatus, UserRole } from '@crm/shared';
 import { Repository } from 'typeorm';
 import { AppConfig } from '../config/configuration';
 import { MailService } from '../mail/mail.service';
+import { jobRuns } from '../metrics/metrics.registry';
 import { trialReminderMail } from '../mail/mail.templates';
 import { Organization } from './organization.entity';
 import { OrganizationMember } from './organization-member.entity';
@@ -47,9 +48,12 @@ export class TrialService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     const run = () =>
-      void this.sendReminders().catch((error: Error) =>
-        this.logger.error(`Напоминания о пробном периоде: ${error.message}`),
-      );
+      void this.sendReminders()
+        .then(() => jobRuns.inc({ job: 'trial_reminders', result: 'ok' }))
+        .catch((error: Error) => {
+          jobRuns.inc({ job: 'trial_reminders', result: 'failed' });
+          this.logger.error(`Напоминания о пробном периоде: ${error.message}`);
+        });
     this.startTimer = setTimeout(run, 60_000);
     this.timer = setInterval(run, 60 * 60 * 1000);
     this.startTimer.unref();

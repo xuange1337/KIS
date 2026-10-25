@@ -29,6 +29,7 @@ import { DiagnosticsModule } from './diagnostics/diagnostics.module';
 import { SearchModule } from './search/search.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { MailModule } from './mail/mail.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { MailModule } from './mail/mail.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     DatabaseModule,
     MailModule,
+    MetricsModule,
     OrganizationsModule,
     TypeOrmModule.forFeature([AuditLog, IdempotencyKey]),
     AuthModule,
