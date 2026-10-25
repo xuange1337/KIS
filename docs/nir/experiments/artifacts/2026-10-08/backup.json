@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-08T06:03:24.981Z",
+  "backupDirectory": "backups/nir-2026-10-08",
+  "sourceDatabase": "crm_nir",
+  "restoredDatabase": "crm_nir_restore",
+  "files": {
+    "database.dump": {
+      "bytes": 1618173,
+      "sha256": "d23d6821fc2a659c51379ee2a42465c9bd0753a70e9bd909dc32f215dfcd7e37"
+    },
+    "uploads.tar": {
+      "bytes": 10240,
+      "sha256": "a7a24d897fe3e01b84b9579d4c3c82585204d44066985cb4ac8bc403c8b5fe41"
+    }
+  },
+  "source": {
+    "organizations": {
+      "count": 3,
+      "logicalMd5": "4f5ca79cb9f390fafe939137a49292d2"
+    },
+    "users": {
+      "count": 30,
+      "logicalMd5": "143299e31c0a117fba8cc27233dcb3ee"
+    },
+    "organization_members": {
+      "count": 30,
+      "logicalMd5": "64450d30b8c4a9cb9db91f1db835cf2e"
+    },
+    "organization_invitations": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "clients": {
+      "count": 10000,
+      "logicalMd5": "a7f9a4496a58a66adb373d3fe7832474"
+    },
+    "contacts": {
+      "count": 15000,
+      "logicalMd5": "560e93e23715e47fb7337dff564ae920"
+    },
+    "deals": {
+      "count": 20000,
+      "logicalMd5": "d9126f1d76788bd2551678d34c523ca4"
+    },
+    "deal_stage_history": {
+      "count": 20000,
+      "logicalMd5": "268310e9daf7e05c4593128299d562d0"
+    },
+    "activities": {
+      "count": 50000,
+      "logicalMd5": "46c2792994db8d29fba9c2589e7900cf"
+    },
+    "commercial_offers": {
+      "count": 5000,
+      "logicalMd5": "4b4768e96e5a9c9389005df449ced0af"
+    },
+    "products": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "offer_items": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "audit_log": {
+      "count": 91,
+      "logicalMd5": "31f72da1977a5893decbde7b7146837d"
+    },
+    "refresh_sessions": {
+      "count": 91,
+      "logicalMd5": "8dd458fa2ce3eb8a05b2ee1bd049d1b7"
+    },
+    "idempotency_keys": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "export_jobs": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "password_resets": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "migrations": {
+      "count": 13,
+      "logicalMd5": "ba43ce2e25a38a6549770dad00bca028"
+    }
+  },
+  "restored": {
+    "organizations": {
+      "count": 3,
+      "logicalMd5": "4f5ca79cb9f390fafe939137a49292d2"
+    },
+    "users": {
+      "count": 30,
+      "logicalMd5": "143299e31c0a117fba8cc27233dcb3ee"
+    },
+    "organization_members": {
+      "count": 30,
+      "logicalMd5": "64450d30b8c4a9cb9db91f1db835cf2e"
+    },
+    "organization_invitations": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "clients": {
+      "count": 10000,
+      "logicalMd5": "a7f9a4496a58a66adb373d3fe7832474"
+    },
+    "contacts": {
+      "count": 15000,
+      "logicalMd5": "560e93e23715e47fb7337dff564ae920"
+    },
+    "deals": {
+      "count": 20000,
+      "logicalMd5": "d9126f1d76788bd2551678d34c523ca4"
+    },
+    "deal_stage_history": {
+      "count": 20000,
+      "logicalMd5": "268310e9daf7e05c4593128299d562d0"
+    },
+    "activities": {
+      "count": 50000,
+      "logicalMd5": "46c2792994db8d29fba9c2589e7900cf"
+    },
+    "commercial_offers": {
+      "count": 5000,
+      "logicalMd5": "4b4768e96e5a9c9389005df449ced0af"
+    },
+    "products": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "offer_items": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "audit_log": {
+      "count": 91,
+      "logicalMd5": "31f72da1977a5893decbde7b7146837d"
+    },
+    "refresh_sessions": {
+      "count": 91,
+      "logicalMd5": "8dd458fa2ce3eb8a05b2ee1bd049d1b7"
+    },
+    "idempotency_keys": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "export_jobs": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "password_resets": {
+      "count": 0,
+      "logicalMd5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "migrations": {
+      "count": 13,
+      "logicalMd5": "ba43ce2e25a38a6549770dad00bca028"
+    }
+  },
+  "allTablesEqual": true,
+  "syntheticAttachmentEqual": true,
+  "attachmentSha256": "6a970189bdb67be19bf82a2e4166a174a269e469b7673556f05fa318d646e836",
+  "limitation": "Local synthetic database and synthetic attachment; not a production recovery test"
+}

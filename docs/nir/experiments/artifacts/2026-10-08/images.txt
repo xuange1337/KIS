@@ -1,0 +1,3 @@
+[kis-api:latest] sha256:53d824dce388eb417c2b624edacb53699f5f95d3ff9feedee5bec97448e7a33a linux/arm64
+[kis-web:latest] sha256:2c658693bc646ab04b29970a8a0d5fc69cd1ee642cccf011db8c6e15ea95a80a linux/arm64
+[postgres:17-alpine] sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73 linux/arm64

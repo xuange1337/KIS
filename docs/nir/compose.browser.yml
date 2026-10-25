@@ -1,0 +1,6 @@
+# Browser tests use the separate fixture DB prepared by the API tests.
+services:
+  api:
+    environment:
+      POSTGRES_DB: crm_test
+      RATE_LIMIT_DISABLED: "true"

@@ -1,0 +1,16 @@
+# Offline fallback: use existing runtime dependencies with CURRENT compiled code.
+# Run npm run build before starting. Record image IDs and installed versions.
+services:
+  api:
+    build: !reset null
+    image: kis-api:latest
+    volumes:
+      - ../../server/dist:/app/server/dist:ro
+      - ../../packages/shared/dist:/app/packages/shared/dist:ro
+  web:
+    build: !reset null
+    image: kis-web:latest
+    volumes:
+      - ../../web/dist:/usr/share/nginx/html:ro
+      - ../../web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../web/security-headers.conf:/etc/nginx/security-headers.conf:ro
