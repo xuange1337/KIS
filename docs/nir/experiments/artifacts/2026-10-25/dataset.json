@@ -1,0 +1,19 @@
+{
+  "seed": 20261008,
+  "referenceDate": "2026-10-08T12:00:00+03:00",
+  "counts": {
+    "organizations": 3,
+    "users": 30,
+    "organization_members": 30,
+    "clients": 10000,
+    "contacts": 15000,
+    "deals": 20000,
+    "activities": 50000,
+    "commercial_offers": 5000,
+    "deal_stage_history": 20000
+  },
+  "clientProjectionSha256": "8f9641a1f8c44e7e8dadbf836edead6e323192868b754f3e3d33d39b5cc7c342",
+  "fingerprintScope": "clients: id, organization, name, owner, created_at; credentials excluded",
+  "fixtureLogin": "nir_3",
+  "fixturePassword": "nir-test-only"
+}

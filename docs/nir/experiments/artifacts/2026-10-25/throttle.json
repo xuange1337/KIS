@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-25T17:09:20.519Z",
+  "route": "/api/dashboard",
+  "requests": 130,
+  "statuses": {
+    "200": 120,
+    "429": 10
+  },
+  "firstRejectedRequest": 121
+}
