@@ -152,7 +152,13 @@ describe('Обновление схемы с предыдущей версии',
           WHERE table_schema = 'public'
           ORDER BY table_name, column_name`,
       );
-      return JSON.stringify(rows);
+      // Индексы входят в снимок: миграция, меняющая только их, тоже
+      // должна быть обратимой, а по одним столбцам её не отличить
+      const indexes = await runner.query(
+        `SELECT indexname FROM pg_indexes
+          WHERE schemaname = 'public' ORDER BY indexname`,
+      );
+      return JSON.stringify({ rows, indexes });
     };
 
     const ordered = [...dataSource.migrations].sort(
