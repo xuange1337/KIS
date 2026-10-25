@@ -33,7 +33,7 @@ const psql = (database, sql) =>
   )
     .toString()
     .trim();
-const dir = 'backups/nir-2026-10-08';
+const dir = process.env.NIR_BACKUP_DIR ?? 'backups/nir-2026-10-08';
 const restoreDatabase = 'crm_nir_restore';
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 const tables = [

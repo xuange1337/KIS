@@ -13,6 +13,9 @@ const allowedLicenses = new Set([
   'MIT',
   'MIT AND ISC',
   'MIT/X11',
+  // Вариант MIT без требования сохранять уведомление об авторстве;
+  // разрешительная лицензия OSI без copyleft (nodemailer)
+  'MIT-0',
   'OFL-1.1',
   // Разрешительная лицензия OSI без copyleft; пришла с argparse
   // (транзитивно через js-yaml в @nestjs/swagger)

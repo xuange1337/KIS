@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: crm_nir
       POSTGRES_USER: ${POSTGRES_USER:-crm}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ne zadan v .env}
       TZ: Europe/Moscow
       PGTZ: Europe/Moscow
     ports:
@@ -33,9 +33,9 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_DB: crm_nir
       POSTGRES_USER: ${POSTGRES_USER:-crm}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?required}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ne zadan v .env}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?ne zadan v .env}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?ne zadan v .env}
       TZ: Europe/Moscow
       API_PORT: 3000
       COOKIE_SECURE: "false"
