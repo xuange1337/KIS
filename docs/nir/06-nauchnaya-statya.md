@@ -88,7 +88,7 @@ Lᵢ = round_half_up(Pᵢ × Qᵢ / 1000),  T = Σ Lᵢ,
 
 ## Литература
 
-1. Круглова О. В., Федотова А. С. Автоматизированное рабочее место как инструмент повышения эффективности трудовых и экономических ресурсов организации // Научный альманах. 2018. № 8-1(46). С. 16–24. DOI: [10.17117/na.2018.08.01.016](https://doi.org/10.17117/na.2018.08.01.016).
+1. Круглова О. В., Федотова А. С. Автоматизированное рабочее место как инструмент повышения эффективности трудовых и экономических ресурсов организации // Научный альманах. 2018. № 8-1(46). С. 16–24. DOI: [10.17117/na.2018.08.01.016](https://doi.org/10.17117/na.2018.08.01.016) (напечатан в статье; на doi.org 26.10.2026 не открывался, полный текст выпуска: <https://ukonf.com/doc/na.2018.08.01.pdf>).
 2. Попов А. Л. Автоматизированное рабочее место администратора оперативной дежурной смены центра управления в кризисных ситуациях // Вестник ВГУ. Серия: Системный анализ и информационные технологии. 2019. № 3. С. 80–93. DOI: [10.17308/sait.2019.3/1309](https://doi.org/10.17308/sait.2019.3/1309).
 3. Keramati A., Mehrabi H., Mojir N. A process-oriented perspective on customer relationship management and organizational performance: An empirical investigation // Industrial Marketing Management. 2010. Vol. 39, no. 7. P. 1170–1185. DOI: [10.1016/j.indmarman.2010.02.001](https://doi.org/10.1016/j.indmarman.2010.02.001).
 4. Chang W., Park J. E., Chaiy S. How does CRM technology transform into organizational performance? A mediating role of marketing capability // Journal of Business Research. 2010. Vol. 63, no. 8. P. 849–855. DOI: [10.1016/j.jbusres.2009.07.003](https://doi.org/10.1016/j.jbusres.2009.07.003).
