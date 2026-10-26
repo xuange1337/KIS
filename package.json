@@ -19,7 +19,7 @@
     "licenses:check": "node scripts/check-licenses.mjs",
     "check:docker": "docker compose config --quiet",
     "openapi": "npm run openapi -w @crm/server",
-    "lint": "eslint . --max-warnings 20",
+    "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,mjs,json}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,mjs,json}\"",
