@@ -54,6 +54,7 @@ const tables = [
   ['idempotency_keys', 'idempotency_id'],
   ['export_jobs', 'export_job_id'],
   ['password_resets', 'password_reset_id'],
+  ['email_verifications', 'verification_id'],
   ['migrations', 'id'],
 ];
 const snapshot = (database) =>
