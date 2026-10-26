@@ -147,7 +147,7 @@ export class DashboardService {
   }
 
   private async readAggregate(qb: {
-    getRawOne: () => Promise<any>;
+    getRawOne: () => Promise<Record<string, unknown> | undefined>;
   }): Promise<{ count: number; amount: number }> {
     const raw = await qb.getRawOne();
     return { count: Number(raw?.count ?? 0), amount: Number(raw?.amount ?? 0) };

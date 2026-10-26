@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuditAction } from '@crm/shared';
+import type { Request } from 'express';
 import { Observable, from, mergeMap } from 'rxjs';
 import { Repository } from 'typeorm';
 import { AuditLog } from '../audit-log.entity';
@@ -73,7 +74,9 @@ export class AuditInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user?: AuthUser }>();
     const explicitAction = this.reflector.getAllAndOverride<AuditAction>(
       AUDIT_ACTION_KEY,
       [context.getHandler(), context.getClass()],
@@ -103,7 +106,7 @@ export class AuditInterceptor implements NestInterceptor {
   }
 
   private async write(
-    request: any,
+    request: Request,
     user: AuthUser | undefined,
     entity: string,
     action: AuditAction,
@@ -129,7 +132,7 @@ export class AuditInterceptor implements NestInterceptor {
     }
   }
 
-  private resolveEntityId(request: any, result: unknown): string | null {
+  private resolveEntityId(request: Request, result: unknown): string | null {
     if (request.params?.id) {
       return String(request.params.id);
     }
@@ -145,7 +148,7 @@ export class AuditInterceptor implements NestInterceptor {
     return null;
   }
 
-  private buildPayload(request: any): Record<string, unknown> {
+  private buildPayload(request: Request): Record<string, unknown> {
     const body = this.maskSensitive(request.body);
     const query = this.maskSensitive(request.query);
     return {

@@ -3,7 +3,11 @@ import { ExportFormat, ReportName } from '@crm/shared';
 import * as ExcelJS from 'exceljs';
 import PdfPrinter from 'pdfmake';
 import { join } from 'path';
-import { REPORT_DEFINITIONS } from './report-definitions';
+import {
+  ExportCell,
+  ExportRow,
+  REPORT_DEFINITIONS,
+} from './report-definitions';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -35,7 +39,7 @@ export class ExportService {
   async export(
     report: ReportName,
     format: ExportFormat,
-    rows: Record<string, any>[],
+    rows: ExportRow[],
     period: string,
   ): Promise<ExportResult> {
     const definition = REPORT_DEFINITIONS[report];
@@ -64,10 +68,10 @@ export class ExportService {
   }
 
   private toCsv(
-    columns: { header: string; value: (row: any) => string | number }[],
-    rows: Record<string, any>[],
+    columns: { header: string; value: (row: ExportRow) => ExportCell }[],
+    rows: ExportRow[],
   ): Buffer {
-    const escape = (value: string | number): string => {
+    const escape = (value: ExportCell): string => {
       const text = this.neutralizeFormula(String(value ?? ''));
       return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
     };
@@ -88,9 +92,9 @@ export class ExportService {
     columns: {
       header: string;
       width: number;
-      value: (row: any) => string | number;
+      value: (row: ExportRow) => ExportCell;
     }[],
-    rows: Record<string, any>[],
+    rows: ExportRow[],
   ): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
     workbook.created = new Date();
@@ -125,9 +129,9 @@ export class ExportService {
     columns: {
       header: string;
       width: number;
-      value: (row: any) => string | number;
+      value: (row: ExportRow) => ExportCell;
     }[],
-    rows: Record<string, any>[],
+    rows: ExportRow[],
   ): Promise<Buffer> {
     const landscape = columns.length > 4;
     // Ширины колонок в описании заданы в символах, а pdfmake ждёт пункты,

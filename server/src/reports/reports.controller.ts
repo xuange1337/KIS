@@ -22,7 +22,7 @@ import { Response } from 'express';
 import { ReportsService } from './reports.service';
 import { ExportService } from './export.service';
 import { ExportJobsService } from './jobs/export-jobs.service';
-import { REPORT_DEFINITIONS } from './report-definitions';
+import { ExportRow, REPORT_DEFINITIONS } from './report-definitions';
 import {
   ReportQueryDto,
   SalesDynamicsQueryDto,
@@ -225,11 +225,25 @@ export class ReportsController {
     return exportFormat;
   }
 
-  private loadRows(
+  /**
+   * Строки отчёта для выгрузки. Строки копируются в обычные объекты:
+   * типы строк отчётов — интерфейсы без индексной сигнатуры, и колонки
+   * выгрузки читают их по имени поля.
+   */
+  private async loadRows(
     report: ReportName,
     query: TopQueryDto & SalesDynamicsQueryDto,
     user: AuthUser,
-  ): Promise<Record<string, any>[]> {
+  ): Promise<ExportRow[]> {
+    const rows = await this.fetchRows(report, query, user);
+    return rows.map((row) => ({ ...row }));
+  }
+
+  private fetchRows(
+    report: ReportName,
+    query: TopQueryDto & SalesDynamicsQueryDto,
+    user: AuthUser,
+  ): Promise<object[]> {
     switch (report) {
       case 'funnel':
         return this.reportsService.funnel(query, user);
