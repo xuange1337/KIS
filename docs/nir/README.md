@@ -34,7 +34,7 @@
 - [План эксперимента](experiment-plan.md) и [итоговый протокол](experiments/2026-10-08-research-validation.md).
 - [Метрики и индексы поиска](experiments/2026-10-25-metrics-and-search-indexes.md) — проверка от 25.10.2026.
 - [Каталог и состав КП](experiments/2026-10-08-catalog-and-offer-items.md) — предшествующая проверка.
-- [Пользовательский протокол](usability-protocol.md) — исследование с людьми пока не проведено.
+- [Пользовательский протокол](usability-protocol.md) и [набор для проведения сессий](usability-kit.md) — исследование с людьми пока не проведено.
 
 ## Проверенные результаты
 
