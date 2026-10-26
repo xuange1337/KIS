@@ -27,8 +27,16 @@ test.describe('Массовые операции над клиентами', () 
 
     // Панель действий появляется только когда что-то отмечено
     await expect(page.getByText(/^Отмечено:/)).toBeHidden();
-    await page.getByRole('checkbox', { name: 'Выбрать все строки' }).check();
-    await expect(page.getByText('Отмечено: 2')).toBeVisible();
+    // Таблица может перерисоваться после ответа поиска и сбросить отметку,
+    // поэтому отметка и её проверка повторяются вместе
+    await expect(async () => {
+      await page
+        .getByRole('checkbox', { name: 'Выбрать все строки' })
+        .check({ timeout: 3_000 });
+      await expect(page.getByText('Отмечено: 2')).toBeVisible({
+        timeout: 2_000,
+      });
+    }).toPass({ timeout: 15_000 });
 
     await page.getByLabel('Статус').last().click();
     await page.getByRole('option', { name: 'Архив' }).click();

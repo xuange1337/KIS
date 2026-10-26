@@ -22,7 +22,7 @@ async function exportOpenApi(): Promise<void> {
   const document = buildOpenApiDocument(app);
   writeFileSync(target, `${JSON.stringify(document, null, 2)}\n`, 'utf8');
   await app.close();
-  // eslint-disable-next-line no-console
+
   console.log(`Спецификация сохранена: ${target}`);
 }
 
