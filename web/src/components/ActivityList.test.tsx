@@ -1,4 +1,9 @@
-import { ActivityStatus, ActivityType, ActivityDto } from '@crm/shared';
+import {
+  ActivityDto,
+  ActivityRecurrence,
+  ActivityStatus,
+  ActivityType,
+} from '@crm/shared';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -55,6 +60,24 @@ describe('Лента активностей', () => {
 
   afterAll(() => {
     vi.useRealTimers();
+  });
+
+  it('помечает повторяющуюся активность значком с подписью правила', () => {
+    renderList([
+      activity({
+        activityId: 1,
+        plannedAt: '2026-09-20T10:00:00+03:00',
+        recurrence: ActivityRecurrence.WEEKLY,
+      }),
+      activity({
+        activityId: 2,
+        subject: 'Разовый звонок',
+        plannedAt: '2026-09-20T11:00:00+03:00',
+      }),
+    ]);
+    expect(
+      screen.getAllByRole('img', { name: 'Повторяется: каждую неделю' }),
+    ).toHaveLength(1);
   });
 
   it('подписывает срок словами вместо голой даты', () => {

@@ -4,6 +4,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
+import RepeatIcon from '@mui/icons-material/Repeat';
 import {
   ACTIVITY_TYPE_LABELS,
   ActivityDto,
@@ -13,6 +14,7 @@ import {
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EmptyState } from './EmptyState';
+import { ACTIVITY_RECURRENCE_LABELS } from '../features/activities/recurrenceLabels';
 import { DURATION, TOKENS } from '../theme/tokens';
 
 const TYPE_ICONS: Record<ActivityType, ReactNode> = {
@@ -168,9 +170,25 @@ export function ActivityList({
             </Tooltip>
 
             <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-              <Typography sx={{ fontSize: 13, fontWeight: 500 }} noWrap>
-                {activity.subject}
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <Typography sx={{ fontSize: 13, fontWeight: 500 }} noWrap>
+                  {activity.subject}
+                </Typography>
+                {activity.recurrence && (
+                  <Tooltip
+                    title={`Повторяется: ${ACTIVITY_RECURRENCE_LABELS[
+                      activity.recurrence
+                    ].toLowerCase()}`}
+                  >
+                    <Box
+                      role="img"
+                      sx={{ color: TOKENS.textMuted, display: 'flex' }}
+                    >
+                      <RepeatIcon sx={{ fontSize: 14 }} />
+                    </Box>
+                  </Tooltip>
+                )}
+              </Stack>
               <Typography
                 variant="caption"
                 color="text.secondary"

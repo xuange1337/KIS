@@ -10,6 +10,7 @@ import {
   TextField,
 } from '@mui/material';
 import { ActivityDto } from '@crm/shared';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { FormEvent, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../../api/client';
@@ -21,6 +22,7 @@ import {
   useSaveActivity,
 } from '../../api/hooks';
 import { closeUnlessBackdrop } from '../../components/dialogClose';
+import { ACTIVITY_RECURRENCE_LABELS } from './recurrenceLabels';
 
 interface ActivityFormDialogProps {
   open: boolean;
@@ -40,6 +42,8 @@ const EMPTY = {
   subject: '',
   plannedAt: '',
   comment: '',
+  recurrence: '',
+  recurrenceUntil: '',
 };
 
 /** Форма планирования активности (ТЗ п. 1.2.4). */
@@ -82,6 +86,8 @@ export function ActivityFormDialog({
             subject: activity.subject,
             plannedAt: activity.plannedAt,
             comment: activity.comment ?? '',
+            recurrence: activity.recurrence ?? '',
+            recurrenceUntil: activity.recurrenceUntil ?? '',
           }
         : {
             ...EMPTY,
@@ -108,6 +114,10 @@ export function ActivityFormDialog({
         subject: form.subject.trim(),
         plannedAt: form.plannedAt,
         comment: form.comment.trim() || null,
+        recurrence: (form.recurrence || null) as ActivityDto['recurrence'],
+        // Предел имеет смысл только вместе с повтором
+        recurrenceUntil:
+          form.recurrence && form.recurrenceUntil ? form.recurrenceUntil : null,
       });
       onClose();
     } catch (caught) {
@@ -213,6 +223,60 @@ export function ActivityFormDialog({
                 ))}
               </TextField>
             </Grid>
+            <Grid item xs={12} sm={form.recurrence ? 6 : 12}>
+              <TextField
+                select
+                label="Повторять"
+                value={form.recurrence}
+                onChange={(event) => setField('recurrence')(event.target.value)}
+                fullWidth
+                helperText={
+                  form.recurrence
+                    ? 'Следующая появится, когда эта будет выполнена'
+                    : undefined
+                }
+              >
+                <MenuItem value="">Не повторять</MenuItem>
+                {Object.entries(ACTIVITY_RECURRENCE_LABELS).map(
+                  ([value, label]) => (
+                    <MenuItem key={value} value={value}>
+                      {label}
+                    </MenuItem>
+                  ),
+                )}
+              </TextField>
+            </Grid>
+            {form.recurrence && (
+              <Grid item xs={12} sm={6}>
+                <DatePicker
+                  label="Повторять до"
+                  value={parseDateValue(form.recurrenceUntil)}
+                  onChange={(value) =>
+                    // Конец выбранных суток: повтор в этот день ещё допустим
+                    setField('recurrenceUntil')(
+                      value
+                        ? toIsoDateTime(
+                            new Date(
+                              value.getFullYear(),
+                              value.getMonth(),
+                              value.getDate(),
+                              23,
+                              59,
+                              59,
+                            ),
+                          )
+                        : '',
+                    )
+                  }
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      helperText: 'Необязательно',
+                    },
+                  }}
+                />
+              </Grid>
+            )}
             <Grid item xs={12}>
               <TextField
                 label="Комментарий"
