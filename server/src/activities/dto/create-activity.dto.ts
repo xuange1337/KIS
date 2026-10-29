@@ -1,4 +1,4 @@
-import { ActivityStatus, ActivityType } from '@crm/shared';
+import { ActivityRecurrence, ActivityStatus, ActivityType } from '@crm/shared';
 import {
   IsDateString,
   IsEnum,
@@ -41,4 +41,13 @@ export class CreateActivityDto {
   @IsOptional()
   @IsInt()
   ownerUserId?: number | null;
+
+  /** Повтор: null или отсутствие — одноразовая активность. */
+  @IsOptional()
+  @IsEnum(ActivityRecurrence)
+  recurrence?: ActivityRecurrence | null;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'Некорректная дата окончания повторов' })
+  recurrenceUntil?: string | null;
 }

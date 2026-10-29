@@ -1,4 +1,4 @@
-import { ActivityStatus, ActivityType } from '@crm/shared';
+import { ActivityRecurrence, ActivityStatus, ActivityType } from '@crm/shared';
 import {
   Column,
   Entity,
@@ -69,6 +69,14 @@ export class Activity {
 
   @Column({ type: 'text', nullable: true })
   comment: string | null;
+
+  /** Правило повтора; при выполнении создаётся следующая активность. */
+  @Column({ type: 'varchar', length: 16, nullable: true })
+  recurrence: ActivityRecurrence | null;
+
+  /** Серия не продолжается за эту дату; null — без предела. */
+  @Column({ name: 'recurrence_until', type: 'timestamptz', nullable: true })
+  recurrenceUntil: Date | null;
 
   @Column({ name: 'owner_user_id', type: 'int', nullable: true })
   ownerUserId: number | null;

@@ -1,4 +1,5 @@
 import {
+  ActivityRecurrence,
   ActivityStatus,
   ActivityType,
   ClientSource,
@@ -256,6 +257,10 @@ export interface ActivityDto {
   status: ActivityStatus;
   result: string | null;
   comment: string | null;
+  /** Повторение: после выполнения создаётся следующая активность. */
+  recurrence: ActivityRecurrence | null;
+  /** Последняя допустимая дата планирования повторов; null — без предела. */
+  recurrenceUntil: string | null;
   ownerUserId: number | null;
   owner?: UserDto | null;
 }

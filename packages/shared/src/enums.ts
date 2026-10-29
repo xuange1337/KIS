@@ -184,6 +184,17 @@ export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
   [ActivityStatus.CANCELED]: 'Отменена',
 };
 
+/**
+ * Повторение активности. Следующая активность создаётся при отметке
+ * текущей выполненной, а не заранее: отменённая или перенесённая серия не
+ * оставляет в календаре десятков лишних записей.
+ */
+export enum ActivityRecurrence {
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTHLY = 'monthly',
+}
+
 /** Предпочитаемый канал связи с контактным лицом. */
 export enum PreferredChannel {
   PHONE = 'phone',

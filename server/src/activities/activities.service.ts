@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ActivityStatus, Paginated } from '@crm/shared';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { ActivityRecurrence, ActivityStatus, Paginated } from '@crm/shared';
+import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { Activity } from './activity.entity';
 import { CreateActivityDto } from './dto/create-activity.dto';
@@ -24,6 +24,7 @@ import {
 import { applyTenantScope } from '../common/helpers/tenant-scope';
 import { UsersService } from '../users/users.service';
 import { paginate } from '../common/helpers/paginate';
+import { nextOccurrence } from './recurrence';
 
 const SORTABLE = ['plannedAt', 'status', 'type', 'subject'];
 
@@ -107,10 +108,17 @@ export class ActivitiesService {
     if (canSeeAll(user)) {
       await this.assertOwnerInTenant(dto.ownerUserId, user);
     }
+    const plannedAt = new Date(dto.plannedAt);
+    const recurrenceUntil = dto.recurrenceUntil
+      ? new Date(dto.recurrenceUntil)
+      : null;
+    this.assertRecurrence(dto.recurrence ?? null, recurrenceUntil, plannedAt);
     const activity = this.repo.create({
       ...dto,
       organizationId: user.organizationId,
-      plannedAt: new Date(dto.plannedAt),
+      plannedAt,
+      recurrence: dto.recurrence ?? null,
+      recurrenceUntil,
       status: dto.status ?? ActivityStatus.PLANNED,
       ownerUserId: canSeeAll(user)
         ? (dto.ownerUserId ?? user.userId)
@@ -126,7 +134,14 @@ export class ActivitiesService {
     user: AuthUser,
   ): Promise<Activity> {
     const activity = await this.findOne(activityId, user);
-    const { ownerUserId, plannedAt, dealId, ...rest } = dto;
+    const {
+      ownerUserId,
+      plannedAt,
+      dealId,
+      recurrence,
+      recurrenceUntil,
+      ...rest
+    } = dto;
 
     if (dealId !== undefined) {
       await this.assertDealAllowed(dealId, activity.clientId, user);
@@ -149,6 +164,35 @@ export class ActivitiesService {
       await this.assertOwnerInTenant(ownerUserId, user);
       patch.ownerUserId = ownerUserId;
     }
+    if (
+      recurrence !== undefined ||
+      recurrenceUntil !== undefined ||
+      plannedAt !== undefined
+    ) {
+      // Правило проверяется в итоговом виде: частичное обновление не должно
+      // оставлять предел серии раньше даты самой активности
+      const nextRecurrence =
+        recurrence !== undefined ? recurrence : activity.recurrence;
+      let nextUntil =
+        recurrenceUntil !== undefined
+          ? recurrenceUntil
+            ? new Date(recurrenceUntil)
+            : null
+          : activity.recurrenceUntil;
+      // Снятие повтора снимает и предел: он имеет смысл только вместе с ним
+      if (nextRecurrence === null && recurrenceUntil === undefined) {
+        nextUntil = null;
+      }
+      this.assertRecurrence(
+        nextRecurrence,
+        nextUntil,
+        plannedAt !== undefined ? new Date(plannedAt) : activity.plannedAt,
+      );
+      if (recurrence !== undefined) patch.recurrence = recurrence;
+      if (recurrenceUntil !== undefined || nextRecurrence === null) {
+        patch.recurrenceUntil = nextUntil;
+      }
+    }
 
     if (Object.keys(patch).length > 0) {
       await this.repo.update({ activityId }, patch);
@@ -166,13 +210,26 @@ export class ActivitiesService {
     if (activity.status === ActivityStatus.DONE) {
       throw new BadRequestException('Активность уже выполнена');
     }
-    activity.status = ActivityStatus.DONE;
-    activity.doneAt = new Date();
-    activity.result = dto.result;
-    if (dto.comment !== undefined) {
-      activity.comment = dto.comment;
-    }
-    await this.repo.save(activity);
+    const doneAt = new Date();
+
+    await this.repo.manager.transaction(async (manager) => {
+      // Условный UPDATE вместо save(): при двух одновременных отметках
+      // выполнится ровно одна, и следующая активность серии появится один раз
+      const marked = await manager.update(
+        Activity,
+        { activityId, status: ActivityStatus.PLANNED },
+        {
+          status: ActivityStatus.DONE,
+          doneAt,
+          result: dto.result,
+          ...(dto.comment !== undefined ? { comment: dto.comment } : {}),
+        },
+      );
+      if (!marked.affected) {
+        throw new BadRequestException('Активность уже выполнена');
+      }
+      await this.scheduleNextOccurrence(manager, activity, doneAt);
+    });
     return this.findOne(activityId, user);
   }
 
@@ -180,6 +237,51 @@ export class ActivitiesService {
     const activity = await this.findOne(activityId, user);
     await this.repo.remove(activity);
     return { success: true };
+  }
+
+  /**
+   * Создаёт следующую активность серии после выполнения текущей.
+   * Серия заканчивается, если следующая дата выходит за предел.
+   */
+  private async scheduleNextOccurrence(
+    manager: EntityManager,
+    done: Activity,
+    now: Date,
+  ): Promise<void> {
+    if (!done.recurrence) return;
+    const plannedAt = nextOccurrence(done.plannedAt, done.recurrence, now);
+    if (done.recurrenceUntil && plannedAt > done.recurrenceUntil) return;
+    await manager.insert(Activity, {
+      organizationId: done.organizationId,
+      clientId: done.clientId,
+      dealId: done.dealId,
+      type: done.type,
+      subject: done.subject,
+      plannedAt,
+      status: ActivityStatus.PLANNED,
+      // Заметка к плану переносится, результат прошлого раза — нет
+      comment: done.comment,
+      ownerUserId: done.ownerUserId,
+      recurrence: done.recurrence,
+      recurrenceUntil: done.recurrenceUntil,
+    });
+  }
+
+  private assertRecurrence(
+    recurrence: ActivityRecurrence | null,
+    until: Date | null,
+    plannedAt: Date,
+  ): void {
+    if (until && !recurrence) {
+      throw new BadRequestException(
+        'Дата окончания повторов задаётся только для повторяющейся активности',
+      );
+    }
+    if (until && until < plannedAt) {
+      throw new BadRequestException(
+        'Дата окончания повторов раньше даты активности',
+      );
+    }
   }
 
   /**
