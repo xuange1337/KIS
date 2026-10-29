@@ -374,7 +374,15 @@ CREATE TABLE activities (
     result        TEXT,
     comment       TEXT,
     owner_user_id INTEGER,
+    recurrence       VARCHAR(16),
+    recurrence_until TIMESTAMPTZ,
 
+    CONSTRAINT ck_activities_recurrence CHECK (
+        recurrence IS NULL OR recurrence IN ('daily', 'weekly', 'monthly')
+    ),
+    CONSTRAINT ck_activities_recurrence_until CHECK (
+        recurrence_until IS NULL OR recurrence IS NOT NULL
+    ),
     CONSTRAINT fk_activities_client FOREIGN KEY (client_id)
         REFERENCES clients (client_id) ON DELETE CASCADE,
     CONSTRAINT fk_activities_deal FOREIGN KEY (deal_id)
@@ -397,6 +405,8 @@ COMMENT ON TABLE  activities            IS 'Планируемые и выпол
 COMMENT ON COLUMN activities.deal_id    IS 'Необязательная привязка к сделке';
 COMMENT ON COLUMN activities.planned_at IS 'Плановые дата и время; просроченной считается planned_at < NOW() при status = planned';
 COMMENT ON COLUMN activities.result     IS 'Результат коммуникации, заполняется при отметке о выполнении';
+COMMENT ON COLUMN activities.recurrence IS 'Правило повтора; при выполнении создаётся следующая активность серии';
+COMMENT ON COLUMN activities.recurrence_until IS 'Серия не продолжается за эту дату; NULL — без предела';
 
 
 -- -----------------------------------------------------------------------------

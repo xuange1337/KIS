@@ -1,6 +1,52 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/metrics": {
+      "get": {
+        "operationId": "MetricsController_metrics[0]_v1",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Metrics"
+        ]
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "operationId": "MetricsController_metrics[1]",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Metrics"
+        ]
+      }
+    },
     "/api/v1/organizations/current/members": {
       "get": {
         "operationId": "OrganizationsController_listMembers[0]_v1",
