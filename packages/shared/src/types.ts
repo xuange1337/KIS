@@ -473,3 +473,24 @@ export interface NotificationDto {
   readAt: string | null;
   createdAt: string;
 }
+
+export interface CommentDto {
+  commentId: number;
+  body: string;
+  createdAt: string;
+  authorUserId: number | null;
+  authorName: string | null;
+}
+
+export interface ChecklistItemDto {
+  itemId: number;
+  text: string;
+  isDone: boolean;
+  position: number;
+  doneAt: string | null;
+}
+
+export interface ChecklistProgress {
+  total: number;
+  done: number;
+}

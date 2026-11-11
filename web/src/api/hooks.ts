@@ -1,7 +1,9 @@
 import {
   ActivityDto,
   ClientDto,
+  ChecklistItemDto,
   ClientStatus,
+  CommentDto,
   ContactDto,
   DashboardSummary,
   DealDto,
@@ -879,4 +881,95 @@ export function useMarkNotificationsRead() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
+}
+
+/* -------------------- Комментарии и чек-листы -------------------- */
+
+export type RecordType = 'client' | 'deal';
+
+export function useComments(type: RecordType, id: number) {
+  return useQuery({
+    queryKey: ['comments', type, id],
+    queryFn: async () =>
+      (
+        await api.get<CommentDto[]>('/comments', {
+          params: { entityType: type, entityId: id },
+        })
+      ).data,
+  });
+}
+
+export function useAddComment(type: RecordType, id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: string) =>
+      (
+        await api.post<CommentDto>('/comments', {
+          entityType: type,
+          entityId: id,
+          body,
+        })
+      ).data,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['comments', type, id] }),
+  });
+}
+
+export function useDeleteComment(type: RecordType, id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (commentId: number) => {
+      await api.delete(`/comments/${commentId}`);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['comments', type, id] }),
+  });
+}
+
+export function useChecklist(type: RecordType, id: number) {
+  return useQuery({
+    queryKey: ['checklist', type, id],
+    queryFn: async () =>
+      (
+        await api.get<ChecklistItemDto[]>('/checklist', {
+          params: { entityType: type, entityId: id },
+        })
+      ).data,
+  });
+}
+
+export function useChecklistActions(type: RecordType, id: number) {
+  const queryClient = useQueryClient();
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['checklist', type, id] });
+  const add = useMutation({
+    mutationFn: async (text: string) =>
+      (
+        await api.post<ChecklistItemDto>('/checklist', {
+          entityType: type,
+          entityId: id,
+          text,
+        })
+      ).data,
+    onSuccess: refresh,
+  });
+  const update = useMutation({
+    mutationFn: async ({
+      itemId,
+      ...changes
+    }: {
+      itemId: number;
+      text?: string;
+      isDone?: boolean;
+    }) =>
+      (await api.patch<ChecklistItemDto>(`/checklist/${itemId}`, changes)).data,
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: async (itemId: number) => {
+      await api.delete(`/checklist/${itemId}`);
+    },
+    onSuccess: refresh,
+  });
+  return { add, update, remove };
 }

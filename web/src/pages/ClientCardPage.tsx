@@ -32,6 +32,8 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ClientTagsEditor } from '../features/tags/ClientTagsEditor';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
+import { ChecklistPanel } from '../features/collab/ChecklistPanel';
+import { CommentsPanel } from '../features/collab/CommentsPanel';
 import { PageHeader } from '../components/PageHeader';
 import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -186,6 +188,18 @@ export function ClientCardPage() {
       </Card>
 
       <Card variant="outlined">
+        <Card variant="outlined" sx={{ mb: 2 }}>
+          <CardContent>
+            <ChecklistPanel type="client" id={clientId} />
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined" sx={{ mb: 2 }}>
+          <CardContent>
+            <CommentsPanel type="client" id={clientId} />
+          </CardContent>
+        </Card>
+
         <Tabs
           value={tab}
           onChange={(_event, value) => setTab(value)}

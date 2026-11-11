@@ -16,6 +16,8 @@ import { Favorite } from '../personal/favorite.entity';
 import { Tag } from '../tags/tag.entity';
 import { ClientTag } from '../tags/client-tag.entity';
 import { Notification } from '../notifications/notification.entity';
+import { Comment } from '../collab/comment.entity';
+import { ChecklistItem } from '../collab/checklist-item.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
@@ -45,6 +47,8 @@ export const ENTITIES = [
   Tag,
   ClientTag,
   Notification,
+  Comment,
+  ChecklistItem,
   AuditLog,
   RefreshSession,
   IdempotencyKey,

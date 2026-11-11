@@ -21,6 +21,7 @@ import { DealsModule } from './deals/deals.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { OffersModule } from './offers/offers.module';
 import { ProductsModule } from './products/products.module';
+import { CollabModule } from './collab/collab.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TagsModule } from './tags/tags.module';
 import { PersonalModule } from './personal/personal.module';
@@ -56,6 +57,7 @@ import { MetricsModule } from './metrics/metrics.module';
     PersonalModule,
     TagsModule,
     NotificationsModule,
+    CollabModule,
     ReportsModule,
     DashboardModule,
     DictionariesModule,

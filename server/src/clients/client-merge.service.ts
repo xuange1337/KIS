@@ -135,6 +135,26 @@ export class ClientMergeService {
         targetId,
         sources,
       );
+      // Записи без внешнего ключа переезжают вместе с карточкой, метки
+      // объединяются, избранное дублей снимается
+      for (const table of ['comments', 'checklist_items']) {
+        await manager.query(
+          `UPDATE ${table} SET entity_id = $1
+            WHERE entity_type = 'client' AND entity_id = ANY($2)`,
+          [targetId, sources],
+        );
+      }
+      await manager.query(
+        `INSERT INTO client_tags (client_id, tag_id, organization_id)
+         SELECT $1, tag_id, organization_id FROM client_tags
+          WHERE client_id = ANY($2)
+         ON CONFLICT DO NOTHING`,
+        [targetId, sources],
+      );
+      await manager.query(
+        `DELETE FROM favorites WHERE entity_type = 'client' AND entity_id = ANY($1)`,
+        [sources],
+      );
       await manager.delete(Client, {
         clientId: In(sources),
         organizationId: user.organizationId,

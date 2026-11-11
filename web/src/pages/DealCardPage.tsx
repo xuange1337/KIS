@@ -33,6 +33,8 @@ import {
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
+import { ChecklistPanel } from '../features/collab/ChecklistPanel';
+import { CommentsPanel } from '../features/collab/CommentsPanel';
 import { PageHeader } from '../components/PageHeader';
 import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -304,6 +306,18 @@ export function DealCardPage() {
                   товары и услуги из каталога, и сумма будет считаться сама.
                 </Typography>
               )}
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined" sx={{ mb: 2 }}>
+            <CardContent>
+              <ChecklistPanel type="deal" id={dealId} />
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined" sx={{ mb: 2 }}>
+            <CardContent>
+              <CommentsPanel type="deal" id={dealId} />
             </CardContent>
           </Card>
 

@@ -20,6 +20,7 @@ import {
   canSeeAll,
 } from '../common/helpers/owner-scope';
 import { applyTenantScope } from '../common/helpers/tenant-scope';
+import { deleteRecordSatellites } from '../common/helpers/record-cleanup';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { paginate } from '../common/helpers/paginate';
@@ -216,6 +217,7 @@ export class ClientsService {
 
     try {
       await this.repo.remove(client);
+      await deleteRecordSatellites(this.repo.manager, 'client', clientId);
     } catch (error) {
       // Страховка на случай гонки: сделку могли завести между проверкой
       // и удалением

@@ -16,6 +16,7 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { Deal } from './deal.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { deleteRecordSatellites } from '../common/helpers/record-cleanup';
 import { DealItemsService } from './deal-items.service';
 import { DealStageHistory } from './deal-stage-history.entity';
 import { CreateDealDto } from './dto/create-deal.dto';
@@ -300,6 +301,7 @@ export class DealsService {
     }
 
     await this.repo.remove(deal);
+    await deleteRecordSatellites(this.repo.manager, 'deal', dealId);
     return { success: true };
   }
 
