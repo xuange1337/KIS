@@ -20,6 +20,7 @@ import {
   useDictionaries,
   useSaveDeal,
   useUsers,
+  useDealItems,
 } from '../../api/hooks';
 import { useAuth } from '../auth/AuthContext';
 import { closeUnlessBackdrop } from '../../components/dialogClose';
@@ -53,6 +54,9 @@ export function DealFormDialog({
   onClose,
   onSaved,
 }: DealFormDialogProps) {
+  const { data: dealItems } = useDealItems(deal?.dealId);
+  // Сумма и валюта следуют за составом сделки, пока он не пуст
+  const lockedByItems = Boolean(dealItems && dealItems.length > 0);
   const { canSeeAll } = useAuth();
   const { data: dictionaries } = useDictionaries();
   const { data: users } = useUsers(canSeeAll);
@@ -186,6 +190,12 @@ export function DealFormDialog({
                 onChange={(event) => setField('amount')(event.target.value)}
                 required
                 fullWidth
+                disabled={lockedByItems}
+                helperText={
+                  lockedByItems
+                    ? 'Сумма считается по составу сделки'
+                    : undefined
+                }
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -202,6 +212,7 @@ export function DealFormDialog({
                 value={form.currency}
                 onChange={(event) => setField('currency')(event.target.value)}
                 fullWidth
+                disabled={lockedByItems}
               >
                 {dictionaries?.currencies.map((item) => (
                   <MenuItem key={item.value} value={item.value}>

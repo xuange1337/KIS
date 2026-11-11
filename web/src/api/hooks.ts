@@ -17,6 +17,7 @@ import {
   FunnelRow,
   ManagerActivityRow,
   OfferDto,
+  OfferItemDto,
   OfferItemInput,
   OverdueActivityRow,
   Paginated,
@@ -641,6 +642,37 @@ export function useMergeClients() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+    },
+  });
+}
+
+/* ---------------------- Позиции сделки ---------------------- */
+
+export function useDealItems(dealId: number | undefined) {
+  return useQuery({
+    queryKey: ['deal-items', dealId],
+    queryFn: async () =>
+      (await api.get<OfferItemDto[]>(`/deals/${dealId}/items`)).data,
+    enabled: Boolean(dealId),
+  });
+}
+
+export function useSaveDealItems() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      dealId,
+      ...payload
+    }: {
+      dealId: number;
+      version: number;
+      items: OfferItemInput[];
+    }) =>
+      (await api.put<OfferItemDto[]>(`/deals/${dealId}/items`, payload)).data,
+    onSuccess: (_items, { dealId }) => {
+      queryClient.invalidateQueries({ queryKey: ['deal-items', dealId] });
+      queryClient.invalidateQueries({ queryKey: ['deal', dealId] });
       queryClient.invalidateQueries({ queryKey: ['deals'] });
     },
   });

@@ -44,6 +44,7 @@ import {
 import { DealFormDialog } from '../features/deals/DealFormDialog';
 import { LossReasonDialog } from '../features/deals/LossReasonDialog';
 import { OfferFormDialog } from '../features/offers/OfferFormDialog';
+import { DealItemsDialog } from '../features/items/DealItemsDialog';
 import { OfferItemsDialog } from '../features/offers/OfferItemsDialog';
 import { ActivityFormDialog } from '../features/activities/ActivityFormDialog';
 import { CompleteActivityDialog } from '../features/activities/CompleteActivityDialog';
@@ -52,6 +53,7 @@ import {
   useChangeDealStage,
   useDeal,
   useDealHistory,
+  useDealItems,
   useDealOffers,
   useDeleteDeal,
   useDeleteOffer,
@@ -68,6 +70,8 @@ export function DealCardPage() {
   const { data: deal, isLoading, isError } = useDeal(dealId);
   const { data: history } = useDealHistory(dealId);
   const { data: offers } = useDealOffers(dealId);
+  const { data: dealItems } = useDealItems(dealId);
+  const [itemsOpen, setItemsOpen] = useState(false);
   const { data: activities } = useActivities({
     dealId,
     limit: 50,
@@ -258,6 +262,57 @@ export function DealCardPage() {
                 alignItems="center"
                 sx={{ mb: 1 }}
               >
+                <Typography variant="h6">Состав сделки</Typography>
+                <Button size="small" onClick={() => setItemsOpen(true)}>
+                  Изменить состав
+                </Button>
+              </Stack>
+              {dealItems && dealItems.length > 0 ? (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Товар или услуга</TableCell>
+                      <TableCell align="right">Кол-во</TableCell>
+                      <TableCell align="right">Цена</TableCell>
+                      <TableCell align="right">Сумма</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {dealItems.map((item) => (
+                      <TableRow key={item.itemId}>
+                        <TableCell>
+                          {item.name} ({item.sku})
+                        </TableCell>
+                        <TableCell align="right">
+                          {item.quantity} {item.unit}
+                        </TableCell>
+                        <TableCell align="right">
+                          {formatMoney(item.unitPrice, deal.currency)}
+                        </TableCell>
+                        <TableCell align="right">
+                          {formatMoney(item.totalAmount, deal.currency)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Typography color="text.secondary" variant="body2">
+                  Состав не указан: сумма сделки вводится вручную. Добавьте
+                  товары и услуги из каталога, и сумма будет считаться сама.
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card variant="outlined" sx={{ mb: 2 }}>
+            <CardContent>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 1 }}
+              >
                 <Typography variant="h6">Коммерческие предложения</Typography>
                 <Button
                   size="small"
@@ -432,6 +487,9 @@ export function DealCardPage() {
         defaultAmount={deal.amount}
         onClose={() => setOfferForm({ open: false, offer: null })}
       />
+      {itemsOpen && (
+        <DealItemsDialog deal={deal} onClose={() => setItemsOpen(false)} />
+      )}
       {itemsOffer && (
         <OfferItemsDialog
           key={itemsOffer.offerId}

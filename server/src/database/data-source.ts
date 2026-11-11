@@ -6,6 +6,7 @@ import { Client } from '../clients/client.entity';
 import { Contact } from '../contacts/contact.entity';
 import { Deal } from '../deals/deal.entity';
 import { DealStageHistory } from '../deals/deal-stage-history.entity';
+import { DealItem } from '../deals/deal-item.entity';
 import { Activity } from '../activities/activity.entity';
 import { Offer } from '../offers/offer.entity';
 import { Product } from '../products/product.entity';
@@ -29,6 +30,7 @@ export const ENTITIES = [
   Contact,
   Deal,
   DealStageHistory,
+  DealItem,
   Activity,
   Offer,
   Product,

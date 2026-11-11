@@ -7,9 +7,12 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { DealsService } from './deals.service';
+import { DealItemsService } from './deal-items.service';
+import { ReplaceDealItemsDto } from './dto/replace-deal-items.dto';
 import { CreateDealDto } from './dto/create-deal.dto';
 import { UpdateDealDto } from './dto/update-deal.dto';
 import { ChangeStageDto } from './dto/change-stage.dto';
@@ -24,7 +27,28 @@ import { AuditEntity } from '../common/decorators/audit.decorator';
 @Controller('deals')
 @AuditEntity('deals')
 export class DealsController {
-  constructor(private readonly dealsService: DealsService) {}
+  constructor(
+    private readonly dealsService: DealsService,
+    private readonly itemsService: DealItemsService,
+  ) {}
+
+  /** Состав сделки: товары и услуги из каталога. */
+  @Get(':id/items')
+  findItems(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.itemsService.list(id, user);
+  }
+
+  @Put(':id/items')
+  replaceItems(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ReplaceDealItemsDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.itemsService.replace(id, dto, user);
+  }
 
   @Get()
   findAll(@Query() query: QueryDealsDto, @CurrentUser() user: AuthUser) {

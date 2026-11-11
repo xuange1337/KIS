@@ -15,6 +15,7 @@ import {
 } from '@crm/shared';
 import { DataSource, Repository } from 'typeorm';
 import { Deal } from './deal.entity';
+import { DealItemsService } from './deal-items.service';
 import { DealStageHistory } from './deal-stage-history.entity';
 import { CreateDealDto } from './dto/create-deal.dto';
 import { UpdateDealDto } from './dto/update-deal.dto';
@@ -44,6 +45,7 @@ export class DealsService {
     private readonly clientsService: ClientsService,
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
+    private readonly itemsService: DealItemsService,
   ) {}
 
   async findAll(
@@ -167,6 +169,14 @@ export class DealsService {
     const deal = await this.findOne(dealId, user);
     const { ownerUserId, version, ...rest } = dto;
     assertVersionMatches(deal.version, version, 'Сделка');
+    if (
+      rest.amount !== undefined &&
+      rest.amount !== deal.amount &&
+      (await this.itemsService.hasItems(dealId, user.organizationId))
+    )
+      throw new BadRequestException(
+        'Сумма рассчитывается по составу сделки. Измените позиции',
+      );
     Object.assign(deal, rest);
     if (ownerUserId !== undefined && canSeeAll(user)) {
       await this.assertOwnerInTenant(ownerUserId, user);
