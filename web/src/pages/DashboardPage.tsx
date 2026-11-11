@@ -7,6 +7,7 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { ActivityDto } from '@crm/shared';
 import { ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { OnboardingCard } from '../features/help/OnboardingCard';
 import { PageHeader } from '../components/PageHeader';
 import { MetricRow, MetricTile } from '../components/MetricTile';
 import { SalesFunnel } from '../components/SalesFunnel';
@@ -94,6 +95,8 @@ export function DashboardPage() {
   return (
     <>
       {header}
+
+      <OnboardingCard />
 
       <MetricRow>
         <MetricTile

@@ -14,6 +14,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
@@ -37,6 +38,7 @@ import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
 import { USER_ROLE_LABELS, UserRole } from '@crm/shared';
 import { ReactNode, Suspense, lazy, useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { OfflineBanner } from '../features/help/OfflineBanner';
 import { NotificationBell } from '../features/notifications/NotificationBell';
 import { useAuth } from '../features/auth/AuthContext';
 import { AccountNotices } from './AccountNotices';
@@ -108,6 +110,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/products', label: 'Каталог', icon: <Inventory2OutlinedIcon /> },
   { to: '/reports', label: 'Отчёты', icon: <AssessmentOutlinedIcon /> },
   { to: '/analytics', label: 'Аналитика', icon: <InsightsOutlinedIcon /> },
+  { to: '/help', label: 'Справка', icon: <HelpOutlineIcon /> },
   {
     to: '/users',
     label: 'Пользователи',
@@ -157,6 +160,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
 
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.roles || hasRole(...item.roles),
+  );
+
   /**
    * Поиск открывается по Ctrl+K (Cmd+K на Mac).
    *
@@ -168,11 +175,29 @@ export function AppLayout({ children }: { children: ReactNode }) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         setSearchOpen(true);
+        return;
+      }
+      // Остальные сочетания не должны срабатывать при наборе текста
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.isContentEditable;
+      if (typing) return;
+      if (event.key === '?') {
+        navigate('/help');
+      } else if (event.altKey && /^[1-9]$/.test(event.key)) {
+        const item = visibleItems[Number(event.key) - 1];
+        if (item) {
+          event.preventDefault();
+          navigate(item.to);
+        }
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [navigate, visibleItems]);
 
   // Переход по разделу закрывает панель: иначе она перекрывает открытый экран
   const location_pathname_for_drawer = location.pathname;
@@ -214,10 +239,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
       return !previous;
     });
   };
-
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.roles || hasRole(...item.roles),
-  );
 
   const handleLogout = async () => {
     setMenuAnchor(null);
@@ -652,6 +673,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         }}
       >
         <AccountNotices />
+        <OfflineBanner />
         {children}
       </Box>
     </Box>

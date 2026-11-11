@@ -85,6 +85,11 @@ const ReportsPage = lazy(() =>
     default: module.ReportsPage,
   })),
 );
+const HelpPage = lazy(() =>
+  import('../pages/HelpPage').then((module) => ({
+    default: module.HelpPage,
+  })),
+);
 const AnalyticsPage = lazy(() =>
   import('../pages/AnalyticsPage').then((module) => ({
     default: module.AnalyticsPage,
@@ -237,6 +242,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <ReportsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/help"
+          element={
+            <RequireAuth>
+              <HelpPage />
             </RequireAuth>
           }
         />
