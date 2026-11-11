@@ -22,6 +22,7 @@ import { ActivitiesModule } from './activities/activities.module';
 import { OffersModule } from './offers/offers.module';
 import { ProductsModule } from './products/products.module';
 import { CustomFieldsModule } from './custom-fields/custom-fields.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { PipelinesModule } from './pipelines/pipelines.module';
 import { CollabModule } from './collab/collab.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -61,6 +62,7 @@ import { MetricsModule } from './metrics/metrics.module';
     NotificationsModule,
     CollabModule,
     PipelinesModule,
+    AnalyticsModule,
     CustomFieldsModule,
     ReportsModule,
     DashboardModule,

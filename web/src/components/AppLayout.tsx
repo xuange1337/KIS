@@ -14,6 +14,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
@@ -106,6 +107,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/offers', label: 'Предложения', icon: <DescriptionOutlinedIcon /> },
   { to: '/products', label: 'Каталог', icon: <Inventory2OutlinedIcon /> },
   { to: '/reports', label: 'Отчёты', icon: <AssessmentOutlinedIcon /> },
+  { to: '/analytics', label: 'Аналитика', icon: <InsightsOutlinedIcon /> },
   {
     to: '/users',
     label: 'Пользователи',

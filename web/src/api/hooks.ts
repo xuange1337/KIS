@@ -5,6 +5,7 @@ import {
   ClientStatus,
   CommentDto,
   ContactDto,
+  ConversionRow,
   CustomFieldDto,
   DashboardSummary,
   DealDto,
@@ -14,7 +15,9 @@ import {
   ExportJobDto,
   DealLossReason,
   DuplicateGroupDto,
+  ForecastRow,
   GlobalSearchResult,
+  ManagerRankingRow,
   MergeClientsResult,
   LossReasonRow,
   FunnelRow,
@@ -1082,5 +1085,43 @@ export function useDeletePipeline() {
       await api.delete(`/pipelines/${pipelineId}`);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pipelines'] }),
+  });
+}
+
+/* ------------------------ Расширенная аналитика ------------------------ */
+
+export function useForecast(months: number) {
+  return useQuery({
+    queryKey: ['analytics', 'forecast', months],
+    queryFn: async () =>
+      (
+        await api.get<ForecastRow[]>('/analytics/forecast', {
+          params: { months },
+        })
+      ).data,
+  });
+}
+
+export function useConversion(period: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ['analytics', 'conversion', period],
+    queryFn: async () =>
+      (
+        await api.get<ConversionRow[]>('/analytics/conversion', {
+          params: period,
+        })
+      ).data,
+  });
+}
+
+export function useManagerRanking(period: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ['analytics', 'managers', period],
+    queryFn: async () =>
+      (
+        await api.get<ManagerRankingRow[]>('/analytics/managers', {
+          params: period,
+        })
+      ).data,
   });
 }

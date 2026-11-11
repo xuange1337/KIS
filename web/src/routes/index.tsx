@@ -85,6 +85,11 @@ const ReportsPage = lazy(() =>
     default: module.ReportsPage,
   })),
 );
+const AnalyticsPage = lazy(() =>
+  import('../pages/AnalyticsPage').then((module) => ({
+    default: module.AnalyticsPage,
+  })),
+);
 const OrganizationPage = lazy(() =>
   import('../pages/OrganizationPage').then((module) => ({
     default: module.OrganizationPage,
@@ -232,6 +237,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <ReportsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <RequireAuth>
+              <AnalyticsPage />
             </RequireAuth>
           }
         />

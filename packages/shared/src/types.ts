@@ -522,3 +522,39 @@ export interface PipelineDto {
   stages: DealStage[];
   dealsCount: number;
 }
+
+/* ---------- Расширенная аналитика ---------- */
+
+/** Прогноз по месяцу планового закрытия; month = null — сделки без даты. */
+export interface ForecastRow {
+  month: string | null;
+  dealsCount: number;
+  amount: number;
+  weightedAmount: number;
+  /** Сделки в других валютах: в суммы не входят. */
+  otherCurrencyCount: number;
+}
+
+export interface ConversionRow {
+  stage: DealStage;
+  label: string;
+  /** Сколько сделок дошло до этой стадии или дальше. */
+  reached: number;
+  /** Доля от предыдущей стадии, %; для первой стадии — null. */
+  conversionFromPrevious: number | null;
+}
+
+export interface ManagerRankingRow {
+  userId: number;
+  fullName: string;
+  dealsWon: number;
+  dealsLost: number;
+  wonAmount: number;
+  /** Доля выигранных среди закрытых, %. */
+  winRate: number | null;
+  /** Средний срок от создания до выигрыша, дни. */
+  avgCycleDays: number | null;
+  openDeals: number;
+  openAmount: number;
+  overdueActivities: number;
+}
