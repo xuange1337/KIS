@@ -190,7 +190,12 @@ export function ClientsPage() {
       minWidth: 140,
       sortable: false,
       renderCell: (params) => (
-        <Stack direction="row" spacing={0.5}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          alignItems="center"
+          sx={{ height: '100%' }}
+        >
           {(params.row as ClientDto).tags?.map((tag) => (
             <TagChip key={tag.tagId} tag={tag} />
           ))}
