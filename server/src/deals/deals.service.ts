@@ -16,6 +16,7 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { Deal } from './deal.entity';
 import { CustomFieldsService } from '../custom-fields/custom-fields.service';
+import { PipelinesService } from '../pipelines/pipelines.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { deleteRecordSatellites } from '../common/helpers/record-cleanup';
 import { DealItemsService } from './deal-items.service';
@@ -51,6 +52,7 @@ export class DealsService {
     private readonly itemsService: DealItemsService,
     private readonly notifications: NotificationsService,
     private readonly customFields: CustomFieldsService,
+    private readonly pipelines: PipelinesService,
   ) {}
 
   private async notifyAssigned(deal: Deal, actor: AuthUser) {
@@ -88,6 +90,14 @@ export class DealsService {
     }
     if (query.clientId) {
       qb.andWhere('deal.clientId = :clientId', { clientId: query.clientId });
+    }
+    if (query.pipelineId) {
+      qb.andWhere(
+        `(deal.pipeline_id = :pipelineId OR (deal.pipeline_id IS NULL AND EXISTS (
+          SELECT 1 FROM pipelines pl WHERE pl.pipeline_id = :pipelineId
+            AND pl.is_default AND pl.organization_id = deal.organization_id)))`,
+        { pipelineId: query.pipelineId },
+      );
     }
     if (query.favorite) {
       qb.andWhere(
@@ -156,6 +166,12 @@ export class DealsService {
       await this.assertOwnerInTenant(dto.ownerUserId, user);
     }
     const stage = dto.stage ?? DealStage.NEW;
+    const pipeline = await this.pipelines.stagesFor(
+      dto.pipelineId ?? null,
+      user.organizationId,
+    );
+    if (!pipeline.stages.includes(stage))
+      throw new BadRequestException('Этой стадии нет в выбранной воронке');
 
     const customValues = await this.customFields.normalize(
       'deal',
@@ -167,6 +183,7 @@ export class DealsService {
       const deal = manager.getRepository(Deal).create({
         ...dto,
         customFields: customValues,
+        pipelineId: pipeline.pipelineId,
         organizationId: user.organizationId,
         stage,
         probability: dto.probability ?? DEAL_STAGE_PROBABILITY[stage],
@@ -216,7 +233,19 @@ export class DealsService {
       throw new BadRequestException(
         'Сумма рассчитывается по составу сделки. Измените позиции',
       );
-    Object.assign(deal, rest);
+    const { pipelineId, ...fields } = rest;
+    if (pipelineId !== undefined) {
+      const target = await this.pipelines.stagesFor(
+        pipelineId,
+        user.organizationId,
+      );
+      if (!target.stages.includes(deal.stage))
+        throw new BadRequestException(
+          'Стадии сделки нет в выбранной воронке. Сначала переведите сделку на стадию, которая в ней есть',
+        );
+      deal.pipelineId = target.pipelineId;
+    }
+    Object.assign(deal, fields);
     if (ownerUserId !== undefined && canSeeAll(user)) {
       await this.assertOwnerInTenant(ownerUserId, user);
       const changed = deal.ownerUserId !== ownerUserId;
@@ -241,7 +270,13 @@ export class DealsService {
     const { stage } = dto;
     const loss = this.resolveLossReason(dto);
     // Права проверяются до транзакции: чужую сделку блокировать незачем
-    await this.findOne(dealId, user);
+    const current = await this.findOne(dealId, user);
+    const pipeline = await this.pipelines.stagesFor(
+      current.pipelineId,
+      user.organizationId,
+    );
+    if (!pipeline.stages.includes(stage))
+      throw new BadRequestException('Этой стадии нет в воронке сделки');
 
     return this.dataSource.transaction(async (manager) => {
       /**

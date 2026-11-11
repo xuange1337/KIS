@@ -10,7 +10,7 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import { DealDto } from '@crm/shared';
+import { DealDto, DealStage } from '@crm/shared';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { FormEvent, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../../api/client';
@@ -22,6 +22,7 @@ import {
   useUsers,
   useCustomFields,
   useDealItems,
+  usePipelines,
 } from '../../api/hooks';
 import {
   CustomFieldsForm,
@@ -50,6 +51,7 @@ const EMPTY = {
   currency: 'RUB',
   plannedClose: '',
   ownerUserId: '',
+  pipelineId: '',
   custom: {} as Record<string, string | boolean>,
 };
 
@@ -75,6 +77,10 @@ export function DealFormDialog({
   });
   const saveDeal = useSaveDeal();
   const { data: fields = [] } = useCustomFields('deal');
+  const { data: pipelines } = usePipelines();
+  const defaultPipelineId = pipelines?.find(
+    (item) => item.isDefault,
+  )?.pipelineId;
 
   const [form, setForm] = useState(EMPTY);
   const [initial, setInitial] = useState(EMPTY);
@@ -99,12 +105,21 @@ export function DealFormDialog({
           currency: deal.currency,
           plannedClose: deal.plannedClose ?? '',
           ownerUserId: deal.ownerUserId ? String(deal.ownerUserId) : '',
+          pipelineId: String(deal.pipelineId ?? defaultPipelineId ?? ''),
           custom: toFormValues(fields, deal.customFields),
         }
-      : { ...EMPTY, clientId: clientId ? String(clientId) : '' };
+      : {
+          ...EMPTY,
+          clientId: clientId ? String(clientId) : '',
+          pipelineId: String(defaultPipelineId ?? ''),
+        };
     setForm(next);
     setInitial(next);
-  }, [open, deal, clientId, fields]);
+  }, [open, deal, clientId, fields, defaultPipelineId]);
+
+  const formPipeline = pipelines?.find(
+    (item) => String(item.pipelineId) === form.pipelineId,
+  );
 
   const setField = (field: keyof typeof EMPTY) => (value: string) =>
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -123,6 +138,7 @@ export function DealFormDialog({
               clientId: Number(form.clientId),
               stage: form.stage as DealDto['stage'],
             }),
+        ...(form.pipelineId ? { pipelineId: Number(form.pipelineId) } : {}),
         title: form.title.trim(),
         amount: Number(form.amount),
         currency: form.currency as DealDto['currency'],
@@ -233,6 +249,40 @@ export function DealFormDialog({
                 ))}
               </TextField>
             </Grid>
+            {pipelines && pipelines.length > 1 && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Воронка"
+                  value={form.pipelineId}
+                  onChange={(event) => {
+                    const next = pipelines.find(
+                      (item) => String(item.pipelineId) === event.target.value,
+                    );
+                    setForm((previous) => ({
+                      ...previous,
+                      pipelineId: event.target.value,
+                      // Стадия, которой нет в новой воронке, сбрасывается
+                      stage:
+                        next &&
+                        !next.stages.includes(previous.stage as DealStage)
+                          ? next.stages[0]
+                          : previous.stage,
+                    }));
+                  }}
+                  fullWidth
+                >
+                  {pipelines.map((item) => (
+                    <MenuItem
+                      key={item.pipelineId}
+                      value={String(item.pipelineId)}
+                    >
+                      {item.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            )}
             {!deal && (
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -243,11 +293,17 @@ export function DealFormDialog({
                   fullWidth
                   helperText="Вероятность подставится автоматически"
                 >
-                  {dictionaries?.dealStages.map((item) => (
-                    <MenuItem key={item.value} value={item.value}>
-                      {item.label}
-                    </MenuItem>
-                  ))}
+                  {dictionaries?.dealStages
+                    .filter(
+                      (item) =>
+                        !formPipeline ||
+                        formPipeline.stages.includes(item.value as DealStage),
+                    )
+                    .map((item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
                 </TextField>
               </Grid>
             )}

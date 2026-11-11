@@ -22,6 +22,7 @@ import {
 } from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ManagePipelinesDialog } from '../features/pipelines/ManagePipelinesDialog';
 import { ManageFieldsDialog } from '../features/custom-fields/ManageFieldsDialog';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
 import { SavedFiltersBar } from '../features/personal/SavedFiltersBar';
@@ -35,6 +36,7 @@ import {
   useChangeDealStage,
   useDeals,
   useDictionaries,
+  usePipelines,
   useUsers,
 } from '../api/hooks';
 import { useAuth } from '../features/auth/AuthContext';
@@ -57,6 +59,12 @@ export function DealsPage() {
   const [ownerUserId, setOwnerUserId] = useState('');
   const [onlyFavorite, setOnlyFavorite] = useState(false);
   const [fieldsOpen, setFieldsOpen] = useState(false);
+  const [pipelinesOpen, setPipelinesOpen] = useState(false);
+  const [pipelineId, setPipelineId] = useState('');
+  const { data: pipelines } = usePipelines();
+  const activePipeline = pipelines?.find(
+    (item) => String(item.pipelineId) === pipelineId,
+  );
   const [formOpen, setFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<GridPaginationModel>({
@@ -80,6 +88,7 @@ export function DealsPage() {
       ...(stage && view === 'list' ? { stage } : {}),
       ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
       ...(onlyFavorite ? { favorite: true } : {}),
+      ...(pipelineId ? { pipelineId: Number(pipelineId) } : {}),
     }),
     [
       view,
@@ -89,6 +98,7 @@ export function DealsPage() {
       stage,
       ownerUserId,
       onlyFavorite,
+      pipelineId,
     ],
   );
 
@@ -211,9 +221,17 @@ export function DealsPage() {
               </ToggleButton>
             </ToggleButtonGroup>
             {canSeeAll && (
-              <Button variant="outlined" onClick={() => setFieldsOpen(true)}>
-                Поля
-              </Button>
+              <>
+                <Button
+                  variant="outlined"
+                  onClick={() => setPipelinesOpen(true)}
+                >
+                  Воронки
+                </Button>
+                <Button variant="outlined" onClick={() => setFieldsOpen(true)}>
+                  Поля
+                </Button>
+              </>
             )}
             <Button
               variant="contained"
@@ -238,6 +256,10 @@ export function DealsPage() {
         </Alert>
       )}
 
+      <ManagePipelinesDialog
+        open={pipelinesOpen}
+        onClose={() => setPipelinesOpen(false)}
+      />
       <ManageFieldsDialog
         open={fieldsOpen}
         entity="deal"
@@ -305,6 +327,31 @@ export function DealsPage() {
               </TextField>
             </Grid>
           )}
+          {pipelines && pipelines.length > 1 && (
+            <Grid item xs={6} md={3}>
+              <TextField
+                select
+                label="Воронка"
+                value={pipelineId}
+                onChange={(event) => {
+                  setPipelineId(event.target.value);
+                  setStage('');
+                }}
+                size="small"
+                fullWidth
+              >
+                <MenuItem value="">Все воронки</MenuItem>
+                {pipelines.map((item) => (
+                  <MenuItem
+                    key={item.pipelineId}
+                    value={String(item.pipelineId)}
+                  >
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+          )}
           <Grid item xs={6} md={2}>
             <Chip
               label="Только избранные"
@@ -358,6 +405,7 @@ export function DealsPage() {
           )}
           <DealKanban
             deals={data?.items ?? []}
+            stages={activePipeline?.stages}
             onStageChange={handleStageChange}
             disabled={changeStage.isPending}
           />

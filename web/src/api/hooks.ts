@@ -25,6 +25,7 @@ import {
   OverdueActivityRow,
   NotificationDto,
   Paginated,
+  PipelineDto,
   ProductDto,
   ProductInput,
   ReportName,
@@ -1038,5 +1039,48 @@ export function useDeleteCustomField(entity: 'client' | 'deal') {
       queryClient.invalidateQueries({ queryKey: [entity] });
       queryClient.invalidateQueries({ queryKey: [`${entity}s`] });
     },
+  });
+}
+
+/* ----------------------------- Воронки ----------------------------- */
+
+export function usePipelines() {
+  return useQuery({
+    queryKey: ['pipelines'],
+    queryFn: async () => (await api.get<PipelineDto[]>('/pipelines')).data,
+    staleTime: 60_000,
+  });
+}
+
+export function useSavePipeline() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pipelineId,
+      ...payload
+    }: {
+      pipelineId?: number;
+      name?: string;
+      stages?: DealStage[];
+      isDefault?: boolean;
+    }) =>
+      pipelineId
+        ? (await api.patch<PipelineDto>(`/pipelines/${pipelineId}`, payload))
+            .data
+        : (await api.post<PipelineDto>('/pipelines', payload)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pipelines'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+    },
+  });
+}
+
+export function useDeletePipeline() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (pipelineId: number) => {
+      await api.delete(`/pipelines/${pipelineId}`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pipelines'] }),
   });
 }

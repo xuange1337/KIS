@@ -20,6 +20,11 @@ import {
 export const MAX_MONEY_AMOUNT = 999_999_999_999.99;
 
 export class CreateDealDto {
+  /** Воронка; без неё сделка попадает в основную. */
+  @IsOptional()
+  @IsInt()
+  pipelineId?: number;
+
   /** Значения пользовательских полей: идентификатор поля → значение. */
   @IsOptional()
   @IsObject()

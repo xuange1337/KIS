@@ -176,6 +176,8 @@ export interface ContactDto {
 
 export interface DealDto {
   dealId: number;
+  /** Воронка сделки; null — основная воронка организации. */
+  pipelineId?: number | null;
   /** Значения пользовательских полей: идентификатор поля → значение. */
   customFields?: Record<string, string | number | boolean>;
   clientId: number;
@@ -509,4 +511,14 @@ export interface CustomFieldDto {
   type: CustomFieldType;
   options: string[];
   position: number;
+}
+
+/** Воронка продаж. */
+export interface PipelineDto {
+  pipelineId: number;
+  name: string;
+  isDefault: boolean;
+  /** Стадии по порядку, включая «Выиграна» и «Проиграна». */
+  stages: DealStage[];
+  dealsCount: number;
 }

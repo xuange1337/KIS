@@ -52,4 +52,10 @@ export class QueryDealsDto extends PaginationDto {
   )
   @IsBoolean()
   favorite?: boolean;
+
+  /** Только сделки этой воронки. */
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  pipelineId?: number;
 }

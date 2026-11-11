@@ -23,6 +23,8 @@ const COLUMNS: DealStage[] = [
 
 interface DealKanbanProps {
   deals: DealDto[];
+  /** Колонки выбранной воронки; без неё показываются все стадии. */
+  stages?: DealStage[];
   onStageChange: (dealId: number, stage: DealStage) => void;
   disabled?: boolean;
 }
@@ -33,6 +35,7 @@ interface DealKanbanProps {
  */
 export function DealKanban({
   deals,
+  stages = COLUMNS,
   onStageChange,
   disabled,
 }: DealKanbanProps) {
@@ -54,7 +57,7 @@ export function DealKanban({
 
   return (
     <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1 }}>
-      {COLUMNS.map((stage) => {
+      {stages.map((stage) => {
         const columnDeals = deals.filter((deal) => deal.stage === stage);
         // Итог по колонке считается только по базовой валюте: суммы
         // разных валют складывать нельзя, курсы в прототипе не хранятся

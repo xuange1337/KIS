@@ -19,6 +19,8 @@ import { Notification } from '../notifications/notification.entity';
 import { Comment } from '../collab/comment.entity';
 import { ChecklistItem } from '../collab/checklist-item.entity';
 import { CustomFieldDefinition } from '../custom-fields/custom-field.entity';
+import { Pipeline } from '../pipelines/pipeline.entity';
+import { PipelineStage } from '../pipelines/pipeline-stage.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
@@ -51,6 +53,8 @@ export const ENTITIES = [
   Comment,
   ChecklistItem,
   CustomFieldDefinition,
+  Pipeline,
+  PipelineStage,
   AuditLog,
   RefreshSession,
   IdempotencyKey,

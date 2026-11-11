@@ -32,6 +32,11 @@ export class Deal {
   @JoinColumn({ name: 'organization_id' })
   organization: Organization;
 
+  /** Воронка сделки; пусто — основная воронка организации. */
+  @Index('idx_deals_pipeline')
+  @Column({ name: 'pipeline_id', type: 'int', nullable: true })
+  pipelineId: number | null;
+
   @Column({ name: 'client_id', type: 'int' })
   clientId: number;
 
