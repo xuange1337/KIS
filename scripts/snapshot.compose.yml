@@ -1,0 +1,78 @@
+# Стенд одного снимка версии. Запускается скриптом scripts/snapshots.sh,
+# вручную не используется: контекст сборки, порты и секреты приходят из
+# переменных, которые скрипт кладёт в .snapshots/<номер>/.env.snap.
+#
+# Отличия от основного docker-compose.yml: нет container_name (иначе
+# контейнеры двух снимков конфликтовали бы), порты задаются явно и
+# публикуются только на петлевой интерфейс, у каждого снимка собственные
+# база и тома, поэтому откат одного снимка не трогает остальные.
+name: ${SNAP_PROJECT}
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: crm
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: ${SNAP_DB_PASSWORD}
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm -d crm"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ${SNAP_DIR}
+      dockerfile: server/Dockerfile
+    image: kis-snap/api:${SNAP_ID}
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      TZ: Europe/Moscow
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: crm
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: ${SNAP_DB_PASSWORD}
+      API_PORT: 3000
+      JWT_ACCESS_SECRET: ${SNAP_JWT_ACCESS}
+      JWT_REFRESH_SECRET: ${SNAP_JWT_REFRESH}
+      COOKIE_SECURE: "false"
+      # Стенд для ручной и браузерной проверки: пять попыток входа в
+      # минуту с адреса обычно мешают при переключении между учётками
+      LOGIN_RATE_LIMIT: "200"
+      APP_URL: http://localhost:${SNAP_WEB_PORT}
+      UPLOADS_DIR: /app/uploads
+    ports:
+      - "127.0.0.1:${SNAP_API_PORT}:3000"
+    volumes:
+      - uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  web:
+    build:
+      context: ${SNAP_DIR}
+      dockerfile: web/Dockerfile
+    image: kis-snap/web:${SNAP_ID}
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${SNAP_WEB_PORT}:80"
+
+volumes:
+  db-data:
+  uploads:
