@@ -1,6 +1,15 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { normalizeName } from '../src/clients/duplicates';
 import { bearer, createTestApp, login } from './setup';
+
+describe('Нормализация названий', () => {
+  it('убирает правовую форму, кавычки, пробелы и регистр', () => {
+    expect(normalizeName('ООО «Логистик Про»')).toBe('логистикпро');
+    expect(normalizeName('ЛогистикПро, ООО')).toBe('логистикпро');
+    expect(normalizeName('Ёлка-Плюс')).toBe('елкаплюс');
+  });
+});
 
 describe('Дубли клиентов и объединение', () => {
   let app: INestApplication;
