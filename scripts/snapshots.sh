@@ -87,7 +87,9 @@ enforce_keep() {
     i=$((i + 1))
     if [ "$i" -gt "$KEEP" ]; then
       log "Копия $(pad "$n") остановлена (держим последние $KEEP)"
-      dc "$n" stop >/dev/null
+      # down, а не stop: остановленный стенд продолжал бы занимать сеть,
+      # а пул адресов Docker конечен. Тома с данными остаются
+      dc "$n" down >/dev/null 2>&1
     fi
   done
 }
@@ -139,8 +141,8 @@ cmd_up() {
 
 cmd_down() {
   local n="${1:?номер снимка}"
-  dc "$n" stop >/dev/null
-  log "Копия $(pad "$n") остановлена"
+  dc "$n" down >/dev/null 2>&1
+  log "Копия $(pad "$n") остановлена (данные сохранены)"
 }
 
 cmd_drop() {
