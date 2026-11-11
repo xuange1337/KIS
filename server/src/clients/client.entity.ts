@@ -59,6 +59,10 @@ export class Client {
   @JoinColumn({ name: 'owner_user_id' })
   owner: User | null;
 
+  /** Значения пользовательских полей: идентификатор поля → значение. */
+  @Column({ name: 'custom_fields', type: 'jsonb', default: () => `'{}'` })
+  customFields: Record<string, string | number | boolean>;
+
   /**
    * Версия записи: увеличивается при каждом сохранении.
    * Нужна, чтобы одновременная правка двумя людьми не затиралась молча.

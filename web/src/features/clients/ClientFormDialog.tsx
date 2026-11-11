@@ -12,7 +12,18 @@ import {
 import { ClientDto } from '@crm/shared';
 import { FormEvent, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../../api/client';
-import { useDictionaries, useSaveClient, useUsers } from '../../api/hooks';
+import {
+  useCustomFields,
+  useDictionaries,
+  useSaveClient,
+  useUsers,
+} from '../../api/hooks';
+import {
+  CustomFieldsForm,
+  toFormValues,
+  toPayload,
+} from '../custom-fields/CustomFieldsForm';
+
 import { useAuth } from '../auth/AuthContext';
 import { closeUnlessBackdrop } from '../../components/dialogClose';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -33,6 +44,7 @@ type FormState = {
   source: string;
   address: string;
   ownerUserId: string;
+  custom: Record<string, string | boolean>;
 };
 
 const EMPTY: FormState = {
@@ -43,6 +55,7 @@ const EMPTY: FormState = {
   source: '',
   address: '',
   ownerUserId: '',
+  custom: {},
 };
 
 /** Форма создания и редактирования карточки клиента (ТЗ п. 1.2.1). */
@@ -57,6 +70,7 @@ export function ClientFormDialog({
   // Список ответственных нужен только руководителю и администратору
   const { data: users } = useUsers(canSeeAll);
   const saveClient = useSaveClient();
+  const { data: fields = [] } = useCustomFields('client');
 
   const [form, setForm] = useState<FormState>(EMPTY);
   const [initial, setInitial] = useState<FormState>(EMPTY);
@@ -82,11 +96,12 @@ export function ClientFormDialog({
           source: client.source ?? '',
           address: client.address ?? '',
           ownerUserId: client.ownerUserId ? String(client.ownerUserId) : '',
+          custom: toFormValues(fields, client.customFields),
         }
       : EMPTY;
     setForm(next);
     setInitial(next);
-  }, [open, client]);
+  }, [open, client, fields]);
 
   const setField = (field: keyof FormState) => (value: string) =>
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -104,6 +119,9 @@ export function ClientFormDialog({
         status: form.status as ClientDto['status'],
         source: (form.source || null) as ClientDto['source'],
         address: form.address.trim() || null,
+        ...(fields.length
+          ? { customFields: toPayload(fields, form.custom) }
+          : {}),
         ...(canSeeAll && form.ownerUserId
           ? { ownerUserId: Number(form.ownerUserId) }
           : {}),
@@ -213,6 +231,16 @@ export function ClientFormDialog({
                 fullWidth
               />
             </Grid>
+            <CustomFieldsForm
+              fields={fields}
+              values={form.custom}
+              onChange={(id, value) =>
+                setForm((previous) => ({
+                  ...previous,
+                  custom: { ...previous.custom, [id]: value },
+                }))
+              }
+            />
             {canSeeAll && (
               <Grid item xs={12}>
                 <TextField

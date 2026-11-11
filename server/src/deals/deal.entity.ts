@@ -76,6 +76,10 @@ export class Deal {
   @Column({ name: 'closed_at', type: 'timestamptz', nullable: true })
   closedAt: Date | null;
 
+  /** Значения пользовательских полей: идентификатор поля → значение. */
+  @Column({ name: 'custom_fields', type: 'jsonb', default: () => `'{}'` })
+  customFields: Record<string, string | number | boolean>;
+
   /**
    * Версия записи: увеличивается при каждом сохранении.
    * Нужна, чтобы одновременная правка двумя людьми не затиралась молча.

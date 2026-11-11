@@ -20,8 +20,14 @@ import {
   useDictionaries,
   useSaveDeal,
   useUsers,
+  useCustomFields,
   useDealItems,
 } from '../../api/hooks';
+import {
+  CustomFieldsForm,
+  toFormValues,
+  toPayload,
+} from '../custom-fields/CustomFieldsForm';
 import { useAuth } from '../auth/AuthContext';
 import { closeUnlessBackdrop } from '../../components/dialogClose';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -44,6 +50,7 @@ const EMPTY = {
   currency: 'RUB',
   plannedClose: '',
   ownerUserId: '',
+  custom: {} as Record<string, string | boolean>,
 };
 
 /** Форма создания и редактирования сделки (ТЗ п. 1.2.3). */
@@ -67,6 +74,7 @@ export function DealFormDialog({
     order: 'ASC',
   });
   const saveDeal = useSaveDeal();
+  const { data: fields = [] } = useCustomFields('deal');
 
   const [form, setForm] = useState(EMPTY);
   const [initial, setInitial] = useState(EMPTY);
@@ -91,11 +99,12 @@ export function DealFormDialog({
           currency: deal.currency,
           plannedClose: deal.plannedClose ?? '',
           ownerUserId: deal.ownerUserId ? String(deal.ownerUserId) : '',
+          custom: toFormValues(fields, deal.customFields),
         }
       : { ...EMPTY, clientId: clientId ? String(clientId) : '' };
     setForm(next);
     setInitial(next);
-  }, [open, deal, clientId]);
+  }, [open, deal, clientId, fields]);
 
   const setField = (field: keyof typeof EMPTY) => (value: string) =>
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -118,6 +127,9 @@ export function DealFormDialog({
         amount: Number(form.amount),
         currency: form.currency as DealDto['currency'],
         plannedClose: form.plannedClose || null,
+        ...(fields.length
+          ? { customFields: toPayload(fields, form.custom) }
+          : {}),
         ...(canSeeAll && form.ownerUserId
           ? { ownerUserId: Number(form.ownerUserId) }
           : {}),
@@ -250,6 +262,16 @@ export function DealFormDialog({
                 }}
               />
             </Grid>
+            <CustomFieldsForm
+              fields={fields}
+              values={form.custom}
+              onChange={(id, value) =>
+                setForm((previous) => ({
+                  ...previous,
+                  custom: { ...previous.custom, [id]: value },
+                }))
+              }
+            />
             {canSeeAll && (
               <Grid item xs={12}>
                 <TextField

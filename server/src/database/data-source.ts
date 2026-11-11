@@ -18,6 +18,7 @@ import { ClientTag } from '../tags/client-tag.entity';
 import { Notification } from '../notifications/notification.entity';
 import { Comment } from '../collab/comment.entity';
 import { ChecklistItem } from '../collab/checklist-item.entity';
+import { CustomFieldDefinition } from '../custom-fields/custom-field.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
@@ -49,6 +50,7 @@ export const ENTITIES = [
   Notification,
   Comment,
   ChecklistItem,
+  CustomFieldDefinition,
   AuditLog,
   RefreshSession,
   IdempotencyKey,

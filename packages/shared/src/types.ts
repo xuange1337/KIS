@@ -159,6 +159,8 @@ export interface ClientDto {
   dealsAmount?: number;
   /** Метки клиента; приходят в списке клиентов. */
   tags?: TagDto[];
+  /** Значения пользовательских полей: идентификатор поля → значение. */
+  customFields?: Record<string, string | number | boolean>;
 }
 
 export interface ContactDto {
@@ -174,6 +176,8 @@ export interface ContactDto {
 
 export interface DealDto {
   dealId: number;
+  /** Значения пользовательских полей: идентификатор поля → значение. */
+  customFields?: Record<string, string | number | boolean>;
   clientId: number;
   client?: Pick<ClientDto, 'clientId' | 'name'> | null;
   title: string;
@@ -493,4 +497,16 @@ export interface ChecklistItemDto {
 export interface ChecklistProgress {
   total: number;
   done: number;
+}
+
+export type CustomFieldType = 'text' | 'number' | 'date' | 'boolean' | 'select';
+
+/** Описание пользовательского поля. */
+export interface CustomFieldDto {
+  fieldId: number;
+  entity: 'client' | 'deal';
+  name: string;
+  type: CustomFieldType;
+  options: string[];
+  position: number;
 }

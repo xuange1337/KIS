@@ -34,6 +34,7 @@ import {
   useTags,
   useUsers,
 } from '../api/hooks';
+import { ManageFieldsDialog } from '../features/custom-fields/ManageFieldsDialog';
 import { ManageTagsDialog } from '../features/tags/ManageTagsDialog';
 import { TagChip } from '../features/tags/TagChip';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
@@ -91,6 +92,7 @@ export function ClientsPage() {
   const [onlyFavorite, setOnlyFavorite] = useState(false);
   const [tagId, setTagId] = useState('');
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [fieldsOpen, setFieldsOpen] = useState(false);
   const { data: tags } = useTags();
   const addTag = useAddTagToClients();
   const [formOpen, setFormOpen] = useState(false);
@@ -249,9 +251,14 @@ export function ClientsPage() {
               </Button>
             )}
             {canSeeAll && (
-              <Button variant="outlined" onClick={() => setTagsOpen(true)}>
-                Метки
-              </Button>
+              <>
+                <Button variant="outlined" onClick={() => setTagsOpen(true)}>
+                  Метки
+                </Button>
+                <Button variant="outlined" onClick={() => setFieldsOpen(true)}>
+                  Поля
+                </Button>
+              </>
             )}
             <Button
               variant="outlined"
@@ -462,6 +469,11 @@ export function ClientsPage() {
         onImported={() => setSelection([])}
       />
 
+      <ManageFieldsDialog
+        open={fieldsOpen}
+        entity="client"
+        onClose={() => setFieldsOpen(false)}
+      />
       <ManageTagsDialog open={tagsOpen} onClose={() => setTagsOpen(false)} />
       <ClientFormDialog
         open={formOpen}

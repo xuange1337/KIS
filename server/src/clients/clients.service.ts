@@ -22,6 +22,7 @@ import {
 import { applyTenantScope } from '../common/helpers/tenant-scope';
 import { deleteRecordSatellites } from '../common/helpers/record-cleanup';
 import { UsersService } from '../users/users.service';
+import { CustomFieldsService } from '../custom-fields/custom-fields.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { paginate } from '../common/helpers/paginate';
 import { assertVersionMatches } from '../common/helpers/optimistic-lock';
@@ -39,6 +40,7 @@ export class ClientsService {
     private readonly repo: Repository<Client>,
     private readonly usersService: UsersService,
     private readonly notifications: NotificationsService,
+    private readonly customFields: CustomFieldsService,
   ) {}
 
   /** Список клиентов с поиском, фильтрами и разграничением по ролям. */
@@ -146,6 +148,11 @@ export class ClientsService {
     }
     const client = this.repo.create({
       ...dto,
+      customFields: await this.customFields.normalize(
+        'client',
+        user.organizationId,
+        dto.customFields,
+      ),
       organizationId: user.organizationId,
       // Менеджер всегда становится владельцем создаваемой карточки,
       // назначить другого ответственного может только руководитель
@@ -167,9 +174,15 @@ export class ClientsService {
     user: AuthUser,
   ): Promise<Client> {
     const client = await this.findOne(clientId, user);
-    const { ownerUserId, version, ...rest } = dto;
+    const { ownerUserId, version, customFields, ...rest } = dto;
     assertVersionMatches(client.version, version, 'Карточка клиента');
     Object.assign(client, rest);
+    client.customFields = await this.customFields.normalize(
+      'client',
+      user.organizationId,
+      customFields,
+      client.customFields,
+    );
     if (ownerUserId !== undefined && canSeeAll(user)) {
       await this.assertOwnerInTenant(ownerUserId, user);
       const changed = client.ownerUserId !== ownerUserId;

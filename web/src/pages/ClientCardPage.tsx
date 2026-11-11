@@ -30,6 +30,7 @@ import {
 } from '@crm/shared';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { CustomFieldsView } from '../features/custom-fields/CustomFieldsView';
 import { ClientTagsEditor } from '../features/tags/ClientTagsEditor';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
 import { ChecklistPanel } from '../features/collab/ChecklistPanel';
@@ -48,6 +49,7 @@ import {
   useActivities,
   useClient,
   useClientContacts,
+  useCustomFields,
   useDeals,
   useDeleteClient,
   useDeleteContact,
@@ -75,6 +77,7 @@ export function ClientCardPage() {
 
   const { data: client, isLoading, isError } = useClient(clientId);
   const { data: contacts } = useClientContacts(clientId);
+  const { data: customFields = [] } = useCustomFields('client');
   const { data: deals } = useDeals({ clientId, limit: 100 });
   const { data: activities } = useActivities({
     clientId,
@@ -174,6 +177,10 @@ export function ClientCardPage() {
             </Field>
             <Field label="Ответственный">{client.owner?.fullName ?? '—'}</Field>
             <Field label="Дата создания">{formatDate(client.createdAt)}</Field>
+            <CustomFieldsView
+              fields={customFields}
+              values={client.customFields}
+            />
             <Grid item xs={12}>
               <ClientTagsEditor clientId={client.clientId} />
             </Grid>

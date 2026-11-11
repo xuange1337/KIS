@@ -5,6 +5,7 @@ import {
   ClientStatus,
   CommentDto,
   ContactDto,
+  CustomFieldDto,
   DashboardSummary,
   DealDto,
   DealStage,
@@ -123,7 +124,10 @@ export function useSaveClient() {
     mutationFn: async ({
       clientId,
       ...payload
-    }: Partial<ClientDto> & { clientId?: number }) =>
+    }: Omit<Partial<ClientDto>, 'customFields'> & {
+      clientId?: number;
+      customFields?: Record<string, string | number | boolean | null>;
+    }) =>
       clientId
         ? (await api.patch<ClientDto>(`/clients/${clientId}`, payload)).data
         : (await api.post<ClientDto>('/clients', payload)).data,
@@ -243,7 +247,10 @@ export function useSaveDeal() {
     mutationFn: async ({
       dealId,
       ...payload
-    }: Partial<DealDto> & { dealId?: number }) =>
+    }: Omit<Partial<DealDto>, 'customFields'> & {
+      dealId?: number;
+      customFields?: Record<string, string | number | boolean | null>;
+    }) =>
       dealId
         ? (await api.patch<DealDto>(`/deals/${dealId}`, payload)).data
         : (await api.post<DealDto>('/deals', payload)).data,
@@ -972,4 +979,64 @@ export function useChecklistActions(type: RecordType, id: number) {
     onSuccess: refresh,
   });
   return { add, update, remove };
+}
+
+/* ---------------------- Пользовательские поля ---------------------- */
+
+export function useCustomFields(entity: 'client' | 'deal') {
+  return useQuery({
+    queryKey: ['custom-fields', entity],
+    queryFn: async () =>
+      (
+        await api.get<CustomFieldDto[]>('/custom-fields', {
+          params: { entity },
+        })
+      ).data,
+    // Состав полей меняется редко: перечитывать при каждом открытии формы незачем
+    staleTime: 60_000,
+  });
+}
+
+export function useSaveCustomField(entity: 'client' | 'deal') {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      fieldId,
+      ...payload
+    }: {
+      fieldId?: number;
+      name: string;
+      type?: CustomFieldDto['type'];
+      options?: string[];
+    }) =>
+      fieldId
+        ? (
+            await api.patch<CustomFieldDto>(`/custom-fields/${fieldId}`, {
+              name: payload.name,
+              options: payload.options,
+            })
+          ).data
+        : (
+            await api.post<CustomFieldDto>('/custom-fields', {
+              entity,
+              ...payload,
+            })
+          ).data,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['custom-fields', entity] }),
+  });
+}
+
+export function useDeleteCustomField(entity: 'client' | 'deal') {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (fieldId: number) => {
+      await api.delete(`/custom-fields/${fieldId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['custom-fields', entity] });
+      queryClient.invalidateQueries({ queryKey: [entity] });
+      queryClient.invalidateQueries({ queryKey: [`${entity}s`] });
+    },
+  });
 }

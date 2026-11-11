@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsInt,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Length,
@@ -19,6 +20,11 @@ import {
 export const MAX_MONEY_AMOUNT = 999_999_999_999.99;
 
 export class CreateDealDto {
+  /** Значения пользовательских полей: идентификатор поля → значение. */
+  @IsOptional()
+  @IsObject()
+  customFields?: Record<string, unknown>;
+
   @IsInt()
   clientId: number;
 

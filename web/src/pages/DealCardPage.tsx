@@ -47,6 +47,7 @@ import {
 import { DealFormDialog } from '../features/deals/DealFormDialog';
 import { LossReasonDialog } from '../features/deals/LossReasonDialog';
 import { OfferFormDialog } from '../features/offers/OfferFormDialog';
+import { CustomFieldsView } from '../features/custom-fields/CustomFieldsView';
 import { DealItemsDialog } from '../features/items/DealItemsDialog';
 import { OfferItemsDialog } from '../features/offers/OfferItemsDialog';
 import { ActivityFormDialog } from '../features/activities/ActivityFormDialog';
@@ -56,6 +57,7 @@ import {
   useChangeDealStage,
   useDeal,
   useDealHistory,
+  useCustomFields,
   useDealItems,
   useDealOffers,
   useDeleteDeal,
@@ -74,6 +76,7 @@ export function DealCardPage() {
   const { data: history } = useDealHistory(dealId);
   const { data: offers } = useDealOffers(dealId);
   const { data: dealItems } = useDealItems(dealId);
+  const { data: customFields = [] } = useCustomFields('deal');
   const [itemsOpen, setItemsOpen] = useState(false);
   const { data: activities } = useActivities({
     dealId,
@@ -248,6 +251,10 @@ export function DealCardPage() {
                 </Field>
                 <Field label="Создана">{formatDate(deal.createdAt)}</Field>
                 <Field label="Закрыта">{formatDate(deal.closedAt)}</Field>
+                <CustomFieldsView
+                  fields={customFields}
+                  values={deal.customFields}
+                />
                 {deal.lossReason && (
                   <Field label="Причина проигрыша">
                     {DEAL_LOSS_REASON_LABELS[deal.lossReason]}

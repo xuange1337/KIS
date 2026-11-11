@@ -22,6 +22,7 @@ import {
 } from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ManageFieldsDialog } from '../features/custom-fields/ManageFieldsDialog';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
 import { SavedFiltersBar } from '../features/personal/SavedFiltersBar';
 import { PageHeader } from '../components/PageHeader';
@@ -55,6 +56,7 @@ export function DealsPage() {
   const [stage, setStage] = useState('');
   const [ownerUserId, setOwnerUserId] = useState('');
   const [onlyFavorite, setOnlyFavorite] = useState(false);
+  const [fieldsOpen, setFieldsOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<GridPaginationModel>({
@@ -208,6 +210,11 @@ export function DealsPage() {
                 <ViewKanbanIcon fontSize="small" />
               </ToggleButton>
             </ToggleButtonGroup>
+            {canSeeAll && (
+              <Button variant="outlined" onClick={() => setFieldsOpen(true)}>
+                Поля
+              </Button>
+            )}
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -231,6 +238,11 @@ export function DealsPage() {
         </Alert>
       )}
 
+      <ManageFieldsDialog
+        open={fieldsOpen}
+        entity="deal"
+        onClose={() => setFieldsOpen(false)}
+      />
       <SavedFiltersBar
         entity="deals"
         current={currentFilters}

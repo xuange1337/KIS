@@ -15,6 +15,7 @@ import {
 } from '@crm/shared';
 import { DataSource, Repository } from 'typeorm';
 import { Deal } from './deal.entity';
+import { CustomFieldsService } from '../custom-fields/custom-fields.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { deleteRecordSatellites } from '../common/helpers/record-cleanup';
 import { DealItemsService } from './deal-items.service';
@@ -49,6 +50,7 @@ export class DealsService {
     private readonly dataSource: DataSource,
     private readonly itemsService: DealItemsService,
     private readonly notifications: NotificationsService,
+    private readonly customFields: CustomFieldsService,
   ) {}
 
   private async notifyAssigned(deal: Deal, actor: AuthUser) {
@@ -155,9 +157,16 @@ export class DealsService {
     }
     const stage = dto.stage ?? DealStage.NEW;
 
+    const customValues = await this.customFields.normalize(
+      'deal',
+      user.organizationId,
+      dto.customFields,
+    );
+
     return this.dataSource.transaction(async (manager) => {
       const deal = manager.getRepository(Deal).create({
         ...dto,
+        customFields: customValues,
         organizationId: user.organizationId,
         stage,
         probability: dto.probability ?? DEAL_STAGE_PROBABILITY[stage],
@@ -191,8 +200,14 @@ export class DealsService {
     user: AuthUser,
   ): Promise<Deal> {
     const deal = await this.findOne(dealId, user);
-    const { ownerUserId, version, ...rest } = dto;
+    const { ownerUserId, version, customFields, ...rest } = dto;
     assertVersionMatches(deal.version, version, 'Сделка');
+    deal.customFields = await this.customFields.normalize(
+      'deal',
+      user.organizationId,
+      customFields,
+      deal.customFields,
+    );
     if (
       rest.amount !== undefined &&
       rest.amount !== deal.amount &&

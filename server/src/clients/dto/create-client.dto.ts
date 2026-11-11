@@ -1,6 +1,7 @@
 import { ClientSource, ClientStatus } from '@crm/shared';
 import {
   IsEnum,
+  IsObject,
   IsInt,
   IsOptional,
   IsString,
@@ -41,4 +42,9 @@ export class CreateClientDto {
   @IsOptional()
   @IsInt()
   ownerUserId?: number | null;
+
+  /** Значения пользовательских полей: идентификатор поля → значение. */
+  @IsOptional()
+  @IsObject()
+  customFields?: Record<string, unknown>;
 }
