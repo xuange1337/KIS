@@ -15,6 +15,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImportPreview, ImportResult } from '@crm/shared';
 import { ClientsService } from './clients.service';
+import { ClientMergeService } from './client-merge.service';
+import { MergeClientsDto } from './dto/merge-clients.dto';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientsDto } from './dto/query-clients.dto';
@@ -34,7 +36,24 @@ export class ClientsController {
   constructor(
     private readonly clientsService: ClientsService,
     private readonly importService: ClientsImportService,
+    private readonly mergeService: ClientMergeService,
   ) {}
+
+  /** Группы возможных дублей среди видимых клиентов. */
+  @Get('duplicates')
+  findDuplicates(@CurrentUser() user: AuthUser) {
+    return this.mergeService.findDuplicates(user);
+  }
+
+  /** Объединение дублей в основную карточку. */
+  @Post(':id/merge')
+  merge(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: MergeClientsDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.mergeService.merge(id, dto.sourceIds, user);
+  }
 
   /**
    * Предпросмотр загружаемого файла.

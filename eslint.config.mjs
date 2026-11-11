@@ -19,6 +19,7 @@ export default tseslint.config(
       'docs/**',
       'packages/*/dist/**',
       'test-results/**',
+      '.snapshots/**',
       'playwright-report/**',
     ],
   },

@@ -1,6 +1,7 @@
 import { Box, Alert, Button, Grid, MenuItem, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import MergeTypeIcon from '@mui/icons-material/MergeType';
 import SearchIcon from '@mui/icons-material/Search';
 import { InputAdornment } from '@mui/material';
 import { ClientDto } from '@crm/shared';
@@ -159,6 +160,13 @@ export function ClientsPage() {
                 Загрузить из файла
               </Button>
             )}
+            <Button
+              variant="outlined"
+              startIcon={<MergeTypeIcon />}
+              onClick={() => navigate('/clients/duplicates')}
+            >
+              Поиск дублей
+            </Button>
             <Button
               variant="contained"
               startIcon={<AddIcon />}

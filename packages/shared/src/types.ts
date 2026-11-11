@@ -411,3 +411,33 @@ export interface ExportJobDto {
   /** До какого момента файл доступен для скачивания. */
   expiresAt: string | null;
 }
+
+/** Почему клиентов сочли возможными дублями. */
+export type DuplicateReason = 'inn' | 'name' | 'email' | 'phone';
+
+export interface DuplicateClientDto {
+  clientId: number;
+  name: string;
+  inn: string | null;
+  status: string;
+  ownerName: string | null;
+  contactsCount: number;
+  dealsCount: number;
+  createdAt: string;
+}
+
+/** Группа клиентов, похожих друг на друга. */
+export interface DuplicateGroupDto {
+  /** Устойчивый ключ группы: наименьший идентификатор клиента. */
+  key: number;
+  reasons: DuplicateReason[];
+  clients: DuplicateClientDto[];
+}
+
+export interface MergeClientsResult {
+  clientId: number;
+  mergedCount: number;
+  movedContacts: number;
+  movedDeals: number;
+  movedActivities: number;
+}

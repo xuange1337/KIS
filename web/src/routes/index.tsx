@@ -45,6 +45,11 @@ const ClientsPage = lazy(() =>
     default: module.ClientsPage,
   })),
 );
+const DuplicatesPage = lazy(() =>
+  import('../pages/DuplicatesPage').then((module) => ({
+    default: module.DuplicatesPage,
+  })),
+);
 const ClientCardPage = lazy(() =>
   import('../pages/ClientCardPage').then((module) => ({
     default: module.ClientCardPage,
@@ -171,6 +176,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <ProductsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/clients/duplicates"
+          element={
+            <RequireAuth>
+              <DuplicatesPage />
             </RequireAuth>
           }
         />

@@ -15,3 +15,4 @@ playwright-report
 
 docs/nir
 docs/reports
+.snapshots

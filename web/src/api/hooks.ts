@@ -10,7 +10,9 @@ import {
   ExportFormat,
   ExportJobDto,
   DealLossReason,
+  DuplicateGroupDto,
   GlobalSearchResult,
+  MergeClientsResult,
   LossReasonRow,
   FunnelRow,
   ManagerActivityRow,
@@ -608,5 +610,38 @@ export function useDeactivateUser() {
       await api.delete(`/users/${userId}`);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  });
+}
+
+/* ---------------------- Дубли клиентов ---------------------- */
+
+export function useDuplicateClients() {
+  return useQuery({
+    queryKey: ['clients', 'duplicates'],
+    queryFn: async () =>
+      (await api.get<DuplicateGroupDto[]>('/clients/duplicates')).data,
+  });
+}
+
+export function useMergeClients() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      targetId,
+      sourceIds,
+    }: {
+      targetId: number;
+      sourceIds: number[];
+    }) =>
+      (
+        await api.post<MergeClientsResult>(`/clients/${targetId}/merge`, {
+          sourceIds,
+        })
+      ).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+    },
   });
 }
