@@ -35,4 +35,10 @@ export class QueryClientsDto extends PaginationDto {
   )
   @IsBoolean()
   favorite?: boolean;
+
+  /** Только клиенты с этой меткой. */
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  tagId?: number;
 }

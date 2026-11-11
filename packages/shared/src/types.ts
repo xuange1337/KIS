@@ -157,6 +157,8 @@ export interface ClientDto {
   /** Агрегаты для списка — заполняются выборкой списка клиентов. */
   dealsCount?: number;
   dealsAmount?: number;
+  /** Метки клиента; приходят в списке клиентов. */
+  tags?: TagDto[];
 }
 
 export interface ContactDto {
@@ -449,4 +451,14 @@ export interface SavedFilterDto {
   name: string;
   filters: Record<string, string | number | boolean>;
   createdAt: string;
+}
+
+/** Метка клиента. */
+export interface TagDto {
+  tagId: number;
+  name: string;
+  /** Цвет в формате #RRGGBB. */
+  color: string;
+  /** Сколько клиентов помечено; приходит только в списке меток. */
+  clientsCount?: number;
 }

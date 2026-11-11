@@ -65,6 +65,13 @@ export class ClientsService {
     if (query.industry) {
       qb.andWhere('client.industry = :industry', { industry: query.industry });
     }
+    if (query.tagId) {
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM client_tags ct WHERE ct.client_id = client.client_id
+          AND ct.tag_id = :tagId AND ct.organization_id = :tagOrg)`,
+        { tagId: query.tagId, tagOrg: user.organizationId },
+      );
+    }
     if (query.favorite) {
       qb.andWhere(
         `EXISTS (SELECT 1 FROM favorites f WHERE f.entity_type = 'client'
@@ -78,7 +85,36 @@ export class ClientsService {
       });
     }
 
-    return paginate(qb, query, 'client', SORTABLE);
+    const page = await paginate(qb, query, 'client', SORTABLE);
+    await this.attachTags(page.items, user.organizationId);
+    return page;
+  }
+
+  /** Метки клиентов страницы одним запросом: список показывает их в строке. */
+  private async attachTags(
+    clients: Client[],
+    organizationId: number,
+  ): Promise<void> {
+    if (!clients.length) return;
+    const rows: Array<{
+      clientId: number;
+      tagId: number;
+      name: string;
+      color: string;
+    }> = await this.repo.query(
+      `SELECT ct.client_id AS "clientId", t.tag_id AS "tagId", t.name, t.color
+         FROM client_tags ct JOIN tags t ON t.tag_id = ct.tag_id
+        WHERE ct.client_id = ANY($1) AND ct.organization_id = $2
+        ORDER BY lower(t.name)`,
+      [clients.map((c) => c.clientId), organizationId],
+    );
+    for (const client of clients) {
+      Object.assign(client, {
+        tags: rows
+          .filter((row) => row.clientId === client.clientId)
+          .map(({ tagId, name, color }) => ({ tagId, name, color })),
+      });
+    }
   }
 
   /** Карточка клиента со связанными контактами (ТЗ п. 2.5). */

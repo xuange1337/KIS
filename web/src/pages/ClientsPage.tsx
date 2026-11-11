@@ -5,6 +5,7 @@ import {
   Chip,
   Grid,
   MenuItem,
+  Stack,
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -26,11 +27,15 @@ import { ClientStatusChip } from '../components/StatusChip';
 import { formatDate } from '../components/formatters';
 import { ClientFormDialog } from '../features/clients/ClientFormDialog';
 import {
+  useAddTagToClients,
   useBulkUpdateClients,
   useClients,
   useDictionaries,
+  useTags,
   useUsers,
 } from '../api/hooks';
+import { ManageTagsDialog } from '../features/tags/ManageTagsDialog';
+import { TagChip } from '../features/tags/TagChip';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
 import { SavedFiltersBar } from '../features/personal/SavedFiltersBar';
 import { BulkActionsBar } from '../features/clients/BulkActionsBar';
@@ -68,12 +73,26 @@ export function ClientsPage() {
     }
   };
 
+  const runBulkTag = async (tagId: number) => {
+    setBulkError(null);
+    try {
+      await addTag.mutateAsync({ tagId, clientIds: selection });
+      setSelection([]);
+    } catch (caught) {
+      setBulkError(extractErrorMessage(caught, 'Не удалось добавить метку'));
+    }
+  };
+
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [source, setSource] = useState('');
   const [industry, setIndustry] = useState('');
   const [ownerUserId, setOwnerUserId] = useState('');
   const [onlyFavorite, setOnlyFavorite] = useState(false);
+  const [tagId, setTagId] = useState('');
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const { data: tags } = useTags();
+  const addTag = useAddTagToClients();
   const [formOpen, setFormOpen] = useState(false);
   const [pagination, setPagination] = useState<GridPaginationModel>({
     page: 0,
@@ -98,6 +117,7 @@ export function ClientsPage() {
       ...(industry ? { industry } : {}),
       ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
       ...(onlyFavorite ? { favorite: true } : {}),
+      ...(tagId ? { tagId: Number(tagId) } : {}),
     }),
     [
       pagination,
@@ -108,6 +128,7 @@ export function ClientsPage() {
       industry,
       ownerUserId,
       onlyFavorite,
+      tagId,
     ],
   );
 
@@ -131,6 +152,7 @@ export function ClientsPage() {
     ...(industry ? { industry } : {}),
     ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
     ...(onlyFavorite ? { favorite: true } : {}),
+    ...(tagId ? { tagId: Number(tagId) } : {}),
   };
   const applyFilters = (filters: Record<string, string | number | boolean>) => {
     setSearch(String(filters.q ?? ''));
@@ -139,6 +161,7 @@ export function ClientsPage() {
     setIndustry(String(filters.industry ?? ''));
     setOwnerUserId(filters.ownerUserId ? String(filters.ownerUserId) : '');
     setOnlyFavorite(filters.favorite === true);
+    setTagId(filters.tagId ? String(filters.tagId) : '');
     setPagination((previous) => ({ ...previous, page: 0 }));
   };
 
@@ -158,6 +181,20 @@ export function ClientsPage() {
       ),
     },
     { field: 'name', headerName: 'Наименование', flex: 2, minWidth: 240 },
+    {
+      field: 'tags',
+      headerName: 'Метки',
+      flex: 1,
+      minWidth: 140,
+      sortable: false,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={0.5}>
+          {(params.row as ClientDto).tags?.map((tag) => (
+            <TagChip key={tag.tagId} tag={tag} />
+          ))}
+        </Stack>
+      ),
+    },
     {
       field: 'status',
       headerName: 'Статус',
@@ -209,6 +246,11 @@ export function ClientsPage() {
                 onClick={() => setImportOpen(true)}
               >
                 Загрузить из файла
+              </Button>
+            )}
+            {canSeeAll && (
+              <Button variant="outlined" onClick={() => setTagsOpen(true)}>
+                Метки
               </Button>
             )}
             <Button
@@ -311,6 +353,23 @@ export function ClientsPage() {
             </TextField>
           </Grid>
           <Grid item xs={6} md={2}>
+            <TextField
+              select
+              label="Метка"
+              value={tagId}
+              onChange={(event) => setTagId(event.target.value)}
+              size="small"
+              fullWidth
+            >
+              <MenuItem value="">Все</MenuItem>
+              {tags?.map((item) => (
+                <MenuItem key={item.tagId} value={String(item.tagId)}>
+                  {item.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={6} md={2}>
             <Chip
               label="Только избранные"
               color={onlyFavorite ? 'primary' : 'default'}
@@ -358,6 +417,8 @@ export function ClientsPage() {
         onSetStatus={(status) =>
           void runBulk({ clientIds: selection, action: 'set-status', status })
         }
+        tags={tags}
+        onAddTag={(tag) => void runBulkTag(tag)}
         onClear={() => setSelection([])}
       />
 
@@ -401,6 +462,7 @@ export function ClientsPage() {
         onImported={() => setSelection([])}
       />
 
+      <ManageTagsDialog open={tagsOpen} onClose={() => setTagsOpen(false)} />
       <ClientFormDialog
         open={formOpen}
         onClose={() => setFormOpen(false)}

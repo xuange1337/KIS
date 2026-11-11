@@ -30,6 +30,7 @@ import {
 } from '@crm/shared';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ClientTagsEditor } from '../features/tags/ClientTagsEditor';
 import { FavoriteStar } from '../features/personal/FavoriteStar';
 import { PageHeader } from '../components/PageHeader';
 import { ActivityList } from '../components/ActivityList';
@@ -171,6 +172,9 @@ export function ClientCardPage() {
             </Field>
             <Field label="Ответственный">{client.owner?.fullName ?? '—'}</Field>
             <Field label="Дата создания">{formatDate(client.createdAt)}</Field>
+            <Grid item xs={12}>
+              <ClientTagsEditor clientId={client.clientId} />
+            </Grid>
             <Grid item xs={12}>
               <Typography variant="caption" color="text.secondary">
                 Адрес

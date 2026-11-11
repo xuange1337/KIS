@@ -25,6 +25,7 @@ import {
   ProductInput,
   ReportName,
   SavedFilterDto,
+  TagDto,
   SalesDynamicsRow,
   TopRow,
   UserDto,
@@ -747,6 +748,94 @@ export function useToggleFavorite(type: FavoriteType) {
       queryClient.invalidateQueries({
         queryKey: type === 'client' ? ['clients'] : ['deals'],
       });
+    },
+  });
+}
+
+/* ---------------------------- Метки ---------------------------- */
+
+export function useTags() {
+  return useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => (await api.get<TagDto[]>('/tags')).data,
+  });
+}
+
+export function useSaveTag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      tagId,
+      ...payload
+    }: {
+      tagId?: number;
+      name: string;
+      color: string;
+    }) =>
+      tagId
+        ? (await api.patch<TagDto>(`/tags/${tagId}`, payload)).data
+        : (await api.post<TagDto>('/tags', payload)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    },
+  });
+}
+
+export function useDeleteTag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (tagId: number) => {
+      await api.delete(`/tags/${tagId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client-tags'] });
+    },
+  });
+}
+
+export function useClientTags(clientId: number | undefined) {
+  return useQuery({
+    queryKey: ['client-tags', clientId],
+    queryFn: async () =>
+      (await api.get<TagDto[]>(`/clients/${clientId}/tags`)).data,
+    enabled: Boolean(clientId),
+  });
+}
+
+export function useSetClientTags(clientId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (tagIds: number[]) =>
+      (await api.put<TagDto[]>(`/clients/${clientId}/tags`, { tagIds })).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-tags', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
+    },
+  });
+}
+
+export function useAddTagToClients() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      tagId,
+      clientIds,
+    }: {
+      tagId: number;
+      clientIds: number[];
+    }) =>
+      (
+        await api.post<{ added: number }>(`/tags/${tagId}/clients`, {
+          clientIds,
+        })
+      ).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
   });
 }

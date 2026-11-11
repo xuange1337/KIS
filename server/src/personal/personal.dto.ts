@@ -13,7 +13,15 @@ export type FilterEntity = (typeof FILTER_ENTITIES)[number];
 
 /** Какие ключи допустимы в наборе фильтров каждого списка. */
 export const ALLOWED_FILTER_KEYS: Record<FilterEntity, string[]> = {
-  clients: ['q', 'status', 'source', 'industry', 'ownerUserId', 'favorite'],
+  clients: [
+    'q',
+    'status',
+    'source',
+    'industry',
+    'ownerUserId',
+    'favorite',
+    'tagId',
+  ],
   deals: ['q', 'stage', 'ownerUserId', 'amountFrom', 'amountTo', 'favorite'],
 };
 

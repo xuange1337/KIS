@@ -1,5 +1,10 @@
 import { Alert, Button, MenuItem, Stack, TextField } from '@mui/material';
-import { CLIENT_STATUS_LABELS, ClientStatus, UserDto } from '@crm/shared';
+import {
+  CLIENT_STATUS_LABELS,
+  ClientStatus,
+  TagDto,
+  UserDto,
+} from '@crm/shared';
 import { useState } from 'react';
 import { TOKENS } from '../../theme/tokens';
 
@@ -13,6 +18,9 @@ interface BulkActionsBarProps {
   error?: string | null;
   onAssignOwner: (ownerUserId: number) => void;
   onSetStatus: (status: ClientStatus) => void;
+  /** Метки для массового назначения; без них блок не показывается. */
+  tags?: TagDto[];
+  onAddTag?: (tagId: number) => void;
   onClear: () => void;
 }
 
@@ -32,10 +40,13 @@ export function BulkActionsBar({
   error,
   onAssignOwner,
   onSetStatus,
+  tags,
+  onAddTag,
   onClear,
 }: BulkActionsBarProps) {
   const [owner, setOwner] = useState('');
   const [status, setStatus] = useState('');
+  const [tag, setTag] = useState('');
 
   if (count === 0) return null;
 
@@ -112,6 +123,33 @@ export function BulkActionsBar({
             Применить
           </Button>
         </Stack>
+
+        {tags && tags.length > 0 && onAddTag && (
+          <Stack direction="row" spacing={1} alignItems="center">
+            <TextField
+              select
+              size="small"
+              label="Метка"
+              value={tag}
+              onChange={(event) => setTag(event.target.value)}
+              sx={{ minWidth: 160 }}
+            >
+              {tags.map((item) => (
+                <MenuItem key={item.tagId} value={String(item.tagId)}>
+                  {item.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!tag || busy}
+              onClick={() => onAddTag(Number(tag))}
+            >
+              Добавить метку
+            </Button>
+          </Stack>
+        )}
 
         <Button size="small" onClick={onClear} disabled={busy}>
           Снять отметки
