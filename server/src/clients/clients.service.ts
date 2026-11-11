@@ -21,6 +21,7 @@ import {
 } from '../common/helpers/owner-scope';
 import { applyTenantScope } from '../common/helpers/tenant-scope';
 import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { paginate } from '../common/helpers/paginate';
 import { assertVersionMatches } from '../common/helpers/optimistic-lock';
 
@@ -36,6 +37,7 @@ export class ClientsService {
     @InjectRepository(Client)
     private readonly repo: Repository<Client>,
     private readonly usersService: UsersService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** Список клиентов с поиском, фильтрами и разграничением по ролям. */
@@ -151,6 +153,7 @@ export class ClientsService {
         : user.userId,
     });
     const saved = await this.repo.save(client);
+    await this.notifyAssigned(saved, user);
     return this.repo.findOneOrFail({
       where: { clientId: saved.clientId },
       relations: { owner: true },
@@ -168,7 +171,11 @@ export class ClientsService {
     Object.assign(client, rest);
     if (ownerUserId !== undefined && canSeeAll(user)) {
       await this.assertOwnerInTenant(ownerUserId, user);
+      const changed = client.ownerUserId !== ownerUserId;
       client.ownerUserId = ownerUserId;
+      await this.repo.save(client);
+      if (changed) await this.notifyAssigned(client, user);
+      return this.findOne(clientId, user);
     }
     await this.repo.save(client);
     return this.findOne(clientId, user);
@@ -272,11 +279,34 @@ export class ClientsService {
         { clientId: In(ids) },
         { ownerUserId: dto.ownerUserId },
       );
+      if (dto.ownerUserId !== undefined && dto.ownerUserId !== user.userId)
+        await this.notifications.notify({
+          organizationId: user.organizationId,
+          userId: dto.ownerUserId,
+          type: 'assigned_client',
+          title: `Вам назначено клиентов: ${ids.length}`,
+          link: '/clients',
+          dedupeKey: `assigned-bulk:${Date.now()}:${ids[0]}`,
+        });
       return { updated: ids.length };
     }
 
     await this.repo.update({ clientId: In(ids) }, { status: dto.status });
     return { updated: ids.length };
+  }
+
+  /** Сообщает новому ответственному, что клиент теперь за ним. */
+  private async notifyAssigned(client: Client, actor: AuthUser) {
+    if (!client.ownerUserId || client.ownerUserId === actor.userId) return;
+    await this.notifications.notify({
+      organizationId: client.organizationId,
+      userId: client.ownerUserId,
+      type: 'assigned_client',
+      title: 'Вам назначен клиент',
+      body: client.name,
+      link: `/clients/${client.clientId}`,
+      dedupeKey: `assigned-client:${client.clientId}:${client.version}`,
+    });
   }
 
   /**

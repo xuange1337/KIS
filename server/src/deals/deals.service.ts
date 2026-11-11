@@ -15,6 +15,7 @@ import {
 } from '@crm/shared';
 import { DataSource, Repository } from 'typeorm';
 import { Deal } from './deal.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { DealItemsService } from './deal-items.service';
 import { DealStageHistory } from './deal-stage-history.entity';
 import { CreateDealDto } from './dto/create-deal.dto';
@@ -46,7 +47,21 @@ export class DealsService {
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
     private readonly itemsService: DealItemsService,
+    private readonly notifications: NotificationsService,
   ) {}
+
+  private async notifyAssigned(deal: Deal, actor: AuthUser) {
+    if (!deal.ownerUserId || deal.ownerUserId === actor.userId) return;
+    await this.notifications.notify({
+      organizationId: deal.organizationId,
+      userId: deal.ownerUserId,
+      type: 'assigned_deal',
+      title: 'Вам назначена сделка',
+      body: deal.title,
+      link: `/deals/${deal.dealId}`,
+      dedupeKey: `assigned-deal:${deal.dealId}:${deal.ownerUserId}`,
+    });
+  }
 
   async findAll(
     query: QueryDealsDto,
@@ -151,6 +166,7 @@ export class DealsService {
           : user.userId,
       });
       const saved = await manager.getRepository(Deal).save(deal);
+      await this.notifyAssigned(saved, user);
 
       // Первая запись истории фиксирует стадию, с которой сделка заведена
       await manager.getRepository(DealStageHistory).save({
@@ -187,7 +203,11 @@ export class DealsService {
     Object.assign(deal, rest);
     if (ownerUserId !== undefined && canSeeAll(user)) {
       await this.assertOwnerInTenant(ownerUserId, user);
+      const changed = deal.ownerUserId !== ownerUserId;
       deal.ownerUserId = ownerUserId;
+      await this.repo.save(deal);
+      if (changed) await this.notifyAssigned(deal, user);
+      return this.findOne(dealId, user);
     }
     await this.repo.save(deal);
     return this.findOne(dealId, user);

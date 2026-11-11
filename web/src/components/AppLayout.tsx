@@ -36,6 +36,7 @@ import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
 import { USER_ROLE_LABELS, UserRole } from '@crm/shared';
 import { ReactNode, Suspense, lazy, useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NotificationBell } from '../features/notifications/NotificationBell';
 import { useAuth } from '../features/auth/AuthContext';
 import { AccountNotices } from './AccountNotices';
 import { DURATION, TOKENS } from '../theme/tokens';
@@ -323,6 +324,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {!compact && <span>Поиск</span>}
           </Box>
         </Tooltip>
+        <Box sx={{ mt: 0.75 }}>
+          <NotificationBell compact={compact} />
+        </Box>
       </Box>
 
       <Stack

@@ -20,6 +20,7 @@ import {
   OfferItemDto,
   OfferItemInput,
   OverdueActivityRow,
+  NotificationDto,
   Paginated,
   ProductDto,
   ProductInput,
@@ -837,5 +838,45 @@ export function useAddTagToClients() {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
+  });
+}
+
+/* ----------------------- Уведомления ----------------------- */
+
+/** Раз в минуту: достаточно, чтобы напоминание не опоздало заметно. */
+const NOTIFICATIONS_REFETCH_MS = 60_000;
+
+export function useUnreadNotifications() {
+  return useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: async () =>
+      (await api.get<{ count: number }>('/notifications/unread-count')).data
+        .count,
+    refetchInterval: NOTIFICATIONS_REFETCH_MS,
+  });
+}
+
+export function useNotifications(enabled: boolean) {
+  return useQuery({
+    queryKey: ['notifications', 'list'],
+    queryFn: async () =>
+      (
+        await api.get<NotificationDto[]>('/notifications', {
+          params: { limit: 30 },
+        })
+      ).data,
+    enabled,
+  });
+}
+
+export function useMarkNotificationsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number | 'all') => {
+      if (id === 'all') await api.post('/notifications/read-all');
+      else await api.post(`/notifications/${id}/read`);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 }

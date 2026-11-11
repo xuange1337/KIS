@@ -15,6 +15,7 @@ import { SavedFilter } from '../personal/saved-filter.entity';
 import { Favorite } from '../personal/favorite.entity';
 import { Tag } from '../tags/tag.entity';
 import { ClientTag } from '../tags/client-tag.entity';
+import { Notification } from '../notifications/notification.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
@@ -43,6 +44,7 @@ export const ENTITIES = [
   Favorite,
   Tag,
   ClientTag,
+  Notification,
   AuditLog,
   RefreshSession,
   IdempotencyKey,

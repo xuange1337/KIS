@@ -462,3 +462,14 @@ export interface TagDto {
   /** Сколько клиентов помечено; приходит только в списке меток. */
   clientsCount?: number;
 }
+
+/** Уведомление центра уведомлений. */
+export interface NotificationDto {
+  notificationId: number;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
