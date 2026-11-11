@@ -550,6 +550,134 @@ COMMENT ON COLUMN export_jobs.params  IS 'Параметры отчёта и р�
 COMMENT ON COLUMN export_jobs.expires_at IS 'До какого момента файл доступен; затем файл и запись удаляются';
 
 
+-- -----------------------------------------------------------------------------
+-- Расширения второй версии: состав сделки, личные настройки, метки,
+-- уведомления, комментарии, чек-листы, пользовательские поля, воронки
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE deal_items (
+    item_id         SERIAL        PRIMARY KEY,
+    organization_id INTEGER       NOT NULL REFERENCES organizations (organization_id) ON DELETE RESTRICT,
+    deal_id         INTEGER       NOT NULL REFERENCES deals (deal_id) ON DELETE CASCADE,
+    product_id      INTEGER       NOT NULL REFERENCES products (product_id) ON DELETE RESTRICT,
+    sku             VARCHAR(64)   NOT NULL,
+    name            VARCHAR(200)  NOT NULL,
+    unit            VARCHAR(32)   NOT NULL,
+    quantity        NUMERIC(10,3) NOT NULL CHECK (quantity > 0),
+    unit_price      NUMERIC(14,2) NOT NULL CHECK (unit_price >= 0),
+    total_amount    NUMERIC(14,2) NOT NULL CHECK (total_amount >= 0)
+);
+CREATE INDEX idx_deal_items_deal ON deal_items (deal_id);
+CREATE INDEX idx_deal_items_organization ON deal_items (organization_id);
+
+CREATE TABLE saved_filters (
+    saved_filter_id SERIAL       PRIMARY KEY,
+    organization_id INTEGER      NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    user_id         INTEGER      NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+    entity          VARCHAR(16)  NOT NULL CHECK (entity IN ('clients', 'deals')),
+    name            VARCHAR(80)  NOT NULL CHECK (length(trim(name)) > 0),
+    filters         JSONB        NOT NULL,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX uq_saved_filters_user_entity_name ON saved_filters (user_id, entity, name);
+
+CREATE TABLE favorites (
+    favorite_id     SERIAL       PRIMARY KEY,
+    organization_id INTEGER      NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    user_id         INTEGER      NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+    entity_type     VARCHAR(16)  NOT NULL CHECK (entity_type IN ('client', 'deal')),
+    entity_id       INTEGER      NOT NULL,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX uq_favorites_user_entity ON favorites (user_id, entity_type, entity_id);
+
+CREATE TABLE tags (
+    tag_id          SERIAL       PRIMARY KEY,
+    organization_id INTEGER      NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    name            VARCHAR(40)  NOT NULL CHECK (length(trim(name)) > 0),
+    color           VARCHAR(7)   NOT NULL DEFAULT '#6B7280' CHECK (color ~ '^#[0-9A-Fa-f]{6}$')
+);
+CREATE UNIQUE INDEX uq_tags_organization_name ON tags (organization_id, lower(name));
+
+CREATE TABLE client_tags (
+    client_id       INTEGER NOT NULL REFERENCES clients (client_id) ON DELETE CASCADE,
+    tag_id          INTEGER NOT NULL REFERENCES tags (tag_id) ON DELETE CASCADE,
+    organization_id INTEGER NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    PRIMARY KEY (client_id, tag_id)
+);
+CREATE INDEX idx_client_tags_tag ON client_tags (tag_id);
+
+CREATE TABLE notifications (
+    notification_id SERIAL       PRIMARY KEY,
+    organization_id INTEGER      NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    user_id         INTEGER      NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+    type            VARCHAR(32)  NOT NULL,
+    title           VARCHAR(255) NOT NULL,
+    body            VARCHAR(500),
+    link            VARCHAR(255),
+    dedupe_key      VARCHAR(120) NOT NULL,
+    read_at         TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX uq_notifications_user_key ON notifications (user_id, dedupe_key);
+CREATE INDEX idx_notifications_user_unread ON notifications (user_id, created_at DESC) WHERE read_at IS NULL;
+
+CREATE TABLE comments (
+    comment_id      SERIAL      PRIMARY KEY,
+    organization_id INTEGER     NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    entity_type     VARCHAR(16) NOT NULL CHECK (entity_type IN ('client', 'deal')),
+    entity_id       INTEGER     NOT NULL,
+    author_user_id  INTEGER     REFERENCES users (user_id) ON DELETE SET NULL,
+    body            TEXT        NOT NULL CHECK (length(trim(body)) > 0 AND length(body) <= 2000),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_comments_entity ON comments (entity_type, entity_id, created_at);
+
+CREATE TABLE checklist_items (
+    item_id         SERIAL       PRIMARY KEY,
+    organization_id INTEGER      NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    entity_type     VARCHAR(16)  NOT NULL CHECK (entity_type IN ('client', 'deal')),
+    entity_id       INTEGER      NOT NULL,
+    text            VARCHAR(255) NOT NULL CHECK (length(trim(text)) > 0),
+    is_done         BOOLEAN      NOT NULL DEFAULT false,
+    position        INTEGER      NOT NULL DEFAULT 0,
+    done_at         TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_checklist_entity ON checklist_items (entity_type, entity_id, position);
+
+CREATE TABLE custom_field_definitions (
+    field_id        SERIAL      PRIMARY KEY,
+    organization_id INTEGER     NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    entity          VARCHAR(16) NOT NULL CHECK (entity IN ('client', 'deal')),
+    name            VARCHAR(80) NOT NULL CHECK (length(trim(name)) > 0),
+    type            VARCHAR(16) NOT NULL CHECK (type IN ('text', 'number', 'date', 'boolean', 'select')),
+    options         JSONB       NOT NULL DEFAULT '[]'::jsonb,
+    position        INTEGER     NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX uq_custom_fields_name ON custom_field_definitions (organization_id, entity, lower(name));
+ALTER TABLE clients ADD COLUMN custom_fields JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE deals   ADD COLUMN custom_fields JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+CREATE TABLE pipelines (
+    pipeline_id     SERIAL      PRIMARY KEY,
+    organization_id INTEGER     NOT NULL REFERENCES organizations (organization_id) ON DELETE CASCADE,
+    name            VARCHAR(80) NOT NULL CHECK (length(trim(name)) > 0),
+    is_default      BOOLEAN     NOT NULL DEFAULT false,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX uq_pipelines_name ON pipelines (organization_id, lower(name));
+CREATE UNIQUE INDEX uq_pipelines_default ON pipelines (organization_id) WHERE is_default;
+
+CREATE TABLE pipeline_stages (
+    pipeline_id INTEGER     NOT NULL REFERENCES pipelines (pipeline_id) ON DELETE CASCADE,
+    stage       VARCHAR(32) NOT NULL CHECK (stage IN ('new', 'qualification', 'proposal', 'negotiation', 'won', 'lost')),
+    position    INTEGER     NOT NULL,
+    PRIMARY KEY (pipeline_id, stage)
+);
+ALTER TABLE deals ADD COLUMN pipeline_id INTEGER REFERENCES pipelines (pipeline_id) ON DELETE RESTRICT;
+CREATE INDEX idx_deals_pipeline ON deals (pipeline_id);
+
 -- =============================================================================
 -- Запросы, лежащие в основе отчётов (п. 2.4)
 -- =============================================================================
