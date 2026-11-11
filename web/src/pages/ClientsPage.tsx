@@ -1,4 +1,12 @@
-import { Box, Alert, Button, Grid, MenuItem, TextField } from '@mui/material';
+import {
+  Box,
+  Alert,
+  Button,
+  Chip,
+  Grid,
+  MenuItem,
+  TextField,
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MergeTypeIcon from '@mui/icons-material/MergeType';
@@ -23,6 +31,8 @@ import {
   useDictionaries,
   useUsers,
 } from '../api/hooks';
+import { FavoriteStar } from '../features/personal/FavoriteStar';
+import { SavedFiltersBar } from '../features/personal/SavedFiltersBar';
 import { BulkActionsBar } from '../features/clients/BulkActionsBar';
 import { ImportDialog } from '../features/clients/ImportDialog';
 import { extractErrorMessage } from '../api/client';
@@ -63,6 +73,7 @@ export function ClientsPage() {
   const [source, setSource] = useState('');
   const [industry, setIndustry] = useState('');
   const [ownerUserId, setOwnerUserId] = useState('');
+  const [onlyFavorite, setOnlyFavorite] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [pagination, setPagination] = useState<GridPaginationModel>({
     page: 0,
@@ -86,6 +97,7 @@ export function ClientsPage() {
       ...(source ? { source } : {}),
       ...(industry ? { industry } : {}),
       ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
+      ...(onlyFavorite ? { favorite: true } : {}),
     }),
     [
       pagination,
@@ -95,6 +107,7 @@ export function ClientsPage() {
       source,
       industry,
       ownerUserId,
+      onlyFavorite,
     ],
   );
 
@@ -102,10 +115,48 @@ export function ClientsPage() {
 
   // Пустая выборка означает разное: база пуста или фильтры слишком узкие
   const hasFilters = Boolean(
-    debouncedSearch || status || source || industry || ownerUserId,
+    debouncedSearch ||
+    status ||
+    source ||
+    industry ||
+    ownerUserId ||
+    onlyFavorite,
   );
 
+  // Набор для сохранения собирается из того, что видит пользователь
+  const currentFilters: Record<string, string | number | boolean> = {
+    ...(search ? { q: search } : {}),
+    ...(status ? { status } : {}),
+    ...(source ? { source } : {}),
+    ...(industry ? { industry } : {}),
+    ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
+    ...(onlyFavorite ? { favorite: true } : {}),
+  };
+  const applyFilters = (filters: Record<string, string | number | boolean>) => {
+    setSearch(String(filters.q ?? ''));
+    setStatus(String(filters.status ?? ''));
+    setSource(String(filters.source ?? ''));
+    setIndustry(String(filters.industry ?? ''));
+    setOwnerUserId(filters.ownerUserId ? String(filters.ownerUserId) : '');
+    setOnlyFavorite(filters.favorite === true);
+    setPagination((previous) => ({ ...previous, page: 0 }));
+  };
+
   const columns: GridColDef[] = [
+    {
+      field: 'favorite',
+      headerName: '',
+      width: 52,
+      sortable: false,
+      disableColumnMenu: true,
+      renderCell: (params) => (
+        <FavoriteStar
+          type="client"
+          id={params.row.clientId}
+          label={params.row.name}
+        />
+      ),
+    },
     { field: 'name', headerName: 'Наименование', flex: 2, minWidth: 240 },
     {
       field: 'status',
@@ -184,6 +235,12 @@ export function ClientsPage() {
         </Alert>
       )}
 
+      <SavedFiltersBar
+        entity="clients"
+        current={currentFilters}
+        onApply={applyFilters}
+      />
+
       <Box sx={{ mb: 2.5 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
@@ -252,6 +309,16 @@ export function ClientsPage() {
                 </MenuItem>
               ))}
             </TextField>
+          </Grid>
+          <Grid item xs={6} md={2}>
+            <Chip
+              label="Только избранные"
+              color={onlyFavorite ? 'primary' : 'default'}
+              variant={onlyFavorite ? 'filled' : 'outlined'}
+              onClick={() => setOnlyFavorite((value) => !value)}
+              aria-pressed={onlyFavorite}
+              sx={{ height: 40 }}
+            />
           </Grid>
           {canSeeAll && (
             <Grid item xs={6} md={2}>

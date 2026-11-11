@@ -65,6 +65,13 @@ export class ClientsService {
     if (query.industry) {
       qb.andWhere('client.industry = :industry', { industry: query.industry });
     }
+    if (query.favorite) {
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM favorites f WHERE f.entity_type = 'client'
+          AND f.entity_id = client.clientId AND f.user_id = :favUser)`,
+        { favUser: user.userId },
+      );
+    }
     if (query.ownerUserId) {
       qb.andWhere('client.ownerUserId = :filterOwner', {
         filterOwner: query.ownerUserId,

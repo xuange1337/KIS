@@ -1,6 +1,12 @@
 import { ClientSource, ClientStatus } from '@crm/shared';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 /** Фильтры списка клиентов (ТЗ п. 2.5 — «Клиенты: список + фильтры»). */
@@ -21,4 +27,12 @@ export class QueryClientsDto extends PaginationDto {
   @Transform(({ value }) => Number(value))
   @IsInt()
   ownerUserId?: number;
+
+  /** Только отмеченные звёздочкой. */
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === 'true' ? true : value === 'false' ? false : value,
+  )
+  @IsBoolean()
+  favorite?: boolean;
 }

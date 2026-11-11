@@ -71,6 +71,13 @@ export class DealsService {
     if (query.clientId) {
       qb.andWhere('deal.clientId = :clientId', { clientId: query.clientId });
     }
+    if (query.favorite) {
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM favorites f WHERE f.entity_type = 'deal'
+          AND f.entity_id = deal.dealId AND f.user_id = :favUser)`,
+        { favUser: user.userId },
+      );
+    }
     if (query.ownerUserId) {
       qb.andWhere('deal.ownerUserId = :filterOwner', {
         filterOwner: query.ownerUserId,

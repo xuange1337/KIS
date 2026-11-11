@@ -441,3 +441,12 @@ export interface MergeClientsResult {
   movedDeals: number;
   movedActivities: number;
 }
+
+/** Личный набор фильтров списка. */
+export interface SavedFilterDto {
+  savedFilterId: number;
+  entity: 'clients' | 'deals';
+  name: string;
+  filters: Record<string, string | number | boolean>;
+  createdAt: string;
+}

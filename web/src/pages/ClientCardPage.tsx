@@ -30,6 +30,7 @@ import {
 } from '@crm/shared';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { FavoriteStar } from '../features/personal/FavoriteStar';
 import { PageHeader } from '../components/PageHeader';
 import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -128,6 +129,11 @@ export function ClientCardPage() {
         ]}
         actions={
           <>
+            <FavoriteStar
+              type="client"
+              id={client.clientId}
+              label={client.name}
+            />
             <Button startIcon={<EditIcon />} onClick={() => setEditOpen(true)}>
               Редактировать
             </Button>

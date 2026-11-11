@@ -24,6 +24,7 @@ import {
   ProductDto,
   ProductInput,
   ReportName,
+  SavedFilterDto,
   SalesDynamicsRow,
   TopRow,
   UserDto,
@@ -674,6 +675,78 @@ export function useSaveDealItems() {
       queryClient.invalidateQueries({ queryKey: ['deal-items', dealId] });
       queryClient.invalidateQueries({ queryKey: ['deal', dealId] });
       queryClient.invalidateQueries({ queryKey: ['deals'] });
+    },
+  });
+}
+
+/* ------------- Сохранённые фильтры и избранное ------------- */
+
+export function useSavedFilters(entity: 'clients' | 'deals') {
+  return useQuery({
+    queryKey: ['saved-filters', entity],
+    queryFn: async () =>
+      (
+        await api.get<SavedFilterDto[]>('/saved-filters', {
+          params: { entity },
+        })
+      ).data,
+  });
+}
+
+export function useCreateSavedFilter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      entity: 'clients' | 'deals';
+      name: string;
+      filters: Record<string, string | number | boolean>;
+    }) => (await api.post<SavedFilterDto>('/saved-filters', payload)).data,
+    onSuccess: (_saved, { entity }) =>
+      queryClient.invalidateQueries({ queryKey: ['saved-filters', entity] }),
+  });
+}
+
+export function useDeleteSavedFilter(entity: 'clients' | 'deals') {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/saved-filters/${id}`);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['saved-filters', entity] }),
+  });
+}
+
+export type FavoriteType = 'client' | 'deal';
+
+/** Идентификаторы избранных записей: множество, чтобы проверка была мгновенной. */
+export function useFavorites(type: FavoriteType) {
+  return useQuery({
+    queryKey: ['favorites', type],
+    queryFn: async () =>
+      new Set(
+        (
+          await api.get<number[]>('/favorites', {
+            params: { entityType: type },
+          })
+        ).data,
+      ),
+  });
+}
+
+export function useToggleFavorite(type: FavoriteType) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, favorite }: { id: number; favorite: boolean }) => {
+      if (favorite) await api.put(`/favorites/${type}/${id}`);
+      else await api.delete(`/favorites/${type}/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favorites', type] });
+      // Список с фильтром «Избранные» меняет состав сразу
+      queryClient.invalidateQueries({
+        queryKey: type === 'client' ? ['clients'] : ['deals'],
+      });
     },
   });
 }

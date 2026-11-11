@@ -32,6 +32,7 @@ import {
 } from '@crm/shared';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { FavoriteStar } from '../features/personal/FavoriteStar';
 import { PageHeader } from '../components/PageHeader';
 import { ActivityList } from '../components/ActivityList';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -165,6 +166,7 @@ export function DealCardPage() {
         breadcrumbs={[{ label: 'Сделки', to: '/deals' }, { label: deal.title }]}
         actions={
           <>
+            <FavoriteStar type="deal" id={deal.dealId} label={deal.title} />
             <Button startIcon={<EditIcon />} onClick={() => setEditOpen(true)}>
               Редактировать
             </Button>

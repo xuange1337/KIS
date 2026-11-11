@@ -1,6 +1,7 @@
 import { DealStage } from '@crm/shared';
 import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
@@ -43,4 +44,12 @@ export class QueryDealsDto extends PaginationDto {
   @Transform(({ value }) => Number(value))
   @IsNumber()
   amountTo?: number;
+
+  /** Только отмеченные звёздочкой. */
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === 'true' ? true : value === 'false' ? false : value,
+  )
+  @IsBoolean()
+  favorite?: boolean;
 }

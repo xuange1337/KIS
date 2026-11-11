@@ -8,6 +8,7 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -21,6 +22,8 @@ import {
 } from '@mui/x-data-grid';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FavoriteStar } from '../features/personal/FavoriteStar';
+import { SavedFiltersBar } from '../features/personal/SavedFiltersBar';
 import { PageHeader } from '../components/PageHeader';
 import { DataTable } from '../components/DataTable';
 import { DealStageChip } from '../components/StatusChip';
@@ -51,6 +54,7 @@ export function DealsPage() {
   const [search, setSearch] = useState('');
   const [stage, setStage] = useState('');
   const [ownerUserId, setOwnerUserId] = useState('');
+  const [onlyFavorite, setOnlyFavorite] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<GridPaginationModel>({
@@ -73,14 +77,39 @@ export function DealsPage() {
       ...(debouncedSearch ? { q: debouncedSearch } : {}),
       ...(stage && view === 'list' ? { stage } : {}),
       ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
+      ...(onlyFavorite ? { favorite: true } : {}),
     }),
-    [view, pagination, sortModel, debouncedSearch, stage, ownerUserId],
+    [
+      view,
+      pagination,
+      sortModel,
+      debouncedSearch,
+      stage,
+      ownerUserId,
+      onlyFavorite,
+    ],
   );
 
   const { data, isFetching, isError } = useDeals(query);
 
   // Пустая выборка означает разное: сделок нет или фильтры слишком узкие
-  const hasFilters = Boolean(debouncedSearch || stage || ownerUserId);
+  const hasFilters = Boolean(
+    debouncedSearch || stage || ownerUserId || onlyFavorite,
+  );
+
+  const currentFilters: Record<string, string | number | boolean> = {
+    ...(search ? { q: search } : {}),
+    ...(stage ? { stage } : {}),
+    ...(ownerUserId ? { ownerUserId: Number(ownerUserId) } : {}),
+    ...(onlyFavorite ? { favorite: true } : {}),
+  };
+  const applyFilters = (filters: Record<string, string | number | boolean>) => {
+    setSearch(String(filters.q ?? ''));
+    setStage(String(filters.stage ?? ''));
+    setOwnerUserId(filters.ownerUserId ? String(filters.ownerUserId) : '');
+    setOnlyFavorite(filters.favorite === true);
+    setPagination((previous) => ({ ...previous, page: 0 }));
+  };
 
   const handleStageChange = async (dealId: number, nextStage: DealStage) => {
     setError(null);
@@ -92,6 +121,20 @@ export function DealsPage() {
   };
 
   const columns: GridColDef[] = [
+    {
+      field: 'favorite',
+      headerName: '',
+      width: 52,
+      sortable: false,
+      disableColumnMenu: true,
+      renderCell: (params) => (
+        <FavoriteStar
+          type="deal"
+          id={params.row.dealId}
+          label={params.row.title}
+        />
+      ),
+    },
     { field: 'title', headerName: 'Сделка', flex: 2, minWidth: 260 },
     {
       field: 'client',
@@ -188,6 +231,12 @@ export function DealsPage() {
         </Alert>
       )}
 
+      <SavedFiltersBar
+        entity="deals"
+        current={currentFilters}
+        onApply={applyFilters}
+      />
+
       <Box sx={{ mb: 2.5 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
@@ -244,6 +293,16 @@ export function DealsPage() {
               </TextField>
             </Grid>
           )}
+          <Grid item xs={6} md={2}>
+            <Chip
+              label="Только избранные"
+              color={onlyFavorite ? 'primary' : 'default'}
+              variant={onlyFavorite ? 'filled' : 'outlined'}
+              onClick={() => setOnlyFavorite((value) => !value)}
+              aria-pressed={onlyFavorite}
+              sx={{ height: 40 }}
+            />
+          </Grid>
         </Grid>
       </Box>
 

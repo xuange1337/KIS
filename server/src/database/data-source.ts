@@ -11,6 +11,8 @@ import { Activity } from '../activities/activity.entity';
 import { Offer } from '../offers/offer.entity';
 import { Product } from '../products/product.entity';
 import { OfferItem } from '../offers/offer-item.entity';
+import { SavedFilter } from '../personal/saved-filter.entity';
+import { Favorite } from '../personal/favorite.entity';
 import { AuditLog } from '../common/audit-log.entity';
 import { RefreshSession } from '../auth/refresh-session.entity';
 import { IdempotencyKey } from '../common/idempotency/idempotency-key.entity';
@@ -35,6 +37,8 @@ export const ENTITIES = [
   Offer,
   Product,
   OfferItem,
+  SavedFilter,
+  Favorite,
   AuditLog,
   RefreshSession,
   IdempotencyKey,
