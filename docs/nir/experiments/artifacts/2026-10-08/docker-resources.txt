@@ -1,0 +1,1 @@
+CPU=8 RAM=8321994752 OS=Docker Desktop
