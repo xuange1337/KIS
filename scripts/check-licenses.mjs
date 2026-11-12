@@ -20,6 +20,8 @@ const allowedLicenses = new Set([
   // Разрешительная лицензия OSI без copyleft; пришла с argparse
   // (транзитивно через js-yaml в @nestjs/swagger)
   'Python-2.0',
+  // Редакция лицензии PSF 2.0 того же семейства (argparse 3)
+  'PSF-2.0',
   'Unlicense',
 ]);
 
