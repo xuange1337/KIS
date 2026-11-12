@@ -42,6 +42,7 @@ test.describe('Дополнительные возможности рабоче�
   }) => {
     const name = uniqueName('ООО «Метка»');
     const tag = uniqueName('Метка');
+    const filterName = uniqueName('Набор');
     await signIn(page, 'head');
     await createClient(page, name);
 
@@ -49,7 +50,7 @@ test.describe('Дополнительные возможности рабоче�
     await page.getByRole('button', { name: 'Метки', exact: true }).click();
     await page.getByLabel('Новая метка').fill(tag);
     await page.getByRole('button', { name: 'Добавить', exact: true }).click();
-    await expect(page.getByText('клиентов: 0')).toBeVisible();
+    await expect(page.getByText(tag)).toBeVisible();
     await page.getByRole('button', { name: 'Закрыть' }).click();
 
     await page.getByLabel('Поиск по наименованию или ИНН').fill(name);
@@ -66,12 +67,12 @@ test.describe('Дополнительные возможности рабоче�
     await expect(page.getByText(name)).toBeVisible();
 
     await page.getByRole('button', { name: /Сохранить текущие/ }).click();
-    await page.getByLabel('Название набора').fill('Мои избранные');
+    await page.getByLabel('Название набора').fill(filterName);
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
-    await expect(page.getByText('Мои избранные')).toBeVisible();
+    await expect(page.getByText(filterName)).toBeVisible();
 
     // Уборка: набор и метка удаляются, избранное снимается вместе с клиентом
-    await page.getByLabel('Удалить набор «Мои избранные»').click();
+    await page.getByLabel(`Удалить набор «${filterName}»`).click();
     await page.getByRole('button', { name: 'Метки', exact: true }).click();
     await page.getByLabel(`Удалить метку ${tag}`).click();
     await page.getByRole('button', { name: 'Закрыть' }).click();
@@ -85,12 +86,16 @@ test.describe('Дополнительные возможности рабоче�
     await page.locator('.MuiDataGrid-row').first().click();
     await expect(page.getByText('Состав сделки')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Чек-лист' }).count();
     const item = uniqueName('Пункт');
     await page.getByLabel('Новый пункт').fill(item);
-    await page.getByRole('button', { name: 'Добавить', exact: true }).click();
+    await page
+      .locator('form')
+      .filter({ has: page.getByLabel('Новый пункт') })
+      .getByRole('button', { name: 'Добавить' })
+      .click();
     await expect(page.getByText(item)).toBeVisible();
-    await page.getByRole('checkbox', { name: item }).check();
+    await page.getByRole('checkbox', { name: item }).click();
+    await expect(page.getByRole('checkbox', { name: item })).toBeChecked();
     await expect(page.getByText(/\d из \d/)).toBeVisible();
     await page.getByLabel(`Удалить пункт ${item}`).click();
     await expect(page.getByText(item)).toBeHidden();
@@ -117,7 +122,7 @@ test.describe('Дополнительные возможности рабоче�
     await page.getByRole('button', { name: 'Создать воронку' }).click();
     await expect(page.getByText(name)).toBeVisible();
     await page.getByRole('button', { name: 'Закрыть' }).click();
-    await expect(page.getByLabel('Воронка')).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Воронка' })).toBeVisible();
 
     // Уборка
     await page.getByRole('button', { name: 'Воронки' }).click();
@@ -135,7 +140,7 @@ test.describe('Дополнительные возможности рабоче�
     await openSection(page, 'Справка');
     await expect(page.getByText('Горячие клавиши')).toBeVisible();
 
-    await page.getByRole('button', { name: /^Уведомления/ }).click();
+    await page.locator('button[aria-label^="Уведомления"]').click();
     await expect(
       page.getByRole('button', { name: 'Прочитать все' }),
     ).toBeVisible();

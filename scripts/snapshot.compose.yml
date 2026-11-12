@@ -49,6 +49,7 @@ services:
       # Стенд для ручной и браузерной проверки: пять попыток входа в
       # минуту с адреса обычно мешают при переключении между учётками
       LOGIN_RATE_LIMIT: "200"
+      API_RATE_LIMIT: "3000"
       APP_URL: http://localhost:${SNAP_WEB_PORT}
       UPLOADS_DIR: /app/uploads
     ports:

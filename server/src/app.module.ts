@@ -43,7 +43,11 @@ import { MetricsModule } from './metrics/metrics.module';
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     // Общий предел частоты запросов; на форме входа он ужесточён
     // отдельным декоратором (см. AuthController)
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    // Общий предел запросов с одного адреса; за NAT живёт весь офис, а
+    // стендам для браузерных прогонов нужен больший (API_RATE_LIMIT)
+    ThrottlerModule.forRoot([
+      { ttl: 60_000, limit: Number(process.env.API_RATE_LIMIT) || 120 },
+    ]),
     DatabaseModule,
     MailModule,
     MetricsModule,

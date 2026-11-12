@@ -11,6 +11,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 export LOGIN_RATE_LIMIT="${LOGIN_RATE_LIMIT:-200}"
+# Страницы теперь делают больше запросов (уведомления, метки, избранное),
+# а сценарии идут подряд с одного адреса
+export API_RATE_LIMIT="${API_RATE_LIMIT:-3000}"
 BASE_URL="${E2E_BASE_URL:-http://localhost:8080}"
 
 log() { printf '[browser-e2e] %s\n' "$*"; }
