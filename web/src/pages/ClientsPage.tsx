@@ -163,7 +163,13 @@ export function ClientsPage() {
     setIndustry(String(filters.industry ?? ''));
     setOwnerUserId(filters.ownerUserId ? String(filters.ownerUserId) : '');
     setOnlyFavorite(filters.favorite === true);
-    setTagId(filters.tagId ? String(filters.tagId) : '');
+    // Метку могли удалить после сохранения набора: такой фильтр обнулил бы список
+    setTagId(
+      filters.tagId &&
+        tags?.some((item) => item.tagId === Number(filters.tagId))
+        ? String(filters.tagId)
+        : '',
+    );
     setPagination((previous) => ({ ...previous, page: 0 }));
   };
 
