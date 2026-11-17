@@ -35,15 +35,19 @@ export class PipelinesService {
     });
     if (found) return found;
     try {
-      const pipeline = await manager.save(
-        manager.create(Pipeline, {
-          organizationId,
-          name: 'Основная воронка',
-          isDefault: true,
-        }),
-      );
-      await this.writeStages(manager, pipeline.pipelineId, [...WORK_STAGES]);
-      return pipeline;
+      // Воронка и её стадии появляются вместе: иначе параллельный запрос
+      // увидел бы воронку без стадий
+      return await manager.transaction(async (tx) => {
+        const pipeline = await tx.save(
+          tx.create(Pipeline, {
+            organizationId,
+            name: 'Основная воронка',
+            isDefault: true,
+          }),
+        );
+        await this.writeStages(tx, pipeline.pipelineId, [...WORK_STAGES]);
+        return pipeline;
+      });
     } catch (error) {
       // Два первых запроса организации одновременно: уникальный индекс
       // пропустил один, второй берёт уже созданную воронку

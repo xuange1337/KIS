@@ -108,16 +108,13 @@ describe('Метки клиентов', () => {
   });
 
   it('массово добавляет метку и считает клиентов в справочнике', async () => {
-    await http()
+    const first = await http()
       .post(`/api/tags/${tagId}/clients`)
       .set(as(head))
       .send({ clientIds: [clientId] })
       .expect(201);
-    await http()
-      .post(`/api/tags/${tagId}/clients`)
-      .set(as(head))
-      .send({ clientIds: [clientId] })
-      .expect(201);
+    // Метка снималась с клиента ранее, поэтому первая выдача — одна новая связь
+    expect(first.body.added).toBe(1);
     const again = await http()
       .post(`/api/tags/${tagId}/clients`)
       .set(as(head))
