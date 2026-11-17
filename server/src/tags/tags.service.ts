@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -128,7 +129,7 @@ export class TagsService {
     if (clients.length !== unique.length)
       throw new NotFoundException('Клиент не найден');
     if (clients.some((c) => !canAccess(user, c.ownerUserId)))
-      throw new ConflictException('Среди клиентов есть чужие карточки');
+      throw new ForbiddenException('Среди клиентов есть чужие карточки');
     const result = await this.links
       .createQueryBuilder()
       .insert()
@@ -141,7 +142,8 @@ export class TagsService {
       )
       .orIgnore()
       .execute();
-    return { added: result.raw?.length ?? result.identifiers.length };
+    // raw содержит только реально вставленные строки (повторы пропущены)
+    return { added: result.raw.length };
   }
 
   /** Метки для набора клиентов одним запросом: нужны списку клиентов. */
