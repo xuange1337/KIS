@@ -108,19 +108,31 @@ describe('Метки клиентов', () => {
   });
 
   it('массово добавляет метку и считает клиентов в справочнике', async () => {
-    await http()
+    const first = await http()
       .post(`/api/tags/${tagId}/clients`)
       .set(as(head))
       .send({ clientIds: [clientId] })
       .expect(201);
-    await http()
+    // Метка снималась с клиента ранее, поэтому первая выдача — одна новая связь
+    expect(first.body.added).toBe(1);
+    const again = await http()
       .post(`/api/tags/${tagId}/clients`)
       .set(as(head))
       .send({ clientIds: [clientId] })
       .expect(201);
+    // Повтор ничего не добавляет: счётчик считает только новые связи
+    expect(again.body.added).toBe(0);
     const list = await http().get('/api/tags').set(as(head)).expect(200);
     const vip = list.body.find((t: { tagId: number }) => t.tagId === tagId);
     expect(vip.clientsCount).toBe(1);
+  });
+
+  it('менеджер не помечает чужие карточки', async () => {
+    await http()
+      .post(`/api/tags/${tagId}/clients`)
+      .set(as(manager))
+      .send({ clientIds: [clientId] })
+      .expect(403);
   });
 
   it('чужая организация не видит и не использует метки', async () => {

@@ -87,6 +87,26 @@ describe('Сохранённые фильтры и избранное', () => {
         .expect(400);
     });
 
+    it('ограничивает число наборов на список', async () => {
+      for (let i = 0; i < 29; i += 1) {
+        await http()
+          .post('/api/saved-filters')
+          .set(as(manager))
+          .send({ entity: 'deals', name: `Набор ${i}`, filters: { q: `${i}` } })
+          .expect(201);
+      }
+      await http()
+        .post('/api/saved-filters')
+        .set(as(manager))
+        .send({ entity: 'deals', name: 'Лишний', filters: { q: 'x' } })
+        .expect(201);
+      await http()
+        .post('/api/saved-filters')
+        .set(as(manager))
+        .send({ entity: 'deals', name: 'Тридцать первый', filters: { q: 'y' } })
+        .expect(400);
+    });
+
     it('удаляет только свой набор', async () => {
       const list = await http()
         .get('/api/saved-filters?entity=clients')

@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -41,6 +42,8 @@ const SORTABLE = ['createdAt', 'amount', 'plannedClose', 'title', 'stage'];
 
 @Injectable()
 export class DealsService {
+  private readonly logger = new Logger(DealsService.name);
+
   constructor(
     @InjectRepository(Deal)
     private readonly repo: Repository<Deal>,
@@ -179,7 +182,7 @@ export class DealsService {
       dto.customFields,
     );
 
-    return this.dataSource.transaction(async (manager) => {
+    const created = await this.dataSource.transaction(async (manager) => {
       const deal = manager.getRepository(Deal).create({
         ...dto,
         customFields: customValues,
@@ -193,7 +196,6 @@ export class DealsService {
           : user.userId,
       });
       const saved = await manager.getRepository(Deal).save(deal);
-      await this.notifyAssigned(saved, user);
 
       // Первая запись истории фиксирует стадию, с которой сделка заведена
       await manager.getRepository(DealStageHistory).save({
@@ -209,6 +211,14 @@ export class DealsService {
         relations: { client: true, owner: true },
       });
     });
+    // Уведомление только после фиксации: при откате транзакции оно
+    // осталось бы ссылкой на сделку, которой нет
+    await this.notifyAssigned(created, user).catch((error: unknown) =>
+      // Сделка уже сохранена: сбой уведомления не должен превращаться в 500
+      // и повторное создание такой же сделки
+      this.logger.error('Не удалось создать уведомление о сделке', error),
+    );
+    return created;
   }
 
   async update(

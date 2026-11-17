@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -128,20 +129,19 @@ export class TagsService {
     if (clients.length !== unique.length)
       throw new NotFoundException('Клиент не найден');
     if (clients.some((c) => !canAccess(user, c.ownerUserId)))
-      throw new ConflictException('Среди клиентов есть чужие карточки');
-    const result = await this.links
-      .createQueryBuilder()
-      .insert()
-      .values(
-        unique.map((clientId) => ({
-          clientId,
-          tagId,
-          organizationId: user.organizationId,
-        })),
-      )
-      .orIgnore()
-      .execute();
-    return { added: result.raw?.length ?? result.identifiers.length };
+      throw new ForbiddenException('Среди клиентов есть чужие карточки');
+    // Сырой запрос со счётом внутри: построитель TypeORM не отдаёт вставленные
+    // строки для таблицы без генерируемых колонок, и счётчик был бы всегда 0
+    const [row]: Array<{ added: number }> = await this.links.query(
+      `WITH inserted AS (
+         INSERT INTO client_tags (client_id, tag_id, organization_id)
+         SELECT c, $2, $3 FROM unnest($1::int[]) AS c
+         ON CONFLICT DO NOTHING
+         RETURNING 1)
+       SELECT count(*)::int AS added FROM inserted`,
+      [unique, tagId, user.organizationId],
+    );
+    return { added: row.added };
   }
 
   /** Метки для набора клиентов одним запросом: нужны списку клиентов. */

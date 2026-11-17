@@ -20,6 +20,8 @@ import {
   FilterEntity,
 } from './personal.dto';
 
+const MAX_FILTERS_PER_LIST = 30;
+
 @Injectable()
 export class PersonalService {
   constructor(
@@ -58,6 +60,14 @@ export class PersonalService {
       throw new BadRequestException('Нечего сохранять: фильтры не выбраны');
     const name = dto.name.trim();
     if (!name) throw new BadRequestException('Название не может быть пустым');
+    const mine = await this.filters.countBy({
+      userId: user.userId,
+      entity: dto.entity,
+    });
+    if (mine >= MAX_FILTERS_PER_LIST)
+      throw new BadRequestException(
+        `Не больше ${MAX_FILTERS_PER_LIST} наборов на список: удалите ненужные`,
+      );
     const exists = await this.filters.existsBy({
       userId: user.userId,
       entity: dto.entity,
